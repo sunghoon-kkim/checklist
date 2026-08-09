@@ -1,1373 +1,1976 @@
 <!DOCTYPE html>
 <html lang="ko" class="dark">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>공무팀 통합 설비관리 시스템 (FMS)</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        brand: {
-                            50: '#f0f9ff',
-                            100: '#e0f2fe',
-                            500: '#0284c7',
-                            600: '#0369a1',
-                            700: '#075985',
-                            900: '#0c4a6e',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-    <!-- FontAwesome Icons CDN -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Chart.js CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
-    <style>
-        /* Custom scrollbars and pulse effects */
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #1e293b;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #475569;
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #64748b;
-        }
-        
-        /* Drag and Drop visual feedback */
-        .drag-over {
-            border-color: #0284c7 !important; /* brand-500 */
-            background-color: rgba(15, 23, 42, 0.8) !important; 
-        }
-        .dragging {
-            opacity: 0.5;
-            transform: scale(0.95);
-        }
-        body.is-dragging .drop-zone * {
-            pointer-events: none; /* 드래그 중 자식 요소 이벤트 방지로 깜빡임 방지 */
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>공무팀 통합 설비관리 시스템 (FMS) v3.1</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  darkMode: 'class',
+  theme: {
+    extend: {
+      colors: {
+        brand: { 50:'#f0f9ff',100:'#e0f2fe',300:'#7dd3fc',400:'#38bdf8',500:'#0284c7',600:'#0369a1',700:'#075985',800:'#0a4166',900:'#0c4a6e',950:'#082f49' }
+      }
+    }
+  }
+}
+</script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: #1e293b; }
+  ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: #64748b; }
 
-        /* 데스크톱 환경 전용 사이드바 크기 조절 (CSS 변수 활용) */
-        @media (min-width: 768px) {
-            #sidebar {
-                width: var(--sidebar-width, 256px) !important;
-                flex-shrink: 0;
-            }
-        }
+  .drag-over { border-color: #0284c7 !important; background-color: rgba(2,132,199,0.06) !important; }
+  .dragging { opacity: .4; }
+  body.is-dragging .drop-zone * { pointer-events: none; }
 
-        /* 모바일 환경 탭 가로 스크롤바 숨김 */
-        .hide-scrollbar::-webkit-scrollbar {
-            display: none;
-        }
-        .hide-scrollbar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
-    </style>
+  @media (min-width: 768px) {
+    #sidebar { width: var(--sidebar-width, 256px) !important; flex-shrink: 0; }
+  }
+
+  .hide-scrollbar::-webkit-scrollbar { display: none; }
+  .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+  /* 키보드 접근성: 포커스 링을 항상 보이게 */
+  :focus-visible { outline: 2px solid #38bdf8; outline-offset: 2px; border-radius: 6px; }
+
+  .toast-enter { opacity: 0; transform: translateY(8px); }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition-duration: .01ms !important; animation-duration: .01ms !important; }
+  }
+</style>
 </head>
 <body class="bg-slate-950 text-slate-100 font-sans min-h-screen flex flex-col antialiased selection:bg-brand-500 selection:text-white">
 
-    <!-- Top Navigation Header -->
-    <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-30 px-3 py-3 flex flex-wrap justify-between items-center shadow-lg gap-y-3">
-        <div class="flex items-center space-x-3">
-            <div class="bg-brand-600 text-white p-2 md:p-2.5 rounded-xl shadow-md flex items-center justify-center">
-                <i class="fa-solid fa-industry text-lg md:text-xl"></i>
-            </div>
+<!-- ================= HEADER ================= -->
+<header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-30 px-3 py-3 flex flex-wrap justify-between items-center shadow-lg gap-y-3">
+  <div class="flex items-center space-x-3">
+    <div class="bg-brand-600 text-white p-2 md:p-2.5 rounded-xl shadow-md flex items-center justify-center">
+      <i class="fa-solid fa-industry text-lg md:text-xl"></i>
+    </div>
+    <div>
+      <h1 class="text-base md:text-lg font-bold tracking-wide text-white flex items-center gap-2">
+        대웅제약 <span class="text-[10px] md:text-xs font-normal bg-brand-900/80 text-brand-300 border border-brand-700/50 px-2 py-0.5 rounded-full hidden sm:inline-block">공무팀 보전관리 v3.1</span>
+      </h1>
+      <p class="text-[10px] md:text-xs text-slate-400 hidden sm:block">설비 가동 모니터링 &amp; 예방보전 시스템</p>
+    </div>
+  </div>
+
+  <div class="hidden xl:flex items-center space-x-6 text-xs border-x border-slate-800 px-6">
+    <div class="text-center">
+      <span class="text-slate-400 block">전체 설비</span>
+      <span id="header-total-eq" class="text-sm font-bold text-white">0대</span>
+    </div>
+    <div class="text-center">
+      <span class="text-slate-400 block">정상 가동</span>
+      <span id="header-running-eq" class="text-sm font-bold text-emerald-400">0대</span>
+    </div>
+    <div class="text-center">
+      <span class="text-slate-400 block">고장 정지</span>
+      <span id="header-broken-eq" class="text-sm font-bold text-rose-400">0대</span>
+    </div>
+    <div class="text-center">
+      <span class="text-slate-400 block">평균 OEE</span>
+      <span id="header-oee" class="text-sm font-bold text-cyan-400">0%</span>
+    </div>
+  </div>
+
+  <div class="flex items-center space-x-2 md:space-x-3 ml-auto">
+    <button type="button" onclick="openWOForm()" class="bg-rose-600 hover:bg-rose-500 text-white text-[11px] md:text-sm font-medium px-2.5 md:px-3.5 py-1.5 md:py-2 rounded-lg flex items-center gap-1.5 shadow-md transition-colors">
+      <i class="fa-solid fa-triangle-exclamation"></i>
+      <span class="hidden sm:inline">고장/수리 접수</span>
+      <span class="sm:hidden">고장접수</span>
+    </button>
+    <button type="button" onclick="openEqForm()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-[11px] md:text-sm font-medium px-2.5 md:px-3.5 py-1.5 md:py-2 rounded-lg flex items-center gap-1.5 transition-colors">
+      <i class="fa-solid fa-plus"></i>
+      <span class="hidden sm:inline">설비 등록</span>
+    </button>
+    <div class="flex items-center gap-2 text-[10px] md:text-xs font-mono bg-brand-950/30 px-2 md:px-3 py-1.5 md:py-2 rounded-lg border border-brand-800/50">
+      <button type="button" id="sync-status" onclick="retrySync()" title="시트 연동 상태" class="flex items-center gap-1.5 text-slate-400">
+        <span id="sync-dot" class="w-2 h-2 rounded-full bg-slate-600"></span>
+        <span id="sync-text" class="hidden lg:inline">연동 확인 중</span>
+      </button>
+      <span class="w-px h-3 bg-slate-700 hidden lg:inline-block"></span>
+      <span id="live-clock" class="text-brand-300">0000-00-00 00:00:00</span>
+    </div>
+  </div>
+</header>
+
+<!-- ================= MAIN ================= -->
+<div class="flex-1 flex flex-col md:flex-row overflow-hidden">
+  <aside id="sidebar" class="w-full bg-slate-900/90 border-r border-slate-800 p-2 md:p-3 flex md:flex-col justify-between shrink-0 overflow-hidden md:overflow-y-auto">
+    <nav class="flex md:flex-col space-x-2 md:space-x-0 md:space-y-1.5 w-full overflow-x-auto hide-scrollbar pb-1 md:pb-0">
+      <button type="button" onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn text-slate-400 hover:bg-slate-800 hover:text-slate-200 flex items-center space-x-2 md:space-x-3 px-3 py-2 md:px-3.5 md:py-2.5 rounded-xl text-xs md:text-sm font-medium transition-colors w-auto md:w-full text-left shrink-0 whitespace-nowrap">
+        <i class="fa-solid fa-chart-pie w-4 md:w-5 text-center"></i><span>종합 대시보드</span>
+      </button>
+      <button type="button" onclick="switchTab('layout')" id="nav-layout" class="nav-btn text-slate-400 hover:bg-slate-800 hover:text-slate-200 flex items-center space-x-2 md:space-x-3 px-3 py-2 md:px-3.5 md:py-2.5 rounded-xl text-xs md:text-sm font-medium transition-colors w-auto md:w-full text-left shrink-0 whitespace-nowrap">
+        <i class="fa-solid fa-map-location-dot w-4 md:w-5 text-center"></i><span>공장 배치도 맵</span>
+      </button>
+      <button type="button" onclick="switchTab('equipments')" id="nav-equipments" class="nav-btn text-slate-400 hover:bg-slate-800 hover:text-slate-200 flex items-center space-x-2 md:space-x-3 px-3 py-2 md:px-3.5 md:py-2.5 rounded-xl text-xs md:text-sm font-medium transition-colors w-auto md:w-full text-left shrink-0 whitespace-nowrap">
+        <i class="fa-solid fa-gears w-4 md:w-5 text-center"></i><span>설비 마스터 관리</span>
+      </button>
+      <button type="button" onclick="switchTab('workorders')" id="nav-workorders" class="nav-btn text-slate-400 hover:bg-slate-800 hover:text-slate-200 flex items-center space-x-2 md:space-x-3 px-3 py-2 md:px-3.5 md:py-2.5 rounded-xl text-xs md:text-sm font-medium transition-colors w-auto md:w-full text-left justify-between shrink-0 whitespace-nowrap">
+        <div class="flex items-center space-x-2 md:space-x-3">
+          <i class="fa-solid fa-wrench w-4 md:w-5 text-center"></i><span>작업 지시 &amp; 고장수리</span>
+        </div>
+        <span id="pending-wo-badge" class="bg-rose-500/20 text-rose-400 text-[10px] px-1.5 py-0.5 rounded-full font-bold border border-rose-500/30 ml-2">0</span>
+      </button>
+      <button type="button" onclick="switchTab('pm')" id="nav-pm" class="nav-btn text-slate-400 hover:bg-slate-800 hover:text-slate-200 flex items-center space-x-2 md:space-x-3 px-3 py-2 md:px-3.5 md:py-2.5 rounded-xl text-xs md:text-sm font-medium transition-colors w-auto md:w-full text-left shrink-0 whitespace-nowrap">
+        <i class="fa-solid fa-calendar-check w-4 md:w-5 text-center"></i><span>예방 보전 (PM)</span>
+      </button>
+      <button type="button" onclick="switchTab('spares')" id="nav-spares" class="nav-btn text-slate-400 hover:bg-slate-800 hover:text-slate-200 flex items-center space-x-2 md:space-x-3 px-3 py-2 md:px-3.5 md:py-2.5 rounded-xl text-xs md:text-sm font-medium transition-colors w-auto md:w-full text-left justify-between shrink-0 whitespace-nowrap">
+        <div class="flex items-center space-x-2 md:space-x-3">
+          <i class="fa-solid fa-boxes-packing w-4 md:w-5 text-center"></i><span>예비 부품 관리</span>
+        </div>
+        <span id="low-stock-badge" class="bg-amber-500/20 text-amber-400 text-[10px] px-1.5 py-0.5 rounded-full font-bold border border-amber-500/30 ml-2 hidden">0</span>
+      </button>
+      <button type="button" onclick="switchTab('analytics')" id="nav-analytics" class="nav-btn text-slate-400 hover:bg-slate-800 hover:text-slate-200 flex items-center space-x-2 md:space-x-3 px-3 py-2 md:px-3.5 md:py-2.5 rounded-xl text-xs md:text-sm font-medium transition-colors w-auto md:w-full text-left shrink-0 whitespace-nowrap">
+        <i class="fa-solid fa-chart-line w-4 md:w-5 text-center"></i><span>통계 리포트</span>
+      </button>
+    </nav>
+  </aside>
+
+  <div id="resizer" class="hidden md:flex w-1 bg-slate-800 hover:bg-brand-500 cursor-col-resize shrink-0 transition-colors z-10 justify-center items-center group relative shadow-md" role="separator" aria-orientation="vertical" tabindex="0" aria-label="사이드바 너비 조절">
+    <div class="absolute inset-y-0 -left-2 -right-2 cursor-col-resize"></div>
+    <div class="h-10 w-0.5 bg-slate-500 group-hover:bg-white rounded-full transition-colors"></div>
+  </div>
+
+  <main class="flex-1 bg-slate-950 p-4 md:p-6 overflow-y-auto space-y-6">
+
+    <!-- ---------- TAB 1: DASHBOARD ---------- -->
+    <section id="tab-dashboard" class="tab-content space-y-6">
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4">
+          <div class="flex justify-between items-start">
             <div>
-                <h1 class="text-base md:text-lg font-bold tracking-wide text-white flex items-center gap-2">
-                    대웅제약 <span class="text-[10px] md:text-xs font-normal bg-brand-900/80 text-brand-300 border border-brand-700/50 px-2 py-0.5 rounded-full hidden sm:inline-block">공무팀 보전관리 v3.0</span>
-                </h1>
-                <p class="text-[10px] md:text-xs text-slate-400 hidden sm:block">스마트 공장 설비 가동 모니터링 & 예방보전 시스템</p>
+              <p class="text-xs font-medium text-slate-400">평균 설비 가동률 (OEE)</p>
+              <h3 id="dash-oee" class="text-2xl font-black text-emerald-400 mt-1">0%</h3>
+              <p id="dash-oee-sub" class="text-[11px] text-slate-500 mt-1">설비 0대 기준</p>
             </div>
+            <div class="bg-emerald-500/10 text-emerald-400 p-3 rounded-xl"><i class="fa-solid fa-bolt text-lg"></i></div>
+          </div>
         </div>
-
-        <div class="hidden xl:flex items-center space-x-6 text-xs border-x border-slate-800 px-6">
-            <div class="text-center">
-                <span class="text-slate-400 block">전체 설비</span>
-                <span id="header-total-eq" class="text-sm font-bold text-white">0대</span>
+        <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4">
+          <div class="flex justify-between items-start">
+            <div>
+              <p class="text-xs font-medium text-slate-400">미완료 작업</p>
+              <h3 id="dash-active-repair" class="text-2xl font-black text-rose-400 mt-1">0 건</h3>
+              <p id="dash-active-sub" class="text-[11px] text-slate-500 mt-1">긴급 0건</p>
             </div>
-            <div class="text-center">
-                <span class="text-slate-400 block">정상 가동</span>
-                <span id="header-running-eq" class="text-sm font-bold text-emerald-400">0대</span>
-            </div>
-            <div class="text-center">
-                <span class="text-slate-400 block">고장 정지</span>
-                <span id="header-broken-eq" class="text-sm font-bold text-rose-400">0대</span>
-            </div>
-            <div class="text-center">
-                <span class="text-slate-400 block">평균 OEE</span>
-                <span id="header-oee" class="text-sm font-bold text-cyan-400">0%</span>
-            </div>
+            <div class="bg-rose-500/10 text-rose-400 p-3 rounded-xl"><i class="fa-solid fa-screwdriver-wrench text-lg"></i></div>
+          </div>
         </div>
+        <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between">
+          <div class="flex justify-between items-start">
+            <div>
+              <p class="text-xs font-medium text-slate-400">오늘 예방보전 (PM)</p>
+              <h3 id="dash-pm-count" class="text-2xl font-black text-amber-400 mt-1">0/0 건</h3>
+            </div>
+            <div class="bg-amber-500/10 text-amber-400 p-3 rounded-xl"><i class="fa-solid fa-clipboard-check text-lg"></i></div>
+          </div>
+          <div class="w-full bg-slate-800 rounded-full h-1.5 mt-3">
+            <div id="dash-pm-progress" class="bg-amber-400 h-1.5 rounded-full transition-all" style="width: 0%"></div>
+          </div>
+        </div>
+        <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4">
+          <div class="flex justify-between items-start">
+            <div>
+              <p class="text-xs font-medium text-slate-400">안전재고 미달 부품</p>
+              <h3 id="dash-low-stock" class="text-2xl font-black text-cyan-400 mt-1">0 품목</h3>
+              <p id="dash-low-stock-sub" class="text-[11px] text-slate-500 mt-1">전체 0품목 중</p>
+            </div>
+            <div class="bg-cyan-500/10 text-cyan-400 p-3 rounded-xl"><i class="fa-solid fa-boxes-stacked text-lg"></i></div>
+          </div>
+        </div>
+      </div>
 
-        <div class="flex items-center space-x-2 md:space-x-3 ml-auto">
-            <button onclick="openWOForm()" class="bg-rose-600 hover:bg-rose-500 text-white text-[11px] md:text-sm font-medium px-2.5 md:px-3.5 py-1.5 md:py-2 rounded-lg flex items-center gap-1.5 shadow-md transition-all">
-                <i class="fa-solid fa-triangle-exclamation"></i>
-                <span class="hidden sm:inline">고장/수리 요청</span>
-                <span class="sm:hidden">고장접수</span>
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2 bg-slate-900/80 border border-slate-800 rounded-2xl p-5 flex flex-col">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="font-bold text-slate-100 flex items-center gap-2"><i class="fa-solid fa-layer-group text-brand-400"></i> 라인별 설비 현황</h3>
+            <button type="button" onclick="switchTab('layout')" class="text-xs text-brand-400 hover:text-brand-300 flex items-center gap-1">배치도 열기 <i class="fa-solid fa-chevron-right text-[10px]"></i></button>
+          </div>
+          <div id="dash-line-summary" class="grid grid-cols-1 sm:grid-cols-2 gap-3 flex-1"></div>
+        </div>
+        <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 flex flex-col">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="font-bold text-slate-100 flex items-center gap-2"><i class="fa-solid fa-bell text-rose-400"></i> 최근 접수 내역</h3>
+            <button type="button" onclick="switchTab('workorders')" class="text-xs text-brand-400 hover:text-brand-300">전체보기</button>
+          </div>
+          <div id="dash-recent-orders" class="space-y-2.5 flex-1 overflow-y-auto max-h-[280px] pr-1"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- TAB 2: LAYOUT MAP ---------- -->
+    <section id="tab-layout" class="tab-content hidden space-y-6">
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
+        <div class="flex flex-wrap justify-between items-center gap-4 mb-6">
+          <div>
+            <h2 class="text-lg font-bold text-white flex items-center gap-2"><i class="fa-solid fa-map-location-dot text-brand-400"></i> 공장 레이아웃</h2>
+            <p class="text-xs text-slate-400 mt-0.5">라인을 만들고 설비를 배치하세요. PC에서는 카드를 끌어다 라인을 옮길 수 있고, 모바일에서는 카드의 <i class="fa-solid fa-right-left text-[10px]"></i> 버튼으로 이동합니다.</p>
+          </div>
+          <div class="flex items-center gap-4">
+            <div class="hidden sm:flex items-center space-x-4 text-xs bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-800">
+              <div class="flex items-center space-x-1.5"><span class="w-3 h-3 rounded-full bg-emerald-500"></span><span class="text-slate-300">가동</span></div>
+              <div class="flex items-center space-x-1.5"><span class="w-3 h-3 rounded-full bg-amber-500"></span><span class="text-slate-300">점검</span></div>
+              <div class="flex items-center space-x-1.5"><span class="w-3 h-3 rounded-full bg-rose-500"></span><span class="text-slate-300">고장</span></div>
+            </div>
+            <button type="button" onclick="openLocationForm()" class="bg-brand-600 hover:bg-brand-500 text-white px-3 py-1.5 rounded-xl text-sm font-medium flex items-center gap-1.5 transition-colors shadow">
+              <i class="fa-solid fa-folder-plus"></i> 라인 추가
             </button>
-            <button onclick="openEqForm()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-[11px] md:text-sm font-medium px-2.5 md:px-3.5 py-1.5 md:py-2 rounded-lg flex items-center gap-1.5 transition-all">
-                <i class="fa-solid fa-plus"></i>
-                <span class="hidden sm:inline">설비 등록</span>
+          </div>
+        </div>
+        <div id="layout-container" class="bg-slate-950 p-6 rounded-2xl border border-slate-800 space-y-10 overflow-x-auto min-h-[400px]"></div>
+      </div>
+    </section>
+
+    <!-- ---------- TAB 3: EQUIPMENT ---------- -->
+    <section id="tab-equipments" class="tab-content hidden space-y-6">
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 flex flex-wrap gap-3 items-center justify-between">
+        <div class="flex flex-wrap items-center gap-3 flex-1">
+          <div class="relative min-w-[220px] flex-1 max-w-sm">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-500 text-sm"></i>
+            <input type="search" id="eq-search" oninput="renderEquipmentTable()" placeholder="설비명, 설비코드, 모델 검색" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-sm focus:outline-none focus:border-brand-500">
+          </div>
+          <select id="eq-filter-location" onchange="renderEquipmentTable()" class="bg-slate-950 text-slate-300 border border-slate-800 rounded-xl px-3 py-2 text-sm"></select>
+          <select id="eq-filter-status" onchange="renderEquipmentTable()" class="bg-slate-950 text-slate-300 border border-slate-800 rounded-xl px-3 py-2 text-sm">
+            <option value="ALL">전체 상태</option>
+            <option value="running">정상 가동</option>
+            <option value="warning">점검 필요</option>
+            <option value="broken">고장 정지</option>
+          </select>
+        </div>
+        <button type="button" onclick="openEqForm()" class="bg-brand-600 hover:bg-brand-500 text-white px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2 shadow transition-colors">
+          <i class="fa-solid fa-plus"></i> 설비 등록
+        </button>
+      </div>
+
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm text-slate-300">
+            <thead class="bg-slate-950 text-xs uppercase text-slate-400 border-b border-slate-800">
+              <tr>
+                <th scope="col" class="px-5 py-3.5">설비 코드/명</th>
+                <th scope="col" class="px-5 py-3.5">위치 (라인)</th>
+                <th scope="col" class="px-5 py-3.5">상태</th>
+                <th scope="col" class="px-5 py-3.5">진동 / 온도</th>
+                <th scope="col" class="px-5 py-3.5">OEE</th>
+                <th scope="col" class="px-5 py-3.5 text-right">관리</th>
+              </tr>
+            </thead>
+            <tbody id="equipment-table-body" class="divide-y divide-slate-800/60"></tbody>
+          </table>
+        </div>
+        <div class="px-5 py-3 text-xs text-slate-500 border-t border-slate-800 bg-slate-950/50" id="eq-table-count">0건</div>
+      </div>
+    </section>
+
+    <!-- ---------- TAB 4: WORK ORDERS ---------- -->
+    <section id="tab-workorders" class="tab-content hidden space-y-6">
+      <div class="flex flex-wrap justify-between items-center gap-4">
+        <h2 class="text-lg font-bold text-white flex items-center gap-2"><i class="fa-solid fa-wrench text-rose-400"></i> 작업 지시 &amp; 고장 수리</h2>
+        <button type="button" onclick="openWOForm()" class="bg-rose-600 hover:bg-rose-500 text-white px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2 shadow transition-colors">
+          <i class="fa-solid fa-plus"></i> 신규 접수
+        </button>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="bg-slate-900/70 border border-slate-800 rounded-2xl p-4 flex flex-col">
+          <div class="flex justify-between items-center mb-3 pb-2 border-b border-slate-800">
+            <span class="font-bold text-slate-200 flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span> 접수 대기</span>
+            <span id="count-pending" class="bg-slate-800 text-slate-400 text-xs px-2.5 py-0.5 rounded-full font-mono">0</span>
+          </div>
+          <div id="wo-col-pending" class="space-y-3 flex-1 min-h-[200px]"></div>
+        </div>
+        <div class="bg-slate-900/70 border border-slate-800 rounded-2xl p-4 flex flex-col">
+          <div class="flex justify-between items-center mb-3 pb-2 border-b border-slate-800">
+            <span class="font-bold text-slate-200 flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-blue-400"></span> 수리 진행 중</span>
+            <span id="count-inprogress" class="bg-slate-800 text-slate-400 text-xs px-2.5 py-0.5 rounded-full font-mono">0</span>
+          </div>
+          <div id="wo-col-inprogress" class="space-y-3 flex-1 min-h-[200px]"></div>
+        </div>
+        <div class="bg-slate-900/70 border border-slate-800 rounded-2xl p-4 flex flex-col">
+          <div class="flex justify-between items-center mb-3 pb-2 border-b border-slate-800">
+            <span class="font-bold text-slate-200 flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span> 조치 완료</span>
+            <span id="count-completed" class="bg-slate-800 text-slate-400 text-xs px-2.5 py-0.5 rounded-full font-mono">0</span>
+          </div>
+          <div id="wo-col-completed" class="space-y-3 flex-1 min-h-[200px]"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- TAB 5: PM ---------- -->
+    <section id="tab-pm" class="tab-content hidden space-y-6">
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
+        <div class="flex flex-wrap justify-between items-center gap-4 mb-6">
+          <div>
+            <h2 class="text-lg font-bold text-white flex items-center gap-2"><i class="fa-solid fa-calendar-check text-amber-400"></i> 정기 점검 및 예방보전</h2>
+            <p class="text-xs text-slate-400 mt-0.5">주기가 지나면 체크가 자동으로 해제됩니다.</p>
+          </div>
+          <div class="flex items-center gap-4">
+            <div class="text-xs text-slate-400">완료율 <span id="pm-completion-rate" class="text-sm font-bold text-amber-400">0%</span></div>
+            <button type="button" onclick="openPMForm()" class="bg-amber-600 hover:bg-amber-500 text-white px-3 py-1.5 rounded-xl text-xs font-medium flex items-center gap-1.5 transition-colors">
+              <i class="fa-solid fa-plus"></i> 점검항목 추가
             </button>
-            <div id="live-clock" class="text-[10px] md:text-xs text-brand-300 font-mono bg-brand-950/30 px-2 md:px-3 py-1.5 md:py-2 rounded-lg border border-brand-800/50">
-                0000-00-00 00:00:00
+          </div>
+        </div>
+        <div id="pm-list-container" class="space-y-6"></div>
+      </div>
+    </section>
+
+    <!-- ---------- TAB 6: SPARE PARTS ---------- -->
+    <section id="tab-spares" class="tab-content hidden space-y-6">
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
+        <div class="flex flex-wrap justify-between items-center gap-4 mb-6">
+          <h2 class="text-lg font-bold text-white flex items-center gap-2"><i class="fa-solid fa-boxes-packing text-cyan-400"></i> 예비 부품 재고</h2>
+          <div class="flex items-center gap-3">
+            <div class="relative">
+              <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-500 text-xs"></i>
+              <input type="search" id="sp-search" oninput="renderSparePartsTable()" placeholder="부품명, 코드 검색" class="bg-slate-950 text-slate-200 border border-slate-800 rounded-xl pl-8 pr-3 py-1.5 text-sm focus:outline-none focus:border-brand-500">
             </div>
+            <button type="button" onclick="openSPForm()" class="bg-cyan-600 hover:bg-cyan-500 text-white px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2 shadow transition-colors">
+              <i class="fa-solid fa-plus"></i> 부품 등록
+            </button>
+          </div>
         </div>
-    </header>
-
-    <!-- Main Container -->
-    <div class="flex-1 flex flex-col md:flex-row overflow-hidden">
-        <aside id="sidebar" class="w-full bg-slate-900/90 border-r border-slate-800 p-2 md:p-3 flex md:flex-col justify-between shrink-0 overflow-hidden md:overflow-y-auto">
-            <nav class="flex md:flex-col space-x-2 md:space-x-0 md:space-y-1.5 w-full overflow-x-auto hide-scrollbar pb-1 md:pb-0">
-                <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn active-nav flex items-center space-x-2 md:space-x-3 px-3 py-2 md:px-3.5 md:py-2.5 rounded-xl text-xs md:text-sm font-medium transition-all w-auto md:w-full text-left shrink-0 whitespace-nowrap">
-                    <i class="fa-solid fa-chart-pie w-4 md:w-5 text-center"></i>
-                    <span>종합 대시보드</span>
-                </button>
-                <button onclick="switchTab('layout')" id="nav-layout" class="nav-btn text-slate-400 hover:bg-slate-800 hover:text-slate-200 flex items-center space-x-2 md:space-x-3 px-3 py-2 md:px-3.5 md:py-2.5 rounded-xl text-xs md:text-sm font-medium transition-all w-auto md:w-full text-left shrink-0 whitespace-nowrap">
-                    <i class="fa-solid fa-map-location-dot w-4 md:w-5 text-center"></i>
-                    <span>공장 배치도 맵</span>
-                </button>
-                <button onclick="switchTab('equipments')" id="nav-equipments" class="nav-btn text-slate-400 hover:bg-slate-800 hover:text-slate-200 flex items-center space-x-2 md:space-x-3 px-3 py-2 md:px-3.5 md:py-2.5 rounded-xl text-xs md:text-sm font-medium transition-all w-auto md:w-full text-left shrink-0 whitespace-nowrap">
-                    <i class="fa-solid fa-gears w-4 md:w-5 text-center"></i>
-                    <span>설비 마스터 관리</span>
-                </button>
-                <button onclick="switchTab('workorders')" id="nav-workorders" class="nav-btn text-slate-400 hover:bg-slate-800 hover:text-slate-200 flex items-center space-x-2 md:space-x-3 px-3 py-2 md:px-3.5 md:py-2.5 rounded-xl text-xs md:text-sm font-medium transition-all w-auto md:w-full text-left justify-between shrink-0 whitespace-nowrap">
-                    <div class="flex items-center space-x-2 md:space-x-3">
-                        <i class="fa-solid fa-wrench w-4 md:w-5 text-center"></i>
-                        <span>작업 지시 & 고장수리</span>
-                    </div>
-                    <span id="pending-wo-badge" class="bg-rose-500/20 text-rose-400 text-[10px] px-1.5 py-0.5 rounded-full font-bold border border-rose-500/30 ml-2">0</span>
-                </button>
-                <button onclick="switchTab('pm')" id="nav-pm" class="nav-btn text-slate-400 hover:bg-slate-800 hover:text-slate-200 flex items-center space-x-2 md:space-x-3 px-3 py-2 md:px-3.5 md:py-2.5 rounded-xl text-xs md:text-sm font-medium transition-all w-auto md:w-full text-left shrink-0 whitespace-nowrap">
-                    <i class="fa-solid fa-calendar-check w-4 md:w-5 text-center"></i>
-                    <span>예방 보전 (PM)</span>
-                </button>
-                <button onclick="switchTab('spares')" id="nav-spares" class="nav-btn text-slate-400 hover:bg-slate-800 hover:text-slate-200 flex items-center space-x-2 md:space-x-3 px-3 py-2 md:px-3.5 md:py-2.5 rounded-xl text-xs md:text-sm font-medium transition-all w-auto md:w-full text-left shrink-0 whitespace-nowrap">
-                    <i class="fa-solid fa-boxes-packing w-4 md:w-5 text-center"></i>
-                    <span>예비 부품 관리</span>
-                </button>
-                <button onclick="switchTab('analytics')" id="nav-analytics" class="nav-btn text-slate-400 hover:bg-slate-800 hover:text-slate-200 flex items-center space-x-2 md:space-x-3 px-3 py-2 md:px-3.5 md:py-2.5 rounded-xl text-xs md:text-sm font-medium transition-all w-auto md:w-full text-left shrink-0 whitespace-nowrap">
-                    <i class="fa-solid fa-chart-line w-4 md:w-5 text-center"></i>
-                    <span>통계 리포트</span>
-                </button>
-            </nav>
-        </aside>
-
-        <!-- 사이드바 크기 조절 리사이저 (데스크톱 전용) -->
-        <div id="resizer" class="hidden md:flex w-1 bg-slate-800 hover:bg-brand-500 cursor-col-resize shrink-0 transition-colors z-10 justify-center items-center group relative shadow-md">
-            <div class="absolute inset-y-0 -left-2 -right-2 cursor-col-resize"></div>
-            <div class="h-10 w-0.5 bg-slate-500 group-hover:bg-white rounded-full transition-colors"></div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm text-slate-300">
+            <thead class="bg-slate-950 text-xs uppercase text-slate-400 border-b border-slate-800">
+              <tr>
+                <th scope="col" class="px-5 py-3.5">부품 코드/명</th>
+                <th scope="col" class="px-5 py-3.5">보관 위치</th>
+                <th scope="col" class="px-5 py-3.5">현재 재고</th>
+                <th scope="col" class="px-5 py-3.5">안전 재고</th>
+                <th scope="col" class="px-5 py-3.5 text-right">수량 조정 / 관리</th>
+              </tr>
+            </thead>
+            <tbody id="spare-parts-table-body" class="divide-y divide-slate-800"></tbody>
+          </table>
         </div>
+      </div>
+    </section>
 
-        <main class="flex-1 bg-slate-950 p-4 md:p-6 overflow-y-auto space-y-6">
-            <!-- TAB 1: DASHBOARD VIEW -->
-            <section id="tab-dashboard" class="tab-content space-y-6">
-                <!-- Summary Metric Cards -->
-                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <p class="text-xs font-medium text-slate-400">설비 가동률 (OEE)</p>
-                                <h3 id="dash-oee" class="text-2xl font-black text-emerald-400 mt-1">0%</h3>
-                            </div>
-                            <div class="bg-emerald-500/10 text-emerald-400 p-3 rounded-xl">
-                                <i class="fa-solid fa-bolt text-lg"></i>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <p class="text-xs font-medium text-slate-400">진행 중 고장 수리</p>
-                                <h3 id="dash-active-repair" class="text-2xl font-black text-rose-400 mt-1">0 건</h3>
-                            </div>
-                            <div class="bg-rose-500/10 text-rose-400 p-3 rounded-xl">
-                                <i class="fa-solid fa-screwdriver-wrench text-lg"></i>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <p class="text-xs font-medium text-slate-400">이번주 예방보전 (PM)</p>
-                                <h3 id="dash-pm-count" class="text-2xl font-black text-amber-400 mt-1">0/0 건</h3>
-                            </div>
-                            <div class="bg-amber-500/10 text-amber-400 p-3 rounded-xl">
-                                <i class="fa-solid fa-clipboard-check text-lg"></i>
-                            </div>
-                        </div>
-                        <div class="w-full bg-slate-800 rounded-full h-1.5 mt-3">
-                            <div id="dash-pm-progress" class="bg-amber-400 h-1.5 rounded-full" style="width: 0%"></div>
-                        </div>
-                    </div>
-                    <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <p class="text-xs font-medium text-slate-400">평균 고장 간격 (MTBF)</p>
-                                <h3 class="text-2xl font-black text-cyan-400 mt-1">340 시간</h3>
-                            </div>
-                            <div class="bg-cyan-500/10 text-cyan-400 p-3 rounded-xl">
-                                <i class="fa-solid fa-clock-rotate-left text-lg"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+    <!-- ---------- TAB 7: ANALYTICS ---------- -->
+    <section id="tab-analytics" class="tab-content hidden space-y-6">
+      <p class="text-xs text-slate-500 flex items-center gap-2"><i class="fa-solid fa-circle-info"></i> 아래 지표는 등록된 작업지시·설비 데이터로 계산됩니다.</p>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
+          <h3 class="font-bold text-slate-100 mb-4 flex items-center gap-2"><i class="fa-solid fa-sack-dollar text-emerald-400"></i> 월별 보전비용 (천원)</h3>
+          <div class="h-64"><canvas id="chartMonthlyCost"></canvas></div>
+        </div>
+        <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
+          <h3 class="font-bold text-slate-100 mb-4 flex items-center gap-2"><i class="fa-solid fa-chart-pie text-cyan-400"></i> 작업 유형 비중</h3>
+          <div class="h-64 flex justify-center"><canvas id="chartWorkTypePie"></canvas></div>
+        </div>
+        <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
+          <h3 class="font-bold text-slate-100 mb-4 flex items-center gap-2"><i class="fa-solid fa-layer-group text-brand-400"></i> 라인별 설비 상태</h3>
+          <div class="h-64"><canvas id="chartLineStatus"></canvas></div>
+        </div>
+        <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
+          <h3 class="font-bold text-slate-100 mb-4 flex items-center gap-2"><i class="fa-solid fa-ranking-star text-rose-400"></i> 설비별 고장 건수 (상위 5)</h3>
+          <div class="h-64"><canvas id="chartTopFailure"></canvas></div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div class="lg:col-span-2 bg-slate-900/80 border border-slate-800 rounded-2xl p-5 flex flex-col">
-                        <div class="flex justify-between items-center mb-4">
-                            <h3 class="font-bold text-slate-100 flex items-center gap-2">
-                                <i class="fa-solid fa-layer-group text-brand-500"></i>
-                                라인별 설비 실시간 현황
-                            </h3>
-                            <button onclick="switchTab('layout')" class="text-xs text-brand-400 hover:text-brand-300 flex items-center gap-1">
-                                전체배치도 상세보기 <i class="fa-solid fa-chevron-right"></i>
-                            </button>
-                        </div>
-                        <div id="dash-mini-map" class="grid grid-cols-2 sm:grid-cols-3 gap-3 flex-1 min-h-[240px]"></div>
-                    </div>
-                    <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 flex flex-col">
-                        <div class="flex justify-between items-center mb-4">
-                            <h3 class="font-bold text-slate-100 flex items-center gap-2">
-                                <i class="fa-solid fa-bell text-rose-400"></i>
-                                최근 고장/수리 접수
-                            </h3>
-                        </div>
-                        <div id="dash-recent-orders" class="space-y-3 flex-1 overflow-y-auto max-h-[280px] pr-1"></div>
-                    </div>
-                </div>
-            </section>
+<!-- ================= MODALS ================= -->
+<div id="equipment-detail-modal" class="modal fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden" role="dialog" aria-modal="true">
+  <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+    <button type="button" onclick="closeModal('equipment-detail-modal')" aria-label="닫기" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+    <div id="eq-modal-content"></div>
+  </div>
+</div>
 
-            <!-- TAB 2: INTERACTIVE FACTORY FLOOR MAP -->
-            <section id="tab-layout" class="tab-content hidden space-y-6">
-                <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
-                    <div class="flex flex-wrap justify-between items-center gap-4 mb-6">
-                        <div>
-                            <h2 class="text-lg font-bold text-white flex items-center gap-2">
-                                <i class="fa-solid fa-map-location-dot text-brand-500"></i>
-                                사용자 지정 공장 레이아웃
-                            </h2>
-                            <p class="text-xs text-slate-400 mt-0.5">우측의 [라인 신설] 버튼으로 새로운 구역을 자유롭게 만들고, 해당 구역에 설비를 배치하세요. 카드를 드래그 앤 드롭하여 라인 이동이 가능합니다.</p>
-                        </div>
-                        <div class="flex items-center gap-4">
-                            <div class="hidden sm:flex items-center space-x-4 text-xs bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-800">
-                                <div class="flex items-center space-x-1.5"><span class="w-3 h-3 rounded-full bg-emerald-500"></span><span class="text-slate-300">가동</span></div>
-                                <div class="flex items-center space-x-1.5"><span class="w-3 h-3 rounded-full bg-amber-500"></span><span class="text-slate-300">점검</span></div>
-                                <div class="flex items-center space-x-1.5"><span class="w-3 h-3 rounded-full bg-rose-500"></span><span class="text-slate-300">고장</span></div>
-                            </div>
-                            <button onclick="openLocationForm()" class="bg-brand-600 hover:bg-brand-500 text-white px-3 py-1.5 rounded-xl text-sm font-medium flex items-center gap-1.5 transition-all shadow">
-                                <i class="fa-solid fa-folder-plus"></i> 라인 신설
-                            </button>
-                        </div>
-                    </div>
-                    <div id="layout-container" class="bg-slate-950 p-6 rounded-2xl border border-slate-800 space-y-8 overflow-x-auto min-h-[400px]"></div>
-                </div>
-            </section>
+<div id="location-modal" class="modal fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden" role="dialog" aria-modal="true">
+  <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-sm w-full p-6 shadow-2xl relative">
+    <button type="button" onclick="closeModal('location-modal')" aria-label="닫기" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+    <h3 id="location-modal-title" class="text-lg font-bold text-white mb-4"><i class="fa-solid fa-folder-plus text-brand-400"></i> 라인 추가</h3>
+    <form onsubmit="handleLocationSubmit(event)" class="space-y-4">
+      <input type="hidden" id="loc-form-id">
+      <div>
+        <label for="loc-form-name" class="block text-xs text-slate-400 mb-1">라인 / 구역 이름</label>
+        <input type="text" id="loc-form-name" required maxlength="40" placeholder="예: 가공 A라인, 프레스동" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+      </div>
+      <div>
+        <label for="loc-form-color" class="block text-xs text-slate-400 mb-1">테마 컬러</label>
+        <select id="loc-form-color" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+          <option value="blue">Blue (블루)</option>
+          <option value="indigo">Indigo (인디고)</option>
+          <option value="emerald">Emerald (에메랄드)</option>
+          <option value="amber">Amber (앰버)</option>
+          <option value="rose">Rose (로즈)</option>
+          <option value="slate">Slate (슬레이트)</option>
+        </select>
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button type="button" onclick="closeModal('location-modal')" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm">취소</button>
+        <button type="submit" class="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-xl text-sm shadow">저장</button>
+      </div>
+    </form>
+  </div>
+</div>
 
-            <!-- TAB 3: EQUIPMENT MASTER MANAGEMENT -->
-            <section id="tab-equipments" class="tab-content hidden space-y-6">
-                <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 flex flex-wrap gap-3 items-center justify-between">
-                    <div class="flex flex-wrap items-center gap-3 flex-1">
-                        <div class="relative min-w-[240px]">
-                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-500 text-sm"></i>
-                            <input type="text" id="eq-search" oninput="filterEquipments()" placeholder="설비명, 설비코드 검색..." class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-sm focus:outline-none focus:border-brand-500">
-                        </div>
-                        <select id="eq-filter-location" onchange="filterEquipments()" class="bg-slate-950 text-slate-300 border border-slate-800 rounded-xl px-3 py-2 text-sm"></select>
-                        <select id="eq-filter-status" onchange="filterEquipments()" class="bg-slate-950 text-slate-300 border border-slate-800 rounded-xl px-3 py-2 text-sm">
-                            <option value="ALL">전체 상태</option>
-                            <option value="running">정상 가동</option>
-                            <option value="warning">점검 필요</option>
-                            <option value="broken">고장 정지</option>
-                        </select>
-                    </div>
-                    <button onclick="openEqForm()" class="bg-brand-600 hover:bg-brand-500 text-white px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2 shadow">
-                        <i class="fa-solid fa-plus"></i> 설비 등록
-                    </button>
-                </div>
+<div id="equipment-modal" class="modal fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden" role="dialog" aria-modal="true">
+  <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+    <button type="button" onclick="closeModal('equipment-modal')" aria-label="닫기" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+    <h3 id="equipment-modal-title" class="text-lg font-bold text-white mb-4"><i class="fa-solid fa-gears text-brand-400"></i> 설비 등록</h3>
+    <form onsubmit="handleEquipmentSubmit(event)" class="space-y-4">
+      <input type="hidden" id="eq-form-id">
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label for="eq-form-code" class="block text-xs text-slate-400 mb-1">설비 코드</label>
+          <input type="text" id="eq-form-code" required maxlength="30" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+        </div>
+        <div>
+          <label for="eq-form-name" class="block text-xs text-slate-400 mb-1">설비명</label>
+          <input type="text" id="eq-form-name" required maxlength="40" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label for="eq-form-location" class="block text-xs text-slate-400 mb-1">배치 위치 (라인)</label>
+          <select id="eq-form-location" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none"></select>
+        </div>
+        <div>
+          <label for="eq-form-model" class="block text-xs text-slate-400 mb-1">제조사 / 모델</label>
+          <input type="text" id="eq-form-model" maxlength="40" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label for="eq-form-status" class="block text-xs text-slate-400 mb-1">가동 상태</label>
+          <select id="eq-form-status" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+            <option value="running">정상 가동</option>
+            <option value="warning">점검 필요</option>
+            <option value="broken">고장 정지</option>
+          </select>
+        </div>
+        <div>
+          <label for="eq-form-oee" class="block text-xs text-slate-400 mb-1">OEE (%)</label>
+          <input type="number" id="eq-form-oee" min="0" max="100" step="1" value="100" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label for="eq-form-vib" class="block text-xs text-slate-400 mb-1">진동 (mm/s)</label>
+          <input type="number" id="eq-form-vib" min="0" step="0.1" value="1.0" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+        </div>
+        <div>
+          <label for="eq-form-temp" class="block text-xs text-slate-400 mb-1">온도 (°C)</label>
+          <input type="number" id="eq-form-temp" step="1" value="35" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+        </div>
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button type="button" onclick="closeModal('equipment-modal')" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm">취소</button>
+        <button type="submit" class="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-xl text-sm shadow">저장</button>
+      </div>
+    </form>
+  </div>
+</div>
 
-                <div class="bg-slate-900/80 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-sm text-slate-300">
-                            <thead class="bg-slate-950 text-xs uppercase text-slate-400 border-b border-slate-800">
-                                <tr>
-                                    <th class="px-5 py-3.5">설비 코드/명</th>
-                                    <th class="px-5 py-3.5">위치 (라인)</th>
-                                    <th class="px-5 py-3.5">상태</th>
-                                    <th class="px-5 py-3.5">진동 / 온도</th>
-                                    <th class="px-5 py-3.5 text-right">관리</th>
-                                </tr>
-                            </thead>
-                            <tbody id="equipment-table-body" class="divide-y divide-slate-800/60"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
+<div id="workorder-modal" class="modal fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden" role="dialog" aria-modal="true">
+  <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+    <button type="button" onclick="closeModal('workorder-modal')" aria-label="닫기" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+    <h3 id="workorder-modal-title" class="text-lg font-bold text-white mb-4"><i class="fa-solid fa-triangle-exclamation text-rose-400"></i> 작업 접수</h3>
+    <form onsubmit="handleWorkOrderSubmit(event)" class="space-y-4">
+      <input type="hidden" id="wo-form-id">
+      <div>
+        <label for="wo-form-eq" class="block text-xs text-slate-400 mb-1">대상 설비</label>
+        <select id="wo-form-eq" required class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none"></select>
+      </div>
+      <div>
+        <label for="wo-form-title" class="block text-xs text-slate-400 mb-1">작업 제목</label>
+        <input type="text" id="wo-form-title" required maxlength="60" placeholder="예: 스핀들 과열로 정지" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label for="wo-form-priority" class="block text-xs text-slate-400 mb-1">우선 순위</label>
+          <select id="wo-form-priority" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+            <option value="HIGH">긴급</option><option value="MEDIUM" selected>보통</option><option value="LOW">낮음</option>
+          </select>
+        </div>
+        <div>
+          <label for="wo-form-type" class="block text-xs text-slate-400 mb-1">작업 유형</label>
+          <select id="wo-form-type" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+            <option value="고장수리">고장수리</option><option value="예방보전">예방보전</option><option value="개조/개선">설비 개조/개선</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label for="wo-form-assignee" class="block text-xs text-slate-400 mb-1">담당자</label>
+          <input type="text" id="wo-form-assignee" maxlength="20" placeholder="예: 김보전" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+        </div>
+        <div>
+          <label for="wo-form-cost" class="block text-xs text-slate-400 mb-1">보전 비용 (천원)</label>
+          <input type="number" id="wo-form-cost" min="0" step="1" value="0" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+        </div>
+      </div>
+      <div>
+        <label for="wo-form-desc" class="block text-xs text-slate-400 mb-1">현상 / 조치 내용</label>
+        <textarea id="wo-form-desc" rows="3" maxlength="500" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none"></textarea>
+      </div>
+      <p class="text-[11px] text-slate-500 flex items-start gap-1.5"><i class="fa-solid fa-circle-info mt-0.5"></i> 우선순위를 <b class="text-rose-400">긴급</b>으로 접수하면 대상 설비가 자동으로 '고장 정지' 상태가 됩니다.</p>
+      <div class="flex justify-end gap-2 pt-2">
+        <button type="button" onclick="closeModal('workorder-modal')" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm">취소</button>
+        <button type="submit" class="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-sm shadow">저장</button>
+      </div>
+    </form>
+  </div>
+</div>
 
-            <!-- TAB 4: WORK ORDERS -->
-            <section id="tab-workorders" class="tab-content hidden space-y-6">
-                <div class="flex flex-wrap justify-between items-center gap-4">
-                    <div>
-                        <h2 class="text-lg font-bold text-white flex items-center gap-2">
-                            <i class="fa-solid fa-wrench text-rose-400"></i> 작업 지시 & 고장 수리 관리
-                        </h2>
-                    </div>
-                    <button onclick="openWOForm()" class="bg-rose-600 hover:bg-rose-500 text-white px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2 shadow">
-                        <i class="fa-solid fa-plus"></i> 신규 지시 등록
-                    </button>
-                </div>
+<div id="sparepart-modal" class="modal fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden" role="dialog" aria-modal="true">
+  <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl relative">
+    <button type="button" onclick="closeModal('sparepart-modal')" aria-label="닫기" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+    <h3 id="sparepart-modal-title" class="text-lg font-bold text-white mb-4"><i class="fa-solid fa-boxes-packing text-cyan-400"></i> 부품 등록</h3>
+    <form onsubmit="handleSparePartSubmit(event)" class="space-y-4">
+      <input type="hidden" id="sp-form-id">
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label for="sp-form-code" class="block text-xs text-slate-400 mb-1">부품 코드</label>
+          <input type="text" id="sp-form-code" required maxlength="30" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+        </div>
+        <div>
+          <label for="sp-form-name" class="block text-xs text-slate-400 mb-1">부품명</label>
+          <input type="text" id="sp-form-name" required maxlength="40" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label for="sp-form-category" class="block text-xs text-slate-400 mb-1">분류</label>
+          <select id="sp-form-category" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+            <option value="기계부품">기계부품</option><option value="전장부품">전장부품</option>
+            <option value="소모품">소모품</option><option value="공압/유압">공압/유압</option>
+            <option value="기타부품" selected>기타부품</option>
+          </select>
+        </div>
+        <div>
+          <label for="sp-form-location" class="block text-xs text-slate-400 mb-1">보관 위치</label>
+          <input type="text" id="sp-form-location" maxlength="20" placeholder="예: A-01-02" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label for="sp-form-qty" class="block text-xs text-slate-400 mb-1">현재 수량</label>
+          <input type="number" id="sp-form-qty" required value="0" min="0" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+        </div>
+        <div>
+          <label for="sp-form-min" class="block text-xs text-slate-400 mb-1">안전 재고</label>
+          <input type="number" id="sp-form-min" required value="1" min="0" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+        </div>
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button type="button" onclick="closeModal('sparepart-modal')" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm">취소</button>
+        <button type="submit" class="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl text-sm shadow">저장</button>
+      </div>
+    </form>
+  </div>
+</div>
 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="bg-slate-900/70 border border-slate-800 rounded-2xl p-4 flex flex-col">
-                        <div class="flex justify-between items-center mb-3 pb-2 border-b border-slate-800">
-                            <span class="font-bold text-slate-200 flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span> 접수 대기</span>
-                            <span id="count-pending" class="bg-slate-800 text-slate-400 text-xs px-2.5 py-0.5 rounded-full font-mono">0</span>
-                        </div>
-                        <div id="wo-col-pending" class="space-y-3 flex-1 min-h-[300px]"></div>
-                    </div>
-                    <div class="bg-slate-900/70 border border-slate-800 rounded-2xl p-4 flex flex-col">
-                        <div class="flex justify-between items-center mb-3 pb-2 border-b border-slate-800">
-                            <span class="font-bold text-slate-200 flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-blue-400"></span> 수리 진행 중</span>
-                            <span id="count-inprogress" class="bg-slate-800 text-slate-400 text-xs px-2.5 py-0.5 rounded-full font-mono">0</span>
-                        </div>
-                        <div id="wo-col-inprogress" class="space-y-3 flex-1 min-h-[300px]"></div>
-                    </div>
-                    <div class="bg-slate-900/70 border border-slate-800 rounded-2xl p-4 flex flex-col">
-                        <div class="flex justify-between items-center mb-3 pb-2 border-b border-slate-800">
-                            <span class="font-bold text-slate-200 flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span> 조치 완료</span>
-                            <span id="count-completed" class="bg-slate-800 text-slate-400 text-xs px-2.5 py-0.5 rounded-full font-mono">0</span>
-                        </div>
-                        <div id="wo-col-completed" class="space-y-3 flex-1 min-h-[300px]"></div>
-                    </div>
-                </div>
-            </section>
+<div id="pm-modal" class="modal fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden" role="dialog" aria-modal="true">
+  <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl relative">
+    <button type="button" onclick="closeModal('pm-modal')" aria-label="닫기" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+    <h3 id="pm-modal-title" class="text-lg font-bold text-white mb-4"><i class="fa-solid fa-calendar-check text-amber-400"></i> 점검항목 추가</h3>
+    <form onsubmit="handlePMSubmit(event)" class="space-y-4">
+      <input type="hidden" id="pm-form-id">
+      <div>
+        <label for="pm-form-eq" class="block text-xs text-slate-400 mb-1">대상 설비</label>
+        <select id="pm-form-eq" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none"></select>
+      </div>
+      <div>
+        <label for="pm-form-title" class="block text-xs text-slate-400 mb-1">점검 항목</label>
+        <input type="text" id="pm-form-title" required maxlength="60" placeholder="예: 절삭유 누유 확인" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+      </div>
+      <div>
+        <label for="pm-form-freq" class="block text-xs text-slate-400 mb-1">점검 주기</label>
+        <select id="pm-form-freq" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+          <option value="매일">매일</option><option value="주간">주간</option><option value="월간">월간</option>
+        </select>
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button type="button" onclick="closeModal('pm-modal')" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm">취소</button>
+        <button type="submit" class="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-sm shadow">저장</button>
+      </div>
+    </form>
+  </div>
+</div>
 
-            <!-- TAB 5: PREVENTIVE MAINTENANCE (PM) -->
-            <section id="tab-pm" class="tab-content hidden space-y-6">
-                <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
-                    <div class="flex flex-wrap justify-between items-center gap-4 mb-6">
-                        <div>
-                            <h2 class="text-lg font-bold text-white flex items-center gap-2">
-                                <i class="fa-solid fa-calendar-check text-amber-400"></i>
-                                정기 점검 및 예방보전 (PM)
-                            </h2>
-                        </div>
-                        <div class="flex items-center gap-4">
-                            <div class="text-xs text-slate-400">오늘 완료율: <span id="pm-completion-rate" class="text-sm font-bold text-amber-400">0%</span></div>
-                            <button onclick="openPMForm()" class="bg-amber-600 hover:bg-amber-500 text-white px-3 py-1.5 rounded-xl text-xs font-medium flex items-center gap-1.5">
-                                <i class="fa-solid fa-plus"></i> 신규 등록
-                            </button>
-                        </div>
-                    </div>
-                    <div id="pm-list-container" class="space-y-4"></div>
-                </div>
-            </section>
+<!-- 이동 대상 라인 선택 (모바일 대체 수단) -->
+<div id="move-modal" class="modal fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden" role="dialog" aria-modal="true">
+  <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-xs w-full p-6 shadow-2xl relative">
+    <button type="button" onclick="closeModal('move-modal')" aria-label="닫기" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+    <h3 class="text-lg font-bold text-white mb-1"><i class="fa-solid fa-right-left text-brand-400"></i> 라인 이동</h3>
+    <p id="move-modal-target" class="text-xs text-slate-400 mb-4"></p>
+    <form onsubmit="handleMoveSubmit(event)" class="space-y-4">
+      <input type="hidden" id="move-form-eqid">
+      <select id="move-form-loc" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none"></select>
+      <div class="flex justify-end gap-2">
+        <button type="button" onclick="closeModal('move-modal')" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm">취소</button>
+        <button type="submit" class="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-xl text-sm shadow">이동</button>
+      </div>
+    </form>
+  </div>
+</div>
 
-            <!-- TAB 6: SPARE PARTS -->
-            <section id="tab-spares" class="tab-content hidden space-y-6">
-                <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
-                    <div class="flex flex-wrap justify-between items-center gap-4 mb-6">
-                        <div>
-                            <h2 class="text-lg font-bold text-white flex items-center gap-2">
-                                <i class="fa-solid fa-boxes-packing text-cyan-400"></i> 공무 예비 부품 재고 관리
-                            </h2>
-                        </div>
-                        <button onclick="openSPForm()" class="bg-cyan-600 hover:bg-cyan-500 text-white px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2 shadow">
-                            <i class="fa-solid fa-plus"></i> 신규 부품 등록
-                        </button>
-                    </div>
+<!-- 삭제 등 되돌릴 수 없는 동작 확인 -->
+<div id="confirm-modal" class="modal fixed inset-0 bg-slate-950/85 backdrop-blur-sm z-[60] flex items-center justify-center p-4 hidden" role="alertdialog" aria-modal="true">
+  <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-sm w-full p-6 shadow-2xl">
+    <div class="flex items-start gap-3">
+      <div id="confirm-icon" class="bg-rose-500/10 text-rose-400 p-2.5 rounded-xl shrink-0"><i class="fa-solid fa-triangle-exclamation"></i></div>
+      <div class="flex-1">
+        <h3 id="confirm-title" class="font-bold text-white">삭제할까요?</h3>
+        <p id="confirm-message" class="text-xs text-slate-400 mt-1.5 leading-relaxed"></p>
+      </div>
+    </div>
+    <div class="flex justify-end gap-2 mt-5">
+      <button type="button" id="confirm-cancel" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm">취소</button>
+      <button type="button" id="confirm-ok" class="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-sm shadow">삭제</button>
+    </div>
+  </div>
+</div>
 
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-sm text-slate-300">
-                            <thead class="bg-slate-950 text-xs uppercase text-slate-400 border-b border-slate-800">
-                                <tr>
-                                    <th class="px-5 py-3.5">부품 코드/명</th>
-                                    <th class="px-5 py-3.5">현재 재고</th>
-                                    <th class="px-5 py-3.5">안전 재고</th>
-                                    <th class="px-5 py-3.5 text-right">수량조정 / 관리</th>
-                                </tr>
-                            </thead>
-                            <tbody id="spare-parts-table-body" class="divide-y divide-slate-800"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
-            
-            <!-- TAB 7: ANALYTICS -->
-            <section id="tab-analytics" class="tab-content hidden space-y-6">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
-                        <h3 class="font-bold text-slate-100 mb-4 flex items-center gap-2"><i class="fa-solid fa-sack-dollar text-emerald-400"></i> 보전비용 트렌드</h3>
-                        <div class="h-64"><canvas id="chartMonthlyCost"></canvas></div>
-                    </div>
-                    <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
-                        <h3 class="font-bold text-slate-100 mb-4 flex items-center gap-2"><i class="fa-solid fa-chart-pie text-cyan-400"></i> 작업 유형 비중</h3>
-                        <div class="h-64 flex justify-center"><canvas id="chartWorkTypePie"></canvas></div>
-                    </div>
-                </div>
-            </section>
-        </main>
+<div id="toast-container" class="fixed bottom-5 right-5 z-[70] flex flex-col space-y-2 pointer-events-none"></div>
+
+<script>
+/* =========================================================
+   공무팀 통합 설비관리 시스템 (FMS) v3.1
+   - 단일 파일 구조 / Google Apps Script 시트 연동
+   ========================================================= */
+
+/* ---------- 0. 연동 설정 ---------- */
+// Apps Script 웹앱 URL. 비워두면 시트 연동 없이 화면 안에서만 동작합니다.
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzlSWZP34ZoFAHhKfl72k6-6Erc0kqiy8Z7u7cdILLeWZpIqZ49UZbmRy9R4HRGtyuz/exec';
+
+/* ---------- 1. 초기(예시) 데이터 ----------
+   시트에서 데이터를 불러오면 아래 값은 대체됩니다. */
+let locations = [
+  { id: 'LOC-1', name: '가공 A라인', color: 'blue' },
+  { id: 'LOC-2', name: '조립 B라인', color: 'indigo' },
+  { id: 'LOC-3', name: '동력 유틸리티동', color: 'slate' }
+];
+
+let equipments = [
+  { id:'EQ-101', code:'CNC-001',  name:'CNC 선반 #1',       location:'가공 A라인',      model:'화천 CUTEX-180',  status:'running', temp:42, vibration:1.2, oee:92 },
+  { id:'EQ-103', code:'MCT-001',  name:'5축 머시닝센터 #1', location:'가공 A라인',      model:'두산 DNM-5700',   status:'broken',  temp:68, vibration:4.8, oee:45 },
+  { id:'EQ-106', code:'COMP-01',  name:'에어 콤프레샤',     location:'동력 유틸리티동', model:'유진 MAVIC-100',  status:'running', temp:72, vibration:1.1, oee:98 }
+];
+
+let workOrders = [
+  { id:'WO-2026-0801', eqId:'EQ-103', eqName:'5축 머시닝센터 #1', title:'스핀들 과열 정지',
+    priority:'HIGH', type:'고장수리', status:'inprogress', assignee:'김보전',
+    date:'2026-08-09 09:15', completedAt:'', cost:0, desc:'온도 68도까지 상승 후 자동 정지' }
+];
+
+let pmTasks = [
+  { id:'PM-01', eqId:'EQ-101', eqName:'CNC 선반 #1',   title:'절삭유 누유 확인',        freq:'매일', done:true,  lastDone:'' },
+  { id:'PM-02', eqId:'EQ-106', eqName:'에어 콤프레샤', title:'응축수 트랩 드레인 배출', freq:'매일', done:false, lastDone:'' }
+];
+
+let spareParts = [
+  { id:'SP-01', code:'BRG-6205', name:'스핀들 베어링', category:'기계부품', qty:12, minQty:4, location:'A-01-02' },
+  { id:'SP-02', code:'FLT-01',   name:'오일필터',      category:'소모품',   qty:2,  minQty:3, location:'C-03-01' }
+];
+
+const UNASSIGNED = '미지정';
+const charts = {};
+
+/* ---------- 2. 공통 유틸 ---------- */
+
+// innerHTML 삽입 전 반드시 통과시킬 것. 설비명에 따옴표가 섞여도 화면이 깨지지 않습니다.
+function esc(v) {
+  return String(v ?? '').replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+}
+
+// 시간순 정렬이 가능하고 충돌하지 않는 ID
+function uid(prefix) {
+  return `${prefix}-${Date.now().toString(36).toUpperCase()}${Math.floor(Math.random() * 46656).toString(36).toUpperCase().padStart(3, '0')}`;
+}
+
+const num = (v, fallback = 0) => {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : fallback;
+};
+
+// 접속 지역과 무관하게 항상 한국 표준시로 표기
+const KST_FMT = new Intl.DateTimeFormat('en-CA', {
+  timeZone: 'Asia/Seoul', hourCycle: 'h23',
+  year: 'numeric', month: '2-digit', day: '2-digit',
+  hour: '2-digit', minute: '2-digit', second: '2-digit'
+});
+function kstNow(d = new Date()) {
+  const p = {};
+  KST_FMT.formatToParts(d).forEach(x => { p[x.type] = x.value; });
+  return `${p.year}-${p.month}-${p.day} ${p.hour}:${p.minute}:${p.second}`;
+}
+const kstDateTime = () => kstNow().slice(0, 16);
+const kstDate = () => kstNow().slice(0, 10);
+
+const STATUS = {
+  running: { label: '정상 가동', text: 'text-emerald-400', chip: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400', border: 'border-emerald-500/40', dot: 'bg-emerald-500', hex: '#10b981' },
+  warning: { label: '점검 필요', text: 'text-amber-400',   chip: 'bg-amber-500/10 border-amber-500/30 text-amber-400',     border: 'border-amber-500/50', dot: 'bg-amber-500',  hex: '#f59e0b' },
+  broken:  { label: '고장 정지', text: 'text-rose-400',    chip: 'bg-rose-500/10 border-rose-500/30 text-rose-400',        border: 'border-rose-500',     dot: 'bg-rose-500',   hex: '#f43f5e' }
+};
+const statusOf = s => STATUS[s] || STATUS.running;
+
+const PRIORITY = {
+  HIGH:   { label: '긴급', chip: 'bg-rose-500/15 text-rose-300 border-rose-500/40' },
+  MEDIUM: { label: '보통', chip: 'bg-slate-700/60 text-slate-300 border-slate-600' },
+  LOW:    { label: '낮음', chip: 'bg-slate-800 text-slate-400 border-slate-700' }
+};
+const priorityOf = p => PRIORITY[p] || PRIORITY.MEDIUM;
+
+const LOC_THEME = {
+  blue:    'bg-brand-900/80 text-brand-300 border-brand-700',
+  indigo:  'bg-indigo-900/80 text-indigo-300 border-indigo-700',
+  slate:   'bg-slate-800 text-slate-300 border-slate-600',
+  emerald: 'bg-emerald-900/80 text-emerald-300 border-emerald-700',
+  amber:   'bg-amber-900/80 text-amber-300 border-amber-700',
+  rose:    'bg-rose-900/80 text-rose-300 border-rose-700'
+};
+const locTheme = c => LOC_THEME[c] || LOC_THEME.slate;
+
+const eqById = id => equipments.find(e => e.id === id);
+const eqNameOf = wo => (eqById(wo.eqId)?.name) || wo.eqName || '삭제된 설비';
+const emptyState = (icon, msg) =>
+  `<div class="text-center py-10 text-slate-600 text-xs"><i class="fa-solid ${icon} text-2xl mb-2 block opacity-60"></i>${esc(msg)}</div>`;
+
+/* ---------- 3. 시트 동기화 (큐 + 재시도 + 상태 표시) ---------- */
+const syncQueue = [];
+let syncing = false;
+let failedCount = 0;
+
+function setSyncBadge(state, text) {
+  const dot = document.getElementById('sync-dot');
+  const label = document.getElementById('sync-text');
+  if (!dot || !label) return;
+  const map = {
+    idle:    ['bg-slate-600', '연동 대기'],
+    ok:      ['bg-emerald-500', '시트 연동됨'],
+    busy:    ['bg-amber-400 animate-pulse', '저장 중'],
+    error:   ['bg-rose-500', '연동 실패 · 눌러서 재시도'],
+    offline: ['bg-slate-600', '로컬 모드']
+  };
+  const [cls, defText] = map[state] || map.idle;
+  dot.className = `w-2 h-2 rounded-full ${cls}`;
+  label.textContent = text || defText;
+}
+
+function syncToSheet(sheetName, dataObj, action = 'upsert') {
+  if (!APPS_SCRIPT_URL) return;
+  syncQueue.push({ sheetName, data: dataObj, action, tries: 0 });
+  processSyncQueue();
+}
+
+async function processSyncQueue() {
+  if (syncing || syncQueue.length === 0) return;
+  syncing = true;
+  setSyncBadge('busy', `저장 중 (${syncQueue.length})`);
+
+  while (syncQueue.length) {
+    const job = syncQueue[0];
+    try {
+      await fetch(APPS_SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // preflight 회피
+        body: JSON.stringify({ sheetName: job.sheetName, data: job.data, action: job.action })
+      });
+      syncQueue.shift();
+      failedCount = 0;
+    } catch (err) {
+      job.tries += 1;
+      if (job.tries >= 2) {
+        syncQueue.shift();
+        failedCount += 1;
+        console.error('시트 저장 실패:', job.sheetName, err);
+      } else {
+        await new Promise(r => setTimeout(r, 1200));
+      }
+    }
+  }
+
+  syncing = false;
+  setSyncBadge(failedCount ? 'error' : 'ok', failedCount ? `저장 실패 ${failedCount}건` : '');
+  if (failedCount) showToast('시트 저장에 실패한 항목이 있습니다. 화면 데이터는 유지됩니다.', 'warning');
+}
+
+function retrySync() {
+  if (!APPS_SCRIPT_URL) { showToast('시트 URL이 설정되지 않았습니다.', 'info'); return; }
+  failedCount = 0;
+  loadFromSheet(true);
+}
+
+// 최초 진입 시 시트에서 데이터 복원. 실패하면 예시 데이터로 계속 진행합니다.
+async function loadFromSheet(manual = false) {
+  if (!APPS_SCRIPT_URL) { setSyncBadge('offline'); return; }
+  setSyncBadge('busy', '불러오는 중');
+  try {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 10000);
+    const res = await fetch(`${APPS_SCRIPT_URL}?action=getAll`, { signal: ctrl.signal });
+    clearTimeout(timer);
+    const json = await res.json();
+
+    const pick = (key, cur) => (Array.isArray(json?.[key]) && json[key].length ? json[key] : null);
+    const L = pick('Locations'), E = pick('Equipments'), W = pick('WorkOrders'),
+          P = pick('PMTasks'),   S = pick('SpareParts');
+
+    if (L || E || W || P || S) {
+      if (L) locations = L;
+      if (E) equipments = E.map(e => ({ ...e, temp: num(e.temp, 0), vibration: num(e.vibration, 0), oee: num(e.oee, 0) }));
+      if (W) workOrders = W.map(w => ({ ...w, cost: num(w.cost, 0) }));
+      if (P) pmTasks = P.map(p => ({ ...p, done: p.done === true || p.done === 'TRUE' || p.done === 'true' }));
+      if (S) spareParts = S.map(s => ({ ...s, qty: num(s.qty, 0), minQty: num(s.minQty, 0) }));
+      showToast('시트에서 최신 데이터를 불러왔습니다.', 'success');
+    } else if (manual) {
+      showToast('시트가 비어 있어 화면 데이터를 유지합니다.', 'info');
+    }
+    setSyncBadge('ok');
+  } catch (err) {
+    console.warn('시트 로드 실패 — 예시 데이터로 시작합니다.', err);
+    setSyncBadge('error', '불러오기 실패');
+    if (manual) showToast('시트를 불러오지 못했습니다. 웹앱 배포 상태를 확인하세요.', 'warning');
+  }
+  resetExpiredPM();
+  renderAll();
+}
+
+/* ---------- 4. 모달 / 토스트 / 확인창 ---------- */
+function openModal(id) {
+  const m = document.getElementById(id);
+  if (!m) return;
+  m.classList.remove('hidden');
+  m.querySelector('input:not([type=hidden]), select, textarea, button')?.focus();
+}
+function closeModal(id) { document.getElementById(id)?.classList.add('hidden'); }
+function closeTopModal() {
+  const open = [...document.querySelectorAll('.modal:not(.hidden)')].pop();
+  if (!open) return;
+  // 확인창은 '취소'를 눌러야 대기 중인 처리가 정리됩니다.
+  if (open.id === 'confirm-modal') document.getElementById('confirm-cancel').click();
+  else open.classList.add('hidden');
+}
+
+function showToast(msg, type = 'info') {
+  const tone = {
+    success: 'bg-emerald-900/90 border-emerald-500 text-emerald-100',
+    warning: 'bg-rose-900/90 border-rose-500 text-rose-100',
+    info:    'bg-slate-900/95 border-brand-500 text-slate-100'
+  }[type] || 'bg-slate-900/95 border-brand-500 text-slate-100';
+  const icon = { success: 'fa-circle-check', warning: 'fa-triangle-exclamation', info: 'fa-circle-info' }[type] || 'fa-circle-info';
+
+  const toast = document.createElement('div');
+  toast.className = `toast-enter px-4 py-3 rounded-xl border text-xs font-medium shadow-2xl flex items-center gap-2 transition-all duration-300 pointer-events-auto max-w-xs ${tone}`;
+  toast.setAttribute('role', 'status');
+  toast.innerHTML = `<i class="fa-solid ${icon}"></i><span>${esc(msg)}</span>`;
+  document.getElementById('toast-container').appendChild(toast);
+  requestAnimationFrame(() => toast.classList.remove('toast-enter'));
+  setTimeout(() => {
+    toast.classList.add('opacity-0', 'translate-y-2');
+    setTimeout(() => toast.remove(), 300);
+  }, 2800);
+}
+
+// 삭제처럼 되돌릴 수 없는 동작 앞에 세우는 확인창 (iframe에서 막히는 confirm() 대체)
+function askConfirm({ title, message, okLabel = '삭제', danger = true }) {
+  return new Promise(resolve => {
+    document.getElementById('confirm-title').textContent = title;
+    document.getElementById('confirm-message').textContent = message;
+    const ok = document.getElementById('confirm-ok');
+    const cancel = document.getElementById('confirm-cancel');
+    ok.textContent = okLabel;
+    ok.className = `px-4 py-2 ${danger ? 'bg-rose-600 hover:bg-rose-500' : 'bg-brand-600 hover:bg-brand-500'} text-white rounded-xl text-sm shadow`;
+    document.getElementById('confirm-icon').className =
+      `${danger ? 'bg-rose-500/10 text-rose-400' : 'bg-brand-500/10 text-brand-400'} p-2.5 rounded-xl shrink-0`;
+
+    const finish = (val) => {
+      closeModal('confirm-modal');
+      ok.removeEventListener('click', onOk);
+      cancel.removeEventListener('click', onCancel);
+      resolve(val);
+    };
+    const onOk = () => finish(true);
+    const onCancel = () => finish(false);
+    ok.addEventListener('click', onOk);
+    cancel.addEventListener('click', onCancel);
+    openModal('confirm-modal');
+    ok.focus();
+  });
+}
+
+/* ---------- 5. 탭 전환 / 렌더 총괄 ---------- */
+let currentTab = 'dashboard';
+
+function switchTab(tabId) {
+  currentTab = tabId;
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+  document.querySelectorAll('.nav-btn').forEach(btn => {
+    btn.classList.remove('bg-brand-600', 'text-white');
+    btn.classList.add('text-slate-400');
+    btn.removeAttribute('aria-current');
+  });
+  document.getElementById(`tab-${tabId}`)?.classList.remove('hidden');
+  const nav = document.getElementById(`nav-${tabId}`);
+  if (nav) {
+    nav.classList.add('bg-brand-600', 'text-white');
+    nav.classList.remove('text-slate-400');
+    nav.setAttribute('aria-current', 'page');
+  }
+  renderAll();
+}
+
+// 데이터가 바뀌면 화면 전체를 한 번에 맞춥니다 (탭 간 수치 불일치 방지).
+function renderAll() {
+  populateLocationSelects();
+  populateEqSelects();
+  renderHeaderStats();
+  if (currentTab === 'dashboard')  renderDashboard();
+  if (currentTab === 'layout')     renderLayoutMap();
+  if (currentTab === 'equipments') renderEquipmentTable();
+  if (currentTab === 'workorders') renderWorkOrders();
+  if (currentTab === 'pm')         renderPMList();
+  if (currentTab === 'spares')     renderSparePartsTable();
+  if (currentTab === 'analytics')  renderAnalyticsCharts();
+  renderBadges();
+}
+
+function renderBadges() {
+  const open = workOrders.filter(w => w.status !== 'completed').length;
+  document.getElementById('pending-wo-badge').textContent = open;
+  const low = spareParts.filter(s => num(s.qty) <= num(s.minQty)).length;
+  const badge = document.getElementById('low-stock-badge');
+  badge.textContent = low;
+  badge.classList.toggle('hidden', low === 0);
+}
+
+function updateClock() {
+  document.getElementById('live-clock').textContent = kstNow();
+}
+
+/* ---------- 6. 셀렉트 박스 구성 ---------- */
+function populateLocationSelects() {
+  const opts = locations.map(l => `<option value="${esc(l.name)}">${esc(l.name)}</option>`).join('');
+  const filter = document.getElementById('eq-filter-location');
+  if (filter) {
+    const keep = filter.value;
+    filter.innerHTML = `<option value="ALL">전체 위치</option>${opts}<option value="${UNASSIGNED}">${UNASSIGNED}</option>`;
+    filter.value = [...filter.options].some(o => o.value === keep) ? keep : 'ALL';
+  }
+  const form = document.getElementById('eq-form-location');
+  if (form) form.innerHTML = opts + `<option value="${UNASSIGNED}">${UNASSIGNED}</option>`;
+  const move = document.getElementById('move-form-loc');
+  if (move) move.innerHTML = opts + `<option value="${UNASSIGNED}">${UNASSIGNED}</option>`;
+}
+
+function populateEqSelects() {
+  const opts = equipments.length
+    ? equipments.map(e => `<option value="${esc(e.id)}">${esc(e.code)} · ${esc(e.name)}</option>`).join('')
+    : `<option value="">등록된 설비가 없습니다</option>`;
+  ['wo-form-eq', 'pm-form-eq'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const keep = el.value;
+    el.innerHTML = opts;
+    if ([...el.options].some(o => o.value === keep)) el.value = keep;
+  });
+}
+
+/* ---------- 7. 대시보드 ---------- */
+function renderHeaderStats() {
+  const total = equipments.length;
+  const running = equipments.filter(e => e.status === 'running').length;
+  const broken = equipments.filter(e => e.status === 'broken').length;
+  const avgOee = total ? Math.round(equipments.reduce((a, e) => a + num(e.oee), 0) / total) : 0;
+
+  document.getElementById('header-total-eq').textContent = `${total}대`;
+  document.getElementById('header-running-eq').textContent = `${running}대`;
+  document.getElementById('header-broken-eq').textContent = `${broken}대`;
+  document.getElementById('header-oee').textContent = `${avgOee}%`;
+}
+
+function renderDashboard() {
+  const total = equipments.length;
+  const avgOee = total ? Math.round(equipments.reduce((a, e) => a + num(e.oee), 0) / total) : 0;
+  const openWO = workOrders.filter(w => w.status !== 'completed');
+  const urgent = openWO.filter(w => w.priority === 'HIGH').length;
+  const pmDone = pmTasks.filter(p => p.done).length;
+  const lowStock = spareParts.filter(s => num(s.qty) <= num(s.minQty));
+
+  document.getElementById('dash-oee').textContent = `${avgOee}%`;
+  document.getElementById('dash-oee-sub').textContent = `설비 ${total}대 기준`;
+  document.getElementById('dash-active-repair').textContent = `${openWO.length} 건`;
+  document.getElementById('dash-active-sub').textContent = `긴급 ${urgent}건`;
+  document.getElementById('dash-pm-count').textContent = `${pmDone}/${pmTasks.length} 건`;
+  document.getElementById('dash-pm-progress').style.width = pmTasks.length ? `${(pmDone / pmTasks.length) * 100}%` : '0%';
+  document.getElementById('dash-low-stock').textContent = `${lowStock.length} 품목`;
+  document.getElementById('dash-low-stock-sub').textContent = `전체 ${spareParts.length}품목 중`;
+
+  // 라인별 요약
+  const summary = document.getElementById('dash-line-summary');
+  const groups = [...locations.map(l => ({ name: l.name, color: l.color })),
+                  ...(equipments.some(e => !isKnownLocation(e.location)) ? [{ name: UNASSIGNED, color: 'slate' }] : [])];
+
+  summary.innerHTML = groups.length ? groups.map(g => {
+    const eqs = equipments.filter(e => normalizeLoc(e.location) === g.name);
+    const run = eqs.filter(e => e.status === 'running').length;
+    const warn = eqs.filter(e => e.status === 'warning').length;
+    const brk = eqs.filter(e => e.status === 'broken').length;
+    const oee = eqs.length ? Math.round(eqs.reduce((a, e) => a + num(e.oee), 0) / eqs.length) : 0;
+    return `
+      <button type="button" onclick="switchTab('layout')" class="text-left bg-slate-950 p-4 rounded-xl border border-slate-800 hover:border-slate-700 transition-colors">
+        <div class="flex items-center justify-between gap-2">
+          <span class="${locTheme(g.color)} border text-[11px] font-bold px-2.5 py-1 rounded-lg truncate">${esc(g.name)}</span>
+          <span class="text-[11px] text-slate-500 shrink-0">${eqs.length}대</span>
+        </div>
+        <div class="flex items-center gap-3 mt-3 text-[11px]">
+          <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-500"></span><span class="text-slate-300">${run}</span></span>
+          <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-amber-500"></span><span class="text-slate-300">${warn}</span></span>
+          <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-rose-500"></span><span class="text-slate-300">${brk}</span></span>
+          <span class="ml-auto text-slate-500">OEE <b class="text-slate-300">${oee}%</b></span>
+        </div>
+      </button>`;
+  }).join('') : emptyState('fa-folder-plus', '라인을 먼저 만들어 주세요.');
+
+  // 최근 접수
+  const recent = [...workOrders].sort((a, b) => String(b.date).localeCompare(String(a.date))).slice(0, 6);
+  document.getElementById('dash-recent-orders').innerHTML = recent.length ? recent.map(wo => {
+    const p = priorityOf(wo.priority);
+    const stateLabel = { pending: '접수 대기', inprogress: '진행 중', completed: '완료' }[wo.status] || wo.status;
+    return `
+      <button type="button" onclick="switchTab('workorders')" class="w-full text-left bg-slate-950 p-3 rounded-xl border border-slate-800 hover:border-slate-700 transition-colors">
+        <div class="flex items-start justify-between gap-2">
+          <p class="font-bold text-slate-200 text-xs leading-snug">${esc(wo.title)}</p>
+          <span class="${p.chip} border text-[10px] px-1.5 py-0.5 rounded shrink-0">${p.label}</span>
+        </div>
+        <p class="text-[11px] text-slate-500 mt-1.5">${esc(eqNameOf(wo))} · ${stateLabel} · ${esc(wo.date || '')}</p>
+      </button>`;
+  }).join('') : emptyState('fa-inbox', '접수된 작업이 없습니다.');
+}
+
+/* ---------- 8. 배치도 ---------- */
+const isKnownLocation = name => locations.some(l => l.name === name);
+const normalizeLoc = name => (isKnownLocation(name) ? name : UNASSIGNED);
+
+let draggedEqId = null;
+
+function handleDragStart(e, id) {
+  draggedEqId = id;
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', id); // Firefox 호환
+  const card = e.currentTarget;
+  setTimeout(() => { card.classList.add('dragging'); document.body.classList.add('is-dragging'); }, 0);
+}
+function handleDragEnd(e) {
+  e.currentTarget.classList.remove('dragging');
+  document.body.classList.remove('is-dragging');
+  draggedEqId = null;
+  document.querySelectorAll('.drop-zone').forEach(z => z.classList.remove('drag-over'));
+}
+function handleDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  e.currentTarget.classList.add('drag-over');
+}
+function handleDragLeave(e) {
+  if (!e.currentTarget.contains(e.relatedTarget)) e.currentTarget.classList.remove('drag-over');
+}
+function handleDrop(e, locId) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over');
+  const id = draggedEqId || e.dataTransfer.getData('text/plain');
+  if (!id) return;
+  const targetName = locId === UNASSIGNED ? UNASSIGNED : (locations.find(l => l.id === locId)?.name);
+  if (targetName) moveEquipment(id, targetName);
+}
+
+function moveEquipment(eqId, targetName) {
+  const eq = eqById(eqId);
+  if (!eq || eq.location === targetName) return;
+  eq.location = targetName;
+  syncToSheet('Equipments', eq, 'upsert');
+  renderAll();
+  showToast(`'${eq.name}' 설비를 ${targetName}(으)로 옮겼습니다.`, 'success');
+}
+
+function openMoveModal(e, eqId) {
+  e.stopPropagation();
+  const eq = eqById(eqId);
+  if (!eq) return;
+  document.getElementById('move-form-eqid').value = eqId;
+  document.getElementById('move-modal-target').textContent = `${eq.code} · ${eq.name}`;
+  populateLocationSelects();
+  document.getElementById('move-form-loc').value = eq.location;
+  openModal('move-modal');
+}
+function handleMoveSubmit(e) {
+  e.preventDefault();
+  moveEquipment(document.getElementById('move-form-eqid').value, document.getElementById('move-form-loc').value);
+  closeModal('move-modal');
+}
+
+function equipmentCard(eq) {
+  const st = statusOf(eq.status);
+  return `
+    <div draggable="true"
+         ondragstart="handleDragStart(event, '${esc(eq.id)}')"
+         ondragend="handleDragEnd(event)"
+         onclick="openEquipmentDetail('${esc(eq.id)}')"
+         class="bg-slate-900 border-2 ${st.border} rounded-xl p-4 cursor-grab active:cursor-grabbing relative group transition-colors hover:bg-slate-800 shadow-md">
+      <div class="absolute top-2 right-2 flex gap-1 z-10 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100 transition-opacity">
+        <button type="button" onclick="openMoveModal(event, '${esc(eq.id)}')" aria-label="라인 이동" title="라인 이동" class="bg-slate-800/90 p-1.5 rounded text-slate-300 hover:text-white hover:bg-brand-600 transition-colors"><i class="fa-solid fa-right-left text-[10px]"></i></button>
+        <button type="button" onclick="editEqFromMap(event, '${esc(eq.id)}')" aria-label="설비 수정" title="수정" class="bg-slate-800/90 p-1.5 rounded text-slate-300 hover:text-white hover:bg-brand-600 transition-colors"><i class="fa-solid fa-pen text-[10px]"></i></button>
+        <button type="button" onclick="deleteEqFromMap(event, '${esc(eq.id)}')" aria-label="설비 삭제" title="삭제" class="bg-slate-800/90 p-1.5 rounded text-slate-300 hover:text-white hover:bg-rose-600 transition-colors"><i class="fa-solid fa-trash text-[10px]"></i></button>
+      </div>
+      <div class="flex items-center gap-2 mb-1">
+        <span class="w-2 h-2 rounded-full ${st.dot} shrink-0"></span>
+        <h4 class="font-bold text-sm text-slate-100 pr-16 truncate">${esc(eq.name)}</h4>
+      </div>
+      <p class="text-[10px] text-slate-500 mb-2 truncate">${esc(eq.code)} · ${esc(eq.model || '모델 미등록')}</p>
+      <div class="flex justify-between items-center text-[11px] pt-2 border-t border-slate-800">
+        <span class="text-slate-500">진동 <span class="text-slate-300 font-mono">${num(eq.vibration)}</span></span>
+        <span class="text-slate-500">온도 <span class="text-slate-300 font-mono">${num(eq.temp)}°C</span></span>
+      </div>
+    </div>`;
+}
+
+function editEqFromMap(e, id) { e.stopPropagation(); openEqForm(id); }
+function deleteEqFromMap(e, id) { e.stopPropagation(); deleteEquipment(id); }
+
+function renderLayoutMap() {
+  const container = document.getElementById('layout-container');
+  const orphanExists = equipments.some(e => !isKnownLocation(e.location));
+
+  if (!locations.length && !orphanExists) {
+    container.innerHTML = `
+      <div class="text-center py-16 text-slate-500">
+        <i class="fa-solid fa-folder-plus text-4xl mb-3 block opacity-60"></i>
+        <p class="text-sm">아직 라인이 없습니다.</p>
+        <button type="button" onclick="openLocationForm()" class="mt-4 bg-brand-600 hover:bg-brand-500 text-white px-4 py-2 rounded-xl text-sm">첫 라인 만들기</button>
+      </div>`;
+    return;
+  }
+
+  const addCard = locName => `
+    <button type="button" onclick="openEqForm(null, '${esc(locName)}')" class="border-2 border-dashed border-slate-700/50 hover:border-brand-500/60 flex flex-col items-center justify-center p-4 cursor-pointer hover:bg-slate-900/50 rounded-xl transition-colors h-full min-h-[110px] group">
+      <span class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center group-hover:bg-brand-600 transition-colors mb-2">
+        <i class="fa-solid fa-plus text-slate-400 group-hover:text-white"></i>
+      </span>
+      <span class="text-xs text-slate-500 group-hover:text-brand-400 font-medium">설비 추가</span>
+    </button>`;
+
+  const zone = (key, name, color, actions) => {
+    const eqs = equipments.filter(e => normalizeLoc(e.location) === name);
+    return `
+      <div class="drop-zone relative bg-slate-950 border border-slate-800 rounded-xl p-4 pt-10 transition-colors"
+           ondragover="handleDragOver(event)" ondragenter="handleDragOver(event)"
+           ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, '${esc(key)}')">
+        <div class="absolute -top-3 left-4 right-4 flex justify-between items-center gap-2">
+          <span class="${locTheme(color)} border text-sm font-bold px-4 py-1.5 rounded-lg shadow-lg flex items-center gap-2 truncate">
+            <i class="fa-solid fa-network-wired text-xs"></i> ${esc(name)}
+            <span class="text-[10px] font-normal opacity-70">${eqs.length}대</span>
+          </span>
+          ${actions}
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mt-2 min-h-[120px]">
+          ${eqs.map(equipmentCard).join('')}
+          ${addCard(name)}
+        </div>
+      </div>`;
+  };
+
+  const lineHtml = locations.map(loc => zone(loc.id, loc.name, loc.color, `
+    <div class="space-x-1 bg-slate-900 p-1 rounded-lg border border-slate-800 shadow-md flex items-center shrink-0">
+      <button type="button" onclick="openLocationForm('${esc(loc.id)}')" class="text-xs bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white px-2.5 py-1.5 rounded transition-colors flex items-center gap-1.5" title="라인 이름·색상 수정"><i class="fa-solid fa-pen"></i><span class="hidden sm:inline">수정</span></button>
+      <button type="button" onclick="deleteLocation('${esc(loc.id)}')" class="text-xs bg-slate-800 text-slate-300 hover:bg-rose-900/80 hover:text-rose-400 px-2.5 py-1.5 rounded transition-colors flex items-center gap-1.5" title="라인 삭제"><i class="fa-solid fa-trash"></i><span class="hidden sm:inline">삭제</span></button>
+    </div>`)).join('');
+
+  // 라인이 삭제되어 갈 곳을 잃은 설비도 화면에 남겨 둡니다.
+  const orphanHtml = orphanExists
+    ? zone(UNASSIGNED, UNASSIGNED, 'slate', `<span class="text-[11px] text-slate-500 bg-slate-900 border border-slate-800 px-2.5 py-1.5 rounded-lg shrink-0">라인을 지정해 주세요</span>`)
+    : '';
+
+  container.innerHTML = lineHtml + orphanHtml;
+}
+
+/* ---------- 9. 설비 마스터 ---------- */
+function renderEquipmentTable() {
+  const q = (document.getElementById('eq-search')?.value || '').trim().toLowerCase();
+  const loc = document.getElementById('eq-filter-location')?.value || 'ALL';
+  const stat = document.getElementById('eq-filter-status')?.value || 'ALL';
+
+  const rows = equipments.filter(eq =>
+    (!q || `${eq.name} ${eq.code} ${eq.model || ''}`.toLowerCase().includes(q)) &&
+    (loc === 'ALL' || normalizeLoc(eq.location) === loc) &&
+    (stat === 'ALL' || eq.status === stat)
+  );
+
+  const tbody = document.getElementById('equipment-table-body');
+  tbody.innerHTML = rows.length ? rows.map(eq => {
+    const st = statusOf(eq.status);
+    return `
+      <tr class="hover:bg-slate-900/50 transition-colors cursor-pointer" onclick="openEquipmentDetail('${esc(eq.id)}')">
+        <td class="px-5 py-4"><div class="font-bold text-slate-100">${esc(eq.name)}</div><div class="text-xs text-slate-500">${esc(eq.code)}</div></td>
+        <td class="px-5 py-4"><span class="bg-slate-800 text-slate-300 text-xs px-2 py-1 rounded">${esc(normalizeLoc(eq.location))}</span></td>
+        <td class="px-5 py-4"><span class="text-xs font-bold ${st.chip} border px-2 py-1 rounded-full whitespace-nowrap">${st.label}</span></td>
+        <td class="px-5 py-4 text-xs font-mono text-slate-300 whitespace-nowrap">${num(eq.vibration)}mm/s · ${num(eq.temp)}°C</td>
+        <td class="px-5 py-4 text-xs font-mono ${num(eq.oee) >= 85 ? 'text-emerald-400' : num(eq.oee) >= 60 ? 'text-amber-400' : 'text-rose-400'}">${num(eq.oee)}%</td>
+        <td class="px-5 py-4 text-right space-x-1 whitespace-nowrap">
+          <button type="button" onclick="event.stopPropagation();openEqForm('${esc(eq.id)}')" aria-label="수정" class="text-xs bg-slate-800 text-slate-200 px-2.5 py-1.5 rounded hover:bg-slate-700 transition-colors"><i class="fa-solid fa-pen"></i></button>
+          <button type="button" onclick="event.stopPropagation();deleteEquipment('${esc(eq.id)}')" aria-label="삭제" class="text-xs bg-rose-950/50 text-rose-400 px-2.5 py-1.5 rounded hover:bg-rose-900 transition-colors"><i class="fa-solid fa-trash"></i></button>
+        </td>
+      </tr>`;
+  }).join('') : `<tr><td colspan="6">${emptyState('fa-gears', equipments.length ? '조건에 맞는 설비가 없습니다.' : '등록된 설비가 없습니다.')}</td></tr>`;
+
+  document.getElementById('eq-table-count').textContent = `${rows.length}건 / 전체 ${equipments.length}건`;
+}
+
+function openEquipmentDetail(eqId) {
+  const eq = eqById(eqId);
+  if (!eq) return;
+  const st = statusOf(eq.status);
+  const relatedWO = workOrders.filter(w => w.eqId === eqId).slice(0, 5);
+  const relatedPM = pmTasks.filter(p => p.eqId === eqId);
+
+  document.getElementById('eq-modal-content').innerHTML = `
+    <div class="border-b border-slate-800 pb-4 pr-8">
+      <div class="flex items-center gap-2 flex-wrap">
+        <h2 class="text-xl font-bold text-white">${esc(eq.name)}</h2>
+        <span class="text-xs font-bold ${st.chip} border px-2 py-1 rounded-full">${st.label}</span>
+      </div>
+      <p class="text-xs text-slate-400 mt-1.5">${esc(eq.code)} · ${esc(normalizeLoc(eq.location))} · ${esc(eq.model || '모델 미등록')}</p>
     </div>
 
-    <!-- EQUIP DETAIL MODAL -->
-    <div id="equipment-detail-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
-            <button onclick="closeModal('equipment-detail-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
-            <div id="eq-modal-content"></div>
-        </div>
+    <div class="grid grid-cols-3 gap-3 my-4 bg-slate-950 p-3 rounded-xl text-center">
+      <div><span class="text-[11px] text-slate-500 block">진동</span><span class="text-sm font-bold text-slate-200">${num(eq.vibration)} mm/s</span></div>
+      <div><span class="text-[11px] text-slate-500 block">온도</span><span class="text-sm font-bold text-slate-200">${num(eq.temp)}°C</span></div>
+      <div><span class="text-[11px] text-slate-500 block">OEE</span><span class="text-sm font-bold text-emerald-400">${num(eq.oee)}%</span></div>
     </div>
 
-    <!-- LOCATION ADD/EDIT MODAL -->
-    <div id="location-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-sm w-full p-6 shadow-2xl relative">
-            <button onclick="closeModal('location-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
-            <h3 class="text-lg font-bold text-white mb-4"><i class="fa-solid fa-folder-plus text-brand-500"></i> 공장 라인 / 구역 신설 및 수정</h3>
-            <form onsubmit="handleLocationSubmit(event)" class="space-y-4">
-                <input type="hidden" id="loc-form-id">
-                <div>
-                    <label class="block text-xs text-slate-400 mb-1">라인 / 구역 이름 설정</label>
-                    <input type="text" id="loc-form-name" required placeholder="예: 가공 A라인, 프레스동 등" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
-                </div>
-                <div>
-                    <label class="block text-xs text-slate-400 mb-1">테마 컬러</label>
-                    <select id="loc-form-color" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
-                        <option value="blue">Blue (블루)</option>
-                        <option value="indigo">Indigo (인디고)</option>
-                        <option value="emerald">Emerald (에메랄드)</option>
-                        <option value="amber">Amber (앰버)</option>
-                        <option value="rose">Rose (로즈)</option>
-                        <option value="slate">Slate (슬레이트)</option>
-                    </select>
-                </div>
-                <div class="flex justify-end gap-2 pt-2">
-                    <button type="button" onclick="closeModal('location-modal')" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm">취소</button>
-                    <button type="submit" class="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-xl text-sm shadow">저장하기</button>
-                </div>
-            </form>
-        </div>
+    <div class="mb-4">
+      <p class="text-xs text-slate-400 mb-2">상태 변경</p>
+      <div class="flex gap-2">
+        ${Object.entries(STATUS).map(([key, s]) => `
+          <button type="button" onclick="setEquipmentStatus('${esc(eq.id)}','${key}')"
+            class="flex-1 text-xs px-3 py-2 rounded-xl border transition-colors ${eq.status === key ? `${s.chip} font-bold` : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-600'}">
+            ${s.label}
+          </button>`).join('')}
+      </div>
     </div>
 
-    <!-- EQUIPMENT ADD/EDIT MODAL -->
-    <div id="equipment-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl relative">
-            <button onclick="closeModal('equipment-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
-            <h3 class="text-lg font-bold text-white mb-4"><i class="fa-solid fa-gears text-brand-500"></i> 설비 등록 및 수정</h3>
-            <form onsubmit="handleEquipmentSubmit(event)" class="space-y-4">
-                <input type="hidden" id="eq-form-id">
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs text-slate-400 mb-1">설비 코드</label>
-                        <input type="text" id="eq-form-code" required class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm">
-                    </div>
-                    <div>
-                        <label class="block text-xs text-slate-400 mb-1">설비명</label>
-                        <input type="text" id="eq-form-name" required class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm">
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs text-slate-400 mb-1">배치 위치 (라인)</label>
-                        <select id="eq-form-location" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm"></select>
-                    </div>
-                    <div>
-                        <label class="block text-xs text-slate-400 mb-1">제조사/모델</label>
-                        <input type="text" id="eq-form-model" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm">
-                    </div>
-                </div>
-                <div class="flex justify-end gap-2 pt-2">
-                    <button type="button" onclick="closeModal('equipment-modal')" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm">취소</button>
-                    <button type="submit" class="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-xl text-sm shadow">저장하기</button>
-                </div>
-            </form>
-        </div>
+    <div class="space-y-4">
+      <div>
+        <h4 class="text-xs font-bold text-slate-300 mb-2 flex items-center gap-1.5"><i class="fa-solid fa-wrench text-rose-400"></i> 최근 작업 이력</h4>
+        ${relatedWO.length ? `<div class="space-y-1.5">${relatedWO.map(w => `
+          <div class="bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs flex justify-between gap-2">
+            <span class="text-slate-300 truncate">${esc(w.title)}</span>
+            <span class="text-slate-500 shrink-0">${esc(w.date || '')}</span>
+          </div>`).join('')}</div>` : `<p class="text-xs text-slate-600">이력이 없습니다.</p>`}
+      </div>
+      <div>
+        <h4 class="text-xs font-bold text-slate-300 mb-2 flex items-center gap-1.5"><i class="fa-solid fa-calendar-check text-amber-400"></i> 연결된 점검 항목</h4>
+        ${relatedPM.length ? `<div class="space-y-1.5">${relatedPM.map(p => `
+          <div class="bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs flex justify-between gap-2">
+            <span class="text-slate-300 truncate">${esc(p.title)}</span>
+            <span class="${p.done ? 'text-emerald-400' : 'text-slate-500'} shrink-0">${p.freq} · ${p.done ? '완료' : '미완료'}</span>
+          </div>`).join('')}</div>` : `<p class="text-xs text-slate-600">등록된 점검 항목이 없습니다.</p>`}
+      </div>
     </div>
 
-    <!-- WORK ORDER ADD/EDIT MODAL -->
-    <div id="workorder-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl relative">
-            <button onclick="closeModal('workorder-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
-            <h3 class="text-lg font-bold text-white mb-4"><i class="fa-solid fa-triangle-exclamation text-rose-400"></i> 고장수리 / 작업지시 등록 및 수정</h3>
-            <form onsubmit="handleWorkOrderSubmit(event)" class="space-y-4">
-                <input type="hidden" id="wo-form-id">
-                <div>
-                    <label class="block text-xs text-slate-400 mb-1">대상 설비</label>
-                    <select id="wo-form-eq" required class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm"></select>
-                </div>
-                <div>
-                    <label class="block text-xs text-slate-400 mb-1">작업 제목</label>
-                    <input type="text" id="wo-form-title" required class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm">
-                </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs text-slate-400 mb-1">우선 순위</label>
-                        <select id="wo-form-priority" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm">
-                            <option value="HIGH">긴급</option><option value="MEDIUM" selected>보통</option><option value="LOW">낮음</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs text-slate-400 mb-1">작업 유형</label>
-                        <select id="wo-form-type" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm">
-                            <option value="고장수리">고장수리</option><option value="예방보전">예방보전</option><option value="개조/개선">설비 개조/개선</option>
-                        </select>
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-xs text-slate-400 mb-1">상세 현상 설명</label>
-                    <textarea id="wo-form-desc" rows="3" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm"></textarea>
-                </div>
-                <div class="flex justify-end gap-2 pt-2">
-                    <button type="button" onclick="closeModal('workorder-modal')" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm">취소</button>
-                    <button type="submit" class="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-sm shadow">저장하기</button>
-                </div>
-            </form>
+    <div class="flex justify-end gap-2 mt-6 pt-4 border-t border-slate-800">
+      <button type="button" onclick="closeModal('equipment-detail-modal');openWOForm(null,'${esc(eq.id)}')" class="px-3 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs">고장 접수</button>
+      <button type="button" onclick="closeModal('equipment-detail-modal');openEqForm('${esc(eq.id)}')" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs">설비 정보 수정</button>
+    </div>`;
+  openModal('equipment-detail-modal');
+}
+
+function setEquipmentStatus(eqId, status) {
+  const eq = eqById(eqId);
+  if (!eq || eq.status === status) return;
+  eq.status = status;
+  syncToSheet('Equipments', eq, 'upsert');
+  openEquipmentDetail(eqId);
+  renderAll();
+  showToast(`상태를 '${statusOf(status).label}'로 변경했습니다.`, 'success');
+}
+
+/* ---------- 10. 작업 지시 ---------- */
+function renderWorkOrders() {
+  const card = wo => {
+    const p = priorityOf(wo.priority);
+    return `
+      <div class="bg-slate-950 p-4 rounded-xl border ${wo.priority === 'HIGH' && wo.status !== 'completed' ? 'border-rose-500/40' : 'border-slate-800'} shadow space-y-2 group hover:border-slate-600 transition-colors">
+        <div class="flex justify-between items-start gap-2">
+          <div class="flex gap-1.5 flex-wrap">
+            <span class="${p.chip} border text-[10px] font-bold px-1.5 py-0.5 rounded">${p.label}</span>
+            <span class="bg-slate-800 text-slate-400 text-[10px] px-1.5 py-0.5 rounded">${esc(wo.type)}</span>
+          </div>
+          <div class="space-x-1 flex opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity shrink-0">
+            <button type="button" onclick="openWOForm('${esc(wo.id)}')" aria-label="수정" class="bg-slate-800 text-slate-300 hover:text-white px-2 py-1 rounded text-[10px]"><i class="fa-solid fa-pen"></i></button>
+            <button type="button" onclick="deleteWorkOrder('${esc(wo.id)}')" aria-label="삭제" class="bg-slate-800 text-slate-300 hover:text-rose-400 px-2 py-1 rounded text-[10px]"><i class="fa-solid fa-trash"></i></button>
+          </div>
         </div>
-    </div>
-
-    <!-- SPARE PART ADD/EDIT MODAL -->
-    <div id="sparepart-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl relative">
-            <button onclick="closeModal('sparepart-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
-            <h3 class="text-lg font-bold text-white mb-4"><i class="fa-solid fa-boxes-packing text-cyan-400"></i> 부품 등록 및 수정</h3>
-            <form onsubmit="handleSparePartSubmit(event)" class="space-y-4">
-                <input type="hidden" id="sp-form-id">
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs text-slate-400 mb-1">부품 코드</label>
-                        <input type="text" id="sp-form-code" required class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm">
-                    </div>
-                    <div>
-                        <label class="block text-xs text-slate-400 mb-1">부품명</label>
-                        <input type="text" id="sp-form-name" required class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm">
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs text-slate-400 mb-1">현재 수량</label>
-                        <input type="number" id="sp-form-qty" required value="0" min="0" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm">
-                    </div>
-                    <div>
-                        <label class="block text-xs text-slate-400 mb-1">안전 재고</label>
-                        <input type="number" id="sp-form-min" required value="1" min="1" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm">
-                    </div>
-                </div>
-                <div class="flex justify-end gap-2 pt-2">
-                    <button type="button" onclick="closeModal('sparepart-modal')" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm">취소</button>
-                    <button type="submit" class="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl text-sm shadow">저장하기</button>
-                </div>
-            </form>
+        <h4 class="text-xs font-bold text-slate-100 leading-snug">${esc(wo.title)}</h4>
+        ${wo.desc ? `<p class="text-[11px] text-slate-500 leading-relaxed line-clamp-2">${esc(wo.desc)}</p>` : ''}
+        <div class="text-[11px] text-slate-400 flex flex-wrap gap-x-3 gap-y-1 pt-1">
+          <span><i class="fa-solid fa-gears text-[10px] mr-1"></i>${esc(eqNameOf(wo))}</span>
+          ${wo.assignee ? `<span><i class="fa-solid fa-user text-[10px] mr-1"></i>${esc(wo.assignee)}</span>` : ''}
         </div>
-    </div>
-
-    <!-- PM ADD/EDIT MODAL -->
-    <div id="pm-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl relative">
-            <button onclick="closeModal('pm-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
-            <h3 class="text-lg font-bold text-white mb-4"><i class="fa-solid fa-calendar-check text-amber-400"></i> PM 점검항목 등록 및 수정</h3>
-            <form onsubmit="handlePMSubmit(event)" class="space-y-4">
-                <input type="hidden" id="pm-form-id">
-                <div>
-                    <label class="block text-xs text-slate-400 mb-1">대상 설비</label>
-                    <select id="pm-form-eq" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm"></select>
-                </div>
-                <div>
-                    <label class="block text-xs text-slate-400 mb-1">점검 항목명</label>
-                    <input type="text" id="pm-form-title" required class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm">
-                </div>
-                <div>
-                    <label class="block text-xs text-slate-400 mb-1">점검 주기</label>
-                    <select id="pm-form-freq" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm">
-                        <option value="매일">매일 (Daily)</option><option value="주간">주간 (Weekly)</option><option value="월간">월간 (Monthly)</option>
-                    </select>
-                </div>
-                <div class="flex justify-end gap-2 pt-2">
-                    <button type="button" onclick="closeModal('pm-modal')" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm">취소</button>
-                    <button type="submit" class="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-sm shadow">저장하기</button>
-                </div>
-            </form>
+        <div class="text-[10px] text-slate-600 font-mono">${esc(wo.date || '')}${wo.completedAt ? ` → ${esc(wo.completedAt)}` : ''}</div>
+        <div class="pt-2 flex justify-end gap-1">
+          ${wo.status === 'pending' ? `<button type="button" onclick="updateWOStatus('${esc(wo.id)}','inprogress')" class="text-xs bg-blue-600/20 hover:bg-blue-600/40 border border-blue-500/30 text-blue-300 px-2.5 py-1.5 rounded transition-colors">수리 시작</button>` : ''}
+          ${wo.status === 'inprogress' ? `
+            <button type="button" onclick="updateWOStatus('${esc(wo.id)}','pending')" class="text-xs bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-400 px-2.5 py-1.5 rounded transition-colors">되돌리기</button>
+            <button type="button" onclick="updateWOStatus('${esc(wo.id)}','completed')" class="text-xs bg-emerald-600/20 hover:bg-emerald-600/40 border border-emerald-500/30 text-emerald-300 px-2.5 py-1.5 rounded transition-colors">조치 완료</button>` : ''}
+          ${wo.status === 'completed' ? `<button type="button" onclick="updateWOStatus('${esc(wo.id)}','inprogress')" class="text-xs bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-400 px-2.5 py-1.5 rounded transition-colors">재작업</button>` : ''}
         </div>
-    </div>
+      </div>`;
+  };
 
-    <!-- TOAST NOTIFICATION -->
-    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+  const byDate = (a, b) => String(b.date).localeCompare(String(a.date));
+  const cols = {
+    pending: workOrders.filter(w => w.status === 'pending').sort(byDate),
+    inprogress: workOrders.filter(w => w.status === 'inprogress').sort(byDate),
+    completed: workOrders.filter(w => w.status === 'completed').sort(byDate)
+  };
+  const emptyMsg = { pending: '대기 중인 작업이 없습니다.', inprogress: '진행 중인 작업이 없습니다.', completed: '완료된 작업이 없습니다.' };
 
-    <script>
-        // --- 🚀 사용자 수정 가능 라인(구역) 데이터 초기값 ---
-        let locations = [
-            { id: 'LOC-1', name: '가공 A라인', color: 'blue' },
-            { id: 'LOC-2', name: '조립 B라인', color: 'indigo' },
-            { id: 'LOC-3', name: '동력 유틸리티동', color: 'slate' }
-        ];
+  Object.entries(cols).forEach(([key, list]) => {
+    document.getElementById(`count-${key}`).textContent = list.length;
+    document.getElementById(`wo-col-${key}`).innerHTML = list.length ? list.map(card).join('') : emptyState('fa-clipboard', emptyMsg[key]);
+  });
+}
 
-        let equipments = [
-            { id: 'EQ-101', code: 'CNC-001', name: 'CNC 선반 #1', location: '가공 A라인', model: '화천 CUTEX-180', status: 'running', runtime: 1420, temp: 42, vibration: 1.2, lastPM: '2026-07-20', nextPM: '2026-08-20', oee: 92 },
-            { id: 'EQ-103', code: 'MCT-001', name: '5축 머시닝센터 #1', location: '가공 A라인', model: '두산 DNM-5700', status: 'broken', runtime: 2100, temp: 68, vibration: 4.8, lastPM: '2026-06-15', nextPM: '2026-08-10', oee: 45 },
-            { id: 'EQ-106', code: 'COMP-01', name: '에어 콤프레샤', location: '동력 유틸리티동', model: '유진 MAVIC-100', status: 'running', runtime: 8500, temp: 72, vibration: 1.1, lastPM: '2026-07-28', nextPM: '2026-08-28', oee: 98 }
-        ];
+function updateWOStatus(id, newStatus) {
+  const wo = workOrders.find(w => w.id === id);
+  if (!wo) return;
+  wo.status = newStatus;
+  wo.completedAt = newStatus === 'completed' ? kstDateTime() : '';
 
-        let workOrders = [
-            { id: 'WO-2026-0801', eqId: 'EQ-103', eqName: '5축 머시닝센터 #1', title: '스핀들 과열 정지', priority: 'HIGH', type: '고장수리', status: 'inprogress', assignee: '김보전', date: '2026-08-09 09:15', desc: '온도 68도 상승' }
-        ];
+  const eq = eqById(wo.eqId);
+  if (eq) {
+    // 같은 설비에 남은 미해결 고장 건이 없을 때만 가동 상태로 되돌립니다.
+    const stillBroken = workOrders.some(w =>
+      w.id !== wo.id && w.eqId === wo.eqId && w.status !== 'completed' && w.priority === 'HIGH');
+    if (newStatus === 'completed' && !stillBroken && eq.status !== 'running') {
+      eq.status = 'running';
+      syncToSheet('Equipments', eq, 'upsert');
+    }
+  }
+  syncToSheet('WorkOrders', wo, 'upsert');
+  renderAll();
+  showToast('작업 상태를 변경했습니다.', 'success');
+}
 
-        let pmTasks = [
-            { id: 'PM-01', eqId: 'EQ-101', eqName: 'CNC 선반 #1', title: '절삭유 누유 확인', freq: '매일', done: true },
-            { id: 'PM-02', eqId: 'EQ-106', eqName: '에어 콤프레샤', title: '응축수 트랩 드레인 배출', freq: '매일', done: false }
-        ];
+/* ---------- 11. 예방 보전 (PM) ---------- */
+// 주기가 지난 항목은 자동으로 미완료로 되돌립니다.
+function resetExpiredPM() {
+  const today = kstDate();
+  let changed = 0;
+  pmTasks.forEach(pm => {
+    if (!pm.done || !pm.lastDone) return;
+    const diffDays = Math.floor((new Date(today) - new Date(pm.lastDone)) / 86400000);
+    const limit = { '매일': 1, '주간': 7, '월간': 30 }[pm.freq] ?? 1;
+    if (diffDays >= limit) {
+      pm.done = false;
+      changed += 1;
+      syncToSheet('PMTasks', pm, 'upsert');
+    }
+  });
+  if (changed) showToast(`주기가 도래한 점검 ${changed}건이 초기화되었습니다.`, 'info');
+}
 
-        let spareParts = [
-            { id: 'SP-01', code: 'BRG-6205', name: '스핀들 베어링', category: '기타부품', qty: 12, minQty: 4, location: 'A-01-02' },
-            { id: 'SP-02', code: 'FLT-01', name: '오일필터', category: '기타부품', qty: 2, minQty: 3, location: 'C-03-01' }
-        ];
+function renderPMList() {
+  const total = pmTasks.length;
+  const done = pmTasks.filter(p => p.done).length;
+  document.getElementById('pm-completion-rate').textContent =
+    total ? `${Math.round((done / total) * 100)}% (${done}/${total})` : '0%';
 
-        let charts = {};
+  const container = document.getElementById('pm-list-container');
+  if (!total) {
+    container.innerHTML = emptyState('fa-calendar-check', '점검 항목을 추가해 주세요.');
+    return;
+  }
 
-        // 🚀 APPS SCRIPT SYNC CONFIG
-        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxdSVmQpPk1P-TaAAva9cM3fULahNXCb1FdgsJAURR5h2S1ZKpl9PPUFPwltbExutcabA/exec';
-
-        function syncToSheet(sheetName, dataObj, action = 'upsert') {
-            if (!APPS_SCRIPT_URL) return;
-            fetch(APPS_SCRIPT_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify({ sheetName: sheetName, data: dataObj, action: action })
-            }).catch(err => console.error('Sync Error:', err));
-        }
-
-        function switchTab(tabId) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-            document.querySelectorAll('.nav-btn').forEach(btn => {
-                btn.classList.remove('bg-brand-600', 'text-white');
-                btn.classList.add('text-slate-400');
-            });
-            document.getElementById(`tab-${tabId}`)?.classList.remove('hidden');
-            document.getElementById(`nav-${tabId}`)?.classList.add('bg-brand-600', 'text-white');
-            document.getElementById(`nav-${tabId}`)?.classList.remove('text-slate-400');
-
-            if (tabId === 'dashboard') renderDashboard();
-            if (tabId === 'layout') renderLayoutMap();
-            if (tabId === 'equipments') renderEquipmentTable();
-            if (tabId === 'workorders') renderWorkOrders();
-            if (tabId === 'pm') renderPMList();
-            if (tabId === 'spares') renderSparePartsTable();
-            if (tabId === 'analytics') renderAnalyticsCharts();
-        }
-
-        function updateClock() {
-            const now = new Date();
-            const options = { 
-                timeZone: 'Asia/Seoul', 
-                year: 'numeric', 
-                month: '2-digit', 
-                day: '2-digit', 
-                hour: '2-digit', 
-                minute: '2-digit', 
-                second: '2-digit', 
-                hour12: false 
-            };
-            const kstString = new Intl.DateTimeFormat('ko-KR', options).format(now).replace(/\./g, '-').replace(/ /g, '').replace(/-$/, ' ');
-            document.getElementById('live-clock').textContent = kstString;
-        }
-
-        function populateLocationSelects() {
-            const options = locations.map(l => `<option value="${l.name}">${l.name}</option>`).join('');
-            const filterSelect = document.getElementById('eq-filter-location');
-            if(filterSelect) filterSelect.innerHTML = `<option value="ALL">전체 위치</option>` + options + `<option value="미지정">미지정</option>`;
-            
-            const formSelect = document.getElementById('eq-form-location');
-            if(formSelect) formSelect.innerHTML = options + `<option value="미지정">미지정</option>`;
-        }
-
-        function populateEqSelects() {
-            const options = equipments.map(e => `<option value="${e.id}">${e.code} - ${e.name}</option>`).join('');
-            if(document.getElementById('wo-form-eq')) document.getElementById('wo-form-eq').innerHTML = options;
-            if(document.getElementById('pm-form-eq')) document.getElementById('pm-form-eq').innerHTML = options;
-        }
-
-        // --- DASHBOARD & LAYOUT ---
-        function renderDashboard() {
-            const total = equipments.length;
-            const running = equipments.filter(e => e.status === 'running').length;
-            const broken = equipments.filter(e => e.status === 'broken').length;
-            const avgOee = total > 0 ? Math.round(equipments.reduce((acc, e) => acc + e.oee, 0) / total) : 0;
-            const activeWO = workOrders.filter(w => w.status !== 'completed').length;
-            const pmDone = pmTasks.filter(p => p.done).length;
-
-            document.getElementById('header-total-eq').textContent = `${total}대`;
-            document.getElementById('header-running-eq').textContent = `${running}대`;
-            document.getElementById('header-broken-eq').textContent = `${broken}대`;
-            document.getElementById('header-oee').textContent = `${avgOee}%`;
-            document.getElementById('dash-oee').textContent = `${avgOee}%`;
-            document.getElementById('dash-active-repair').textContent = `${activeWO} 건`;
-            document.getElementById('dash-pm-count').textContent = `${pmDone}/${pmTasks.length} 건`;
-            document.getElementById('dash-pm-progress').style.width = pmTasks.length > 0 ? `${(pmDone/pmTasks.length)*100}%` : '0%';
-
-            document.getElementById('dash-mini-map').innerHTML = equipments.map(eq => `
-                <div onclick="openEquipmentDetail('${eq.id}')" class="bg-slate-950 p-3 rounded-xl border border-slate-800 cursor-pointer">
-                    <h4 class="text-xs font-bold text-slate-200 truncate">${eq.name}</h4>
-                    <span class="text-[10px] ${eq.status === 'running' ? 'text-emerald-400' : 'text-rose-400'}">${eq.status}</span>
+  const order = ['매일', '주간', '월간'];
+  container.innerHTML = order.filter(freq => pmTasks.some(p => p.freq === freq)).map(freq => {
+    const list = pmTasks.filter(p => p.freq === freq);
+    const d = list.filter(p => p.done).length;
+    return `
+      <div>
+        <div class="flex items-center gap-2 mb-2">
+          <h4 class="text-sm font-bold text-slate-300">${freq} 점검</h4>
+          <span class="text-[11px] text-slate-500">${d}/${list.length}</span>
+        </div>
+        <div class="space-y-2">
+          ${list.map(pm => `
+            <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 flex items-center justify-between gap-3 hover:bg-slate-900/50 transition-colors">
+              <div class="flex items-center space-x-3 min-w-0">
+                <button type="button" onclick="togglePMTask('${esc(pm.id)}')" aria-pressed="${pm.done}" aria-label="완료 표시"
+                  class="w-6 h-6 rounded-lg border flex items-center justify-center transition-colors shrink-0 ${pm.done ? 'bg-amber-500 border-amber-500' : 'border-slate-600 hover:border-amber-500'}">
+                  ${pm.done ? '<i class="fa-solid fa-check text-xs text-slate-900"></i>' : ''}
+                </button>
+                <div class="min-w-0">
+                  <span class="text-sm font-bold ${pm.done ? 'line-through text-slate-500' : 'text-slate-200'}">${esc(pm.title)}</span>
+                  <p class="text-xs text-slate-500 mt-1 flex items-center gap-2 flex-wrap">
+                    <span><i class="fa-solid fa-link text-[10px] mr-1"></i>${esc(pm.eqName || '공통')}</span>
+                    ${pm.lastDone ? `<span class="text-slate-600">최근 완료 ${esc(pm.lastDone)}</span>` : ''}
+                  </p>
                 </div>
-            `).join('');
-            
-            document.getElementById('dash-recent-orders').innerHTML = workOrders.slice(0, 4).map(wo => `
-                <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-xs">
-                    <p class="font-bold text-slate-200">${wo.title}</p>
-                    <p class="text-[11px] text-slate-400">${wo.eqName} | ${wo.status}</p>
-                </div>
-            `).join('');
+              </div>
+              <div class="space-x-1 flex shrink-0">
+                <button type="button" onclick="openPMForm('${esc(pm.id)}')" aria-label="수정" class="bg-slate-900 text-slate-400 hover:text-white px-2.5 py-1.5 rounded transition-colors"><i class="fa-solid fa-pen text-xs"></i></button>
+                <button type="button" onclick="deletePMTask('${esc(pm.id)}')" aria-label="삭제" class="bg-slate-900 text-slate-400 hover:text-rose-400 px-2.5 py-1.5 rounded transition-colors"><i class="fa-solid fa-trash text-xs"></i></button>
+              </div>
+            </div>`).join('')}
+        </div>
+      </div>`;
+  }).join('');
+}
 
-            initDashboardCharts();
-            populateLocationSelects();
-            populateEqSelects();
-        }
+function togglePMTask(id) {
+  const pm = pmTasks.find(p => p.id === id);
+  if (!pm) return;
+  pm.done = !pm.done;
+  pm.lastDone = pm.done ? kstDate() : '';
+  syncToSheet('PMTasks', pm, 'upsert');
+  renderAll();
+}
 
-        function getLocationColors(color) {
-            const map = {
-                blue: 'bg-brand-900/80 text-brand-300 border-brand-700',
-                indigo: 'bg-indigo-900/80 text-indigo-300 border-indigo-700',
-                slate: 'bg-slate-800 text-slate-300 border-slate-600',
-                emerald: 'bg-emerald-900/80 text-emerald-300 border-emerald-700',
-                amber: 'bg-amber-900/80 text-amber-300 border-amber-700',
-                rose: 'bg-rose-900/80 text-rose-300 border-rose-700'
-            };
-            return map[color] || map['slate'];
-        }
+/* ---------- 12. 예비 부품 ---------- */
+function renderSparePartsTable() {
+  const q = (document.getElementById('sp-search')?.value || '').trim().toLowerCase();
+  const rows = spareParts.filter(sp => !q || `${sp.name} ${sp.code} ${sp.category || ''}`.toLowerCase().includes(q));
+  const tbody = document.getElementById('spare-parts-table-body');
 
-        function editEqFromMap(e, id) { e.stopPropagation(); editEquipment(id); }
-        function deleteEqFromMap(e, id) { e.stopPropagation(); deleteEquipment(id); }
+  tbody.innerHTML = rows.length ? rows.map(sp => {
+    const low = num(sp.qty) <= num(sp.minQty);
+    return `
+      <tr class="hover:bg-slate-900/50 transition-colors">
+        <td class="px-5 py-4">
+          <div class="font-bold text-slate-200 flex items-center gap-2">
+            ${esc(sp.name)}
+            ${low ? '<span class="bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[10px] px-1.5 py-0.5 rounded">발주 필요</span>' : ''}
+          </div>
+          <div class="text-xs text-slate-500">${esc(sp.code)} · ${esc(sp.category || '기타부품')}</div>
+        </td>
+        <td class="px-5 py-4 text-xs text-slate-400 font-mono">${esc(sp.location || '-')}</td>
+        <td class="px-5 py-4 font-mono font-bold ${low ? 'text-rose-400' : 'text-slate-200'}">${num(sp.qty)} 개</td>
+        <td class="px-5 py-4 font-mono text-xs text-slate-500">${num(sp.minQty)} 개</td>
+        <td class="px-5 py-4 text-right space-x-1 whitespace-nowrap">
+          <button type="button" onclick="adjustPartQty('${esc(sp.id)}', 1)" aria-label="입고" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-2.5 py-1 rounded text-xs transition-colors"><i class="fa-solid fa-plus"></i></button>
+          <button type="button" onclick="adjustPartQty('${esc(sp.id)}', -1)" aria-label="출고" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-2.5 py-1 rounded text-xs transition-colors"><i class="fa-solid fa-minus"></i></button>
+          <button type="button" onclick="openSPForm('${esc(sp.id)}')" aria-label="수정" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-2.5 py-1 rounded text-xs ml-2 transition-colors"><i class="fa-solid fa-pen"></i></button>
+          <button type="button" onclick="deleteSparePart('${esc(sp.id)}')" aria-label="삭제" class="bg-rose-950/50 hover:bg-rose-900 text-rose-400 px-2.5 py-1 rounded text-xs transition-colors"><i class="fa-solid fa-trash"></i></button>
+        </td>
+      </tr>`;
+  }).join('') : `<tr><td colspan="5">${emptyState('fa-boxes-packing', spareParts.length ? '조건에 맞는 부품이 없습니다.' : '등록된 부품이 없습니다.')}</td></tr>`;
+}
 
-        // --- DRAG AND DROP HANDLERS ---
-        let draggedEqId = null;
+function adjustPartQty(id, delta) {
+  const sp = spareParts.find(s => s.id === id);
+  if (!sp) return;
+  const before = num(sp.qty);
+  sp.qty = Math.max(0, before + delta);
+  if (sp.qty === before) return;
+  syncToSheet('SpareParts', sp, 'upsert');
+  renderAll();
+  if (sp.qty <= num(sp.minQty)) showToast(`'${sp.name}' 재고가 안전재고 이하입니다.`, 'warning');
+}
 
-        function handleDragStart(e, id) {
-            draggedEqId = id;
-            e.dataTransfer.effectAllowed = 'move';
-            e.dataTransfer.setData('text/plain', id);
-            setTimeout(() => {
-                e.target.classList.add('dragging');
-                document.body.classList.add('is-dragging');
-            }, 0);
-        }
+/* ---------- 13. 폼 열기 ---------- */
+function openLocationForm(id = null) {
+  const form = document.querySelector('#location-modal form');
+  form.reset();
+  document.getElementById('loc-form-id').value = id || '';
+  document.getElementById('location-modal-title').innerHTML =
+    `<i class="fa-solid fa-folder-plus text-brand-400"></i> ${id ? '라인 수정' : '라인 추가'}`;
+  if (id) {
+    const loc = locations.find(l => l.id === id);
+    if (!loc) return;
+    document.getElementById('loc-form-name').value = loc.name;
+    document.getElementById('loc-form-color').value = loc.color || 'slate';
+  }
+  openModal('location-modal');
+}
 
-        function handleDragEnd(e) {
-            e.target.classList.remove('dragging');
-            document.body.classList.remove('is-dragging');
-            draggedEqId = null;
-            document.querySelectorAll('.drop-zone').forEach(zone => {
-                zone.classList.remove('drag-over');
-            });
-        }
+function openEqForm(id = null, defaultLoc = null) {
+  const form = document.querySelector('#equipment-modal form');
+  form.reset();
+  populateLocationSelects();
+  document.getElementById('eq-form-id').value = id || '';
+  document.getElementById('equipment-modal-title').innerHTML =
+    `<i class="fa-solid fa-gears text-brand-400"></i> ${id ? '설비 수정' : '설비 등록'}`;
 
-        function handleDragOver(e) {
-            e.preventDefault();
-            e.dataTransfer.dropEffect = 'move';
-            e.currentTarget.classList.add('drag-over');
-        }
+  if (id) {
+    const eq = eqById(id);
+    if (!eq) return;
+    document.getElementById('eq-form-code').value = eq.code || '';
+    document.getElementById('eq-form-name').value = eq.name || '';
+    document.getElementById('eq-form-location').value = normalizeLoc(eq.location);
+    document.getElementById('eq-form-model').value = eq.model || '';
+    document.getElementById('eq-form-status').value = eq.status || 'running';
+    document.getElementById('eq-form-oee').value = num(eq.oee, 100);
+    document.getElementById('eq-form-vib').value = num(eq.vibration, 1);
+    document.getElementById('eq-form-temp').value = num(eq.temp, 35);
+  } else if (defaultLoc) {
+    document.getElementById('eq-form-location').value = defaultLoc;
+  }
+  openModal('equipment-modal');
+}
 
-        function handleDragLeave(e) {
-            if (!e.currentTarget.contains(e.relatedTarget)) {
-                e.currentTarget.classList.remove('drag-over');
-            }
-        }
+function openWOForm(id = null, defaultEqId = null) {
+  const form = document.querySelector('#workorder-modal form');
+  form.reset();
+  populateEqSelects();
+  document.getElementById('wo-form-id').value = id || '';
+  document.getElementById('workorder-modal-title').innerHTML =
+    `<i class="fa-solid fa-triangle-exclamation text-rose-400"></i> ${id ? '작업 수정' : '작업 접수'}`;
 
-        function handleDrop(e, targetLocName) {
-            e.preventDefault();
-            e.currentTarget.classList.remove('drag-over');
+  if (id) {
+    const wo = workOrders.find(w => w.id === id);
+    if (!wo) return;
+    document.getElementById('wo-form-eq').value = wo.eqId;
+    document.getElementById('wo-form-title').value = wo.title || '';
+    document.getElementById('wo-form-priority').value = wo.priority || 'MEDIUM';
+    document.getElementById('wo-form-type').value = wo.type || '고장수리';
+    document.getElementById('wo-form-assignee').value = wo.assignee || '';
+    document.getElementById('wo-form-cost').value = num(wo.cost);
+    document.getElementById('wo-form-desc').value = wo.desc || '';
+  } else if (defaultEqId) {
+    document.getElementById('wo-form-eq').value = defaultEqId;
+  }
+  openModal('workorder-modal');
+}
 
-            if (!draggedEqId) return;
+function openPMForm(id = null) {
+  const form = document.querySelector('#pm-modal form');
+  form.reset();
+  populateEqSelects();
+  document.getElementById('pm-form-id').value = id || '';
+  document.getElementById('pm-modal-title').innerHTML =
+    `<i class="fa-solid fa-calendar-check text-amber-400"></i> ${id ? '점검항목 수정' : '점검항목 추가'}`;
+  if (id) {
+    const pm = pmTasks.find(p => p.id === id);
+    if (!pm) return;
+    document.getElementById('pm-form-eq').value = pm.eqId;
+    document.getElementById('pm-form-title').value = pm.title || '';
+    document.getElementById('pm-form-freq').value = pm.freq || '매일';
+  }
+  openModal('pm-modal');
+}
 
-            const eq = equipments.find(e => e.id === draggedEqId);
-            if (eq && eq.location !== targetLocName) {
-                eq.location = targetLocName;
-                syncToSheet('Equipments', eq, 'upsert');
-                renderLayoutMap();
-                renderEquipmentTable();
-                showToast(`'${eq.name}' 설비가 '${targetLocName}'(으)로 이동되었습니다.`, 'success');
-            }
-        }
+function openSPForm(id = null) {
+  const form = document.querySelector('#sparepart-modal form');
+  form.reset();
+  document.getElementById('sp-form-id').value = id || '';
+  document.getElementById('sparepart-modal-title').innerHTML =
+    `<i class="fa-solid fa-boxes-packing text-cyan-400"></i> ${id ? '부품 수정' : '부품 등록'}`;
+  if (id) {
+    const sp = spareParts.find(s => s.id === id);
+    if (!sp) return;
+    document.getElementById('sp-form-code').value = sp.code || '';
+    document.getElementById('sp-form-name').value = sp.name || '';
+    document.getElementById('sp-form-category').value = sp.category || '기타부품';
+    document.getElementById('sp-form-location').value = sp.location || '';
+    document.getElementById('sp-form-qty').value = num(sp.qty);
+    document.getElementById('sp-form-min').value = num(sp.minQty);
+  }
+  openModal('sparepart-modal');
+}
 
-        function renderLayoutMap() {
-            const createCard = (eq) => `
-                <div draggable="true" 
-                     ondragstart="handleDragStart(event, '${eq.id}')" 
-                     ondragend="handleDragEnd(event)"
-                     onclick="openEquipmentDetail('${eq.id}')" 
-                     class="bg-slate-900 border-2 ${eq.status === 'running' ? 'border-emerald-500/40' : eq.status === 'warning' ? 'border-amber-500/40' : 'border-rose-500'} rounded-xl p-4 cursor-grab active:cursor-grabbing relative group transition-all hover:bg-slate-800 shadow-md">
-                    <div class="absolute top-2 right-2 hidden group-hover:flex gap-1 z-10">
-                        <button onclick="editEqFromMap(event, '${eq.id}')" class="bg-slate-700/80 p-1.5 rounded text-slate-300 hover:text-white hover:bg-brand-600 transition-colors" title="수정"><i class="fa-solid fa-pen text-[10px]"></i></button>
-                        <button onclick="deleteEqFromMap(event, '${eq.id}')" class="bg-slate-700/80 p-1.5 rounded text-slate-300 hover:text-white hover:bg-rose-600 transition-colors" title="삭제"><i class="fa-solid fa-trash text-[10px]"></i></button>
-                    </div>
-                    <div class="flex items-center gap-2 mb-1">
-                        <i class="fa-solid fa-grip-vertical text-slate-600 text-xs cursor-grab"></i>
-                        <h4 class="font-bold text-sm text-slate-100 pr-10 truncate">${eq.name}</h4>
-                    </div>
-                    <p class="text-[10px] text-slate-400 mb-2 truncate">${eq.model}</p>
-                    <div class="flex justify-between items-center text-xs mt-auto pt-2 border-t border-slate-800">
-                        <span class="text-slate-400">진동: <span class="text-slate-200 font-mono">${eq.vibration}</span></span>
-                        <span class="text-slate-400">온도: <span class="text-slate-200 font-mono">${eq.temp}°C</span></span>
-                    </div>
-                </div>
-            `;
-            
-            const addEqCard = (locName) => `
-                <div onclick="openEqForm(null, '${locName}')" class="border-2 border-dashed border-slate-700/50 hover:border-brand-500/50 flex flex-col items-center justify-center p-4 cursor-pointer hover:bg-slate-900/50 rounded-xl transition-all h-full min-h-[100px] group">
-                    <div class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center group-hover:bg-brand-600 transition-colors mb-2">
-                        <i class="fa-solid fa-plus text-slate-400 group-hover:text-white"></i>
-                    </div>
-                    <span class="text-xs text-slate-500 group-hover:text-brand-400 font-medium">여기에 설비 추가</span>
-                </div>
-            `;
+/* ---------- 14. 저장 처리 ---------- */
+function handleLocationSubmit(e) {
+  e.preventDefault();
+  const id = document.getElementById('loc-form-id').value;
+  const name = document.getElementById('loc-form-name').value.trim();
+  const color = document.getElementById('loc-form-color').value;
 
-            if (locations.length === 0) {
-                document.getElementById('layout-container').innerHTML = `<div class="text-center py-12 text-slate-500"><i class="fa-solid fa-folder-plus text-4xl mb-3 block"></i>등록된 라인이 없습니다. 우측 상단의 '라인 신설' 버튼을 눌러 공장 구역을 만들어주세요.</div>`;
-                return;
-            }
+  if (!name) return;
+  if (name === UNASSIGNED) { showToast(`'${UNASSIGNED}'은(는) 라인 이름으로 쓸 수 없습니다.`, 'warning'); return; }
+  if (locations.some(l => l.name === name && l.id !== id)) { showToast('같은 이름의 라인이 이미 있습니다.', 'warning'); return; }
 
-            document.getElementById('layout-container').innerHTML = locations.map(loc => {
-                const eqs = equipments.filter(e => e.location === loc.name);
-                const themeClass = getLocationColors(loc.color);
-                
-                return `
-                    <div class="drop-zone relative bg-slate-950 border border-slate-800 rounded-xl p-4 pt-10 transition-all duration-200"
-                         ondragover="handleDragOver(event)"
-                         ondragenter="handleDragOver(event)"
-                         ondragleave="handleDragLeave(event)"
-                         ondrop="handleDrop(event, '${loc.name}')">
-                        <div class="absolute -top-3 left-4 flex justify-between items-center w-[calc(100%-2rem)]">
-                            <div class="flex items-center gap-2">
-                                <span class="${themeClass} border text-sm font-bold px-4 py-1.5 rounded-lg shadow-lg flex items-center gap-2">
-                                    <i class="fa-solid fa-network-wired"></i> ${loc.name}
-                                </span>
-                            </div>
-                            <div class="space-x-1 bg-slate-900 p-1 rounded-lg border border-slate-800 shadow-md flex items-center">
-                                <button onclick="editLocation('${loc.id}')" class="text-xs bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white px-2.5 py-1.5 rounded transition-colors flex items-center gap-1.5" title="라인 이름/색상 수정"><i class="fa-solid fa-pen"></i> <span class="hidden sm:inline">수정</span></button>
-                                <button onclick="deleteLocation('${loc.id}')" class="text-xs bg-slate-800 text-slate-300 hover:bg-rose-900/80 hover:text-rose-400 px-2.5 py-1.5 rounded transition-colors flex items-center gap-1.5" title="이 라인 삭제"><i class="fa-solid fa-trash"></i> <span class="hidden sm:inline">삭제</span></button>
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4 mt-2 min-h-[120px]">
-                            ${eqs.map(createCard).join('')}
-                            ${addEqCard(loc.name)}
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
+  if (id) {
+    const loc = locations.find(l => l.id === id);
+    if (!loc) return;
+    const oldName = loc.name;
+    loc.name = name;
+    loc.color = color;
+    syncToSheet('Locations', loc, 'upsert');
+    if (oldName !== name) {
+      // 라인 이름이 바뀌면 소속 설비의 위치 값도 함께 옮깁니다.
+      equipments.filter(eq => eq.location === oldName).forEach(eq => {
+        eq.location = name;
+        syncToSheet('Equipments', eq, 'upsert');
+      });
+    }
+    showToast('라인 정보를 수정했습니다.', 'success');
+  } else {
+    const loc = { id: uid('LOC'), name, color };
+    locations.push(loc);
+    syncToSheet('Locations', loc, 'upsert');
+    showToast('라인을 추가했습니다.', 'success');
+  }
+  closeModal('location-modal');
+  renderAll();
+}
 
-        // --- EQUIPMENTS ---
-        function renderEquipmentTable(data = equipments) {
-            const tbody = document.getElementById('equipment-table-body');
-            tbody.innerHTML = data.map(eq => `
-                <tr class="hover:bg-slate-900/50 transition-colors">
-                    <td class="px-5 py-4"><div class="font-bold text-slate-100">${eq.name}</div><div class="text-xs text-slate-500">${eq.code}</div></td>
-                    <td class="px-5 py-4"><span class="bg-slate-800 text-slate-300 text-xs px-2 py-1 rounded">${eq.location}</span></td>
-                    <td class="px-5 py-4"><span class="text-xs font-bold ${eq.status === 'running' ? 'text-emerald-400' : 'text-rose-400'} border ${eq.status === 'running' ? 'border-emerald-500/30 bg-emerald-500/10' : 'border-rose-500/30 bg-rose-500/10'} px-2 py-1 rounded-full">${eq.status}</span></td>
-                    <td class="px-5 py-4 text-xs font-mono text-slate-300">${eq.vibration}mm/s / ${eq.temp}°C</td>
-                    <td class="px-5 py-4 text-right space-x-1">
-                        <button onclick="editEquipment('${eq.id}')" class="text-xs bg-slate-800 text-slate-200 px-2.5 py-1.5 rounded hover:bg-slate-700 transition-colors"><i class="fa-solid fa-pen"></i></button>
-                        <button onclick="deleteEquipment('${eq.id}')" class="text-xs bg-rose-950/50 text-rose-400 px-2.5 py-1.5 rounded hover:bg-rose-900 transition-colors"><i class="fa-solid fa-trash"></i></button>
-                    </td>
-                </tr>
-            `).join('');
-            populateEqSelects();
-        }
+function handleEquipmentSubmit(e) {
+  e.preventDefault();
+  const id = document.getElementById('eq-form-id').value;
+  const code = document.getElementById('eq-form-code').value.trim();
 
-        function filterEquipments() {
-            const q = document.getElementById('eq-search').value.toLowerCase();
-            const loc = document.getElementById('eq-filter-location').value;
-            const stat = document.getElementById('eq-filter-status').value;
-            const filtered = equipments.filter(eq => 
-                (eq.name.toLowerCase().includes(q) || eq.code.toLowerCase().includes(q)) &&
-                (loc === 'ALL' || eq.location === loc) &&
-                (stat === 'ALL' || eq.status === stat)
-            );
-            renderEquipmentTable(filtered);
-        }
+  if (equipments.some(eq => eq.code.toLowerCase() === code.toLowerCase() && eq.id !== id)) {
+    showToast(`설비 코드 '${code}'는 이미 사용 중입니다.`, 'warning');
+    return;
+  }
 
-        // --- WORK ORDERS ---
-        function renderWorkOrders() {
-            const renderCard = (wo) => `
-                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow space-y-2 relative group hover:border-slate-600 transition-colors">
-                    <div class="flex justify-between items-start">
-                        <span class="text-[10px] font-bold text-slate-300 bg-slate-800 px-1.5 py-0.5 rounded">${wo.priority} | ${wo.type}</span>
-                        <div class="space-x-1 hidden group-hover:flex">
-                            <button onclick="editWorkOrder('${wo.id}')" class="bg-slate-800 text-slate-300 hover:text-white px-2 py-1 rounded text-[10px]"><i class="fa-solid fa-pen"></i></button>
-                            <button onclick="deleteWorkOrder('${wo.id}')" class="bg-slate-800 text-slate-300 hover:text-rose-400 px-2 py-1 rounded text-[10px]"><i class="fa-solid fa-trash"></i></button>
-                        </div>
-                    </div>
-                    <h4 class="text-xs font-bold text-slate-100 pt-1">${wo.title}</h4>
-                    <div class="text-[11px] text-slate-400 flex justify-between">
-                        <span><i class="fa-solid fa-gears"></i> ${wo.eqName}</span>
-                    </div>
-                    <div class="pt-2 flex justify-end gap-1">
-                        ${wo.status === 'pending' ? `<button onclick="updateWOStatus('${wo.id}', 'inprogress')" class="text-xs bg-blue-600/20 hover:bg-blue-600/40 border border-blue-500/30 text-blue-300 px-2.5 py-1.5 rounded transition-colors">수리 시작</button>` : ''}
-                        ${wo.status === 'inprogress' ? `<button onclick="updateWOStatus('${wo.id}', 'completed')" class="text-xs bg-emerald-600/20 hover:bg-emerald-600/40 border border-emerald-500/30 text-emerald-300 px-2.5 py-1.5 rounded transition-colors">조치 완료</button>` : ''}
-                    </div>
-                </div>
-            `;
-            const p = workOrders.filter(w => w.status === 'pending');
-            const i = workOrders.filter(w => w.status === 'inprogress');
-            const c = workOrders.filter(w => w.status === 'completed');
-            
-            document.getElementById('count-pending').textContent = p.length;
-            document.getElementById('count-inprogress').textContent = i.length;
-            document.getElementById('count-completed').textContent = c.length;
-            document.getElementById('pending-wo-badge').textContent = p.length + i.length;
+  const payload = {
+    code,
+    name: document.getElementById('eq-form-name').value.trim(),
+    location: document.getElementById('eq-form-location').value || UNASSIGNED,
+    model: document.getElementById('eq-form-model').value.trim() || '',
+    status: document.getElementById('eq-form-status').value,
+    oee: Math.min(100, Math.max(0, num(document.getElementById('eq-form-oee').value, 100))),
+    vibration: num(document.getElementById('eq-form-vib').value, 0),
+    temp: num(document.getElementById('eq-form-temp').value, 0)
+  };
 
-            document.getElementById('wo-col-pending').innerHTML = p.map(renderCard).join('');
-            document.getElementById('wo-col-inprogress').innerHTML = i.map(renderCard).join('');
-            document.getElementById('wo-col-completed').innerHTML = c.map(renderCard).join('');
-        }
+  let eq;
+  if (id) {
+    eq = eqById(id);
+    if (!eq) return;
+    Object.assign(eq, payload);
+    // 설비명이 바뀌면 작업지시·점검항목의 표시명도 맞춰 둡니다.
+    workOrders.filter(w => w.eqId === id).forEach(w => { w.eqName = eq.name; });
+    pmTasks.filter(p => p.eqId === id).forEach(p => { p.eqName = eq.name; });
+    showToast('설비 정보를 수정했습니다.', 'success');
+  } else {
+    eq = { id: uid('EQ'), ...payload };
+    equipments.push(eq);
+    showToast('설비를 등록했습니다.', 'success');
+  }
+  syncToSheet('Equipments', eq, 'upsert');
+  closeModal('equipment-modal');
+  renderAll();
+}
 
-        // --- PM LIST ---
-        function renderPMList() {
-            const total = pmTasks.length;
-            const done = pmTasks.filter(p => p.done).length;
-            document.getElementById('pm-completion-rate').textContent = total > 0 ? `${Math.round((done/total)*100)}% (${done}/${total})` : '0%';
+function handleWorkOrderSubmit(e) {
+  e.preventDefault();
+  const id = document.getElementById('wo-form-id').value;
+  const eqId = document.getElementById('wo-form-eq').value;
+  if (!eqId) { showToast('먼저 설비를 등록해 주세요.', 'warning'); return; }
+  const eq = eqById(eqId);
 
-            document.getElementById('pm-list-container').innerHTML = pmTasks.map(pm => `
-                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 flex items-center justify-between hover:bg-slate-900/50 transition-colors">
-                    <div class="flex items-center space-x-3">
-                        <button onclick="togglePMTask('${pm.id}')" class="w-6 h-6 rounded-lg border flex items-center justify-center transition-colors ${pm.done ? 'bg-amber-500 border-amber-500' : 'border-slate-600 hover:border-amber-500'}">
-                            ${pm.done ? '<i class="fa-solid fa-check text-xs text-slate-900"></i>' : ''}
-                        </button>
-                        <div>
-                            <span class="text-[10px] bg-slate-800 px-1.5 py-0.5 rounded mr-1.5 text-slate-400 font-medium">${pm.freq}</span>
-                            <span class="text-sm font-bold ${pm.done ? 'line-through text-slate-500' : 'text-slate-200'}">${pm.title}</span>
-                            <p class="text-xs text-slate-500 mt-1 pl-1"><i class="fa-solid fa-link text-[10px] mr-1"></i>${pm.eqName}</p>
-                        </div>
-                    </div>
-                    <div class="space-x-1 flex">
-                        <button onclick="editPMTask('${pm.id}')" class="bg-slate-900 text-slate-400 hover:text-white px-2.5 py-1.5 rounded transition-colors"><i class="fa-solid fa-pen text-xs"></i></button>
-                        <button onclick="deletePMTask('${pm.id}')" class="bg-slate-900 text-slate-400 hover:text-rose-400 px-2.5 py-1.5 rounded transition-colors"><i class="fa-solid fa-trash text-xs"></i></button>
-                    </div>
-                </div>
-            `).join('');
-        }
+  const payload = {
+    eqId,
+    eqName: eq ? eq.name : '삭제된 설비',
+    title: document.getElementById('wo-form-title').value.trim(),
+    priority: document.getElementById('wo-form-priority').value,
+    type: document.getElementById('wo-form-type').value,
+    assignee: document.getElementById('wo-form-assignee').value.trim(),
+    cost: num(document.getElementById('wo-form-cost').value, 0),
+    desc: document.getElementById('wo-form-desc').value.trim()
+  };
 
-        // --- SPARE PARTS ---
-        function renderSparePartsTable() {
-            const tbody = document.getElementById('spare-parts-table-body');
-            tbody.innerHTML = spareParts.map(sp => `
-                <tr class="hover:bg-slate-900/50 transition-colors">
-                    <td class="px-5 py-4"><div class="font-bold text-slate-200">${sp.name}</div><div class="text-xs text-slate-500">${sp.code}</div></td>
-                    <td class="px-5 py-4 font-mono font-bold ${sp.qty <= sp.minQty ? 'text-rose-400' : 'text-slate-200'}">${sp.qty} 개</td>
-                    <td class="px-5 py-4 font-mono text-xs text-slate-500">${sp.minQty} 개</td>
-                    <td class="px-5 py-4 text-right space-x-1">
-                        <button onclick="adjustPartQty('${sp.id}', 1)" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-2.5 py-1 rounded text-xs transition-colors"><i class="fa-solid fa-plus"></i></button>
-                        <button onclick="adjustPartQty('${sp.id}', -1)" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-2.5 py-1 rounded text-xs transition-colors"><i class="fa-solid fa-minus"></i></button>
-                        <button onclick="editSparePart('${sp.id}')" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-2.5 py-1 rounded text-xs ml-2 transition-colors"><i class="fa-solid fa-pen"></i></button>
-                        <button onclick="deleteSparePart('${sp.id}')" class="bg-rose-950/50 hover:bg-rose-900 text-rose-400 px-2.5 py-1 rounded text-xs transition-colors"><i class="fa-solid fa-trash"></i></button>
-                    </td>
-                </tr>
-            `).join('');
-        }
+  let wo;
+  if (id) {
+    wo = workOrders.find(w => w.id === id);
+    if (!wo) return;
+    Object.assign(wo, payload);
+    showToast('작업 내용을 수정했습니다.', 'success');
+  } else {
+    wo = { id: uid('WO'), ...payload, status: 'pending', date: kstDateTime(), completedAt: '' };
+    workOrders.unshift(wo);
+    if (wo.priority === 'HIGH' && eq && eq.status !== 'broken') {
+      eq.status = 'broken';
+      syncToSheet('Equipments', eq, 'upsert');
+    }
+    showToast('작업을 접수했습니다.', 'success');
+  }
+  syncToSheet('WorkOrders', wo, 'upsert');
+  closeModal('workorder-modal');
+  renderAll();
+}
 
-        // --- FORM OPENERS (Add / Edit) ---
-        function openLocationForm(id = null) {
-            document.getElementById('loc-form-id').value = id || '';
-            const form = document.querySelector('#location-modal form');
-            form.reset();
-            if (id) {
-                const loc = locations.find(l => l.id === id);
-                document.getElementById('loc-form-name').value = loc.name;
-                document.getElementById('loc-form-color').value = loc.color;
-            }
-            openModal('location-modal');
-        }
+function handlePMSubmit(e) {
+  e.preventDefault();
+  const id = document.getElementById('pm-form-id').value;
+  const eqId = document.getElementById('pm-form-eq').value;
+  const eq = eqById(eqId);
 
-        function openEqForm(id = null, defaultLoc = null) {
-            document.getElementById('eq-form-id').value = id || '';
-            const form = document.querySelector('#equipment-modal form');
-            form.reset();
-            populateLocationSelects();
+  const payload = {
+    eqId,
+    eqName: eq ? eq.name : '공통',
+    title: document.getElementById('pm-form-title').value.trim(),
+    freq: document.getElementById('pm-form-freq').value
+  };
 
-            if (id) {
-                const eq = equipments.find(e => e.id === id);
-                document.getElementById('eq-form-code').value = eq.code;
-                document.getElementById('eq-form-name').value = eq.name;
-                document.getElementById('eq-form-location').value = eq.location;
-                document.getElementById('eq-form-model').value = eq.model;
-            } else if (defaultLoc) {
-                document.getElementById('eq-form-location').value = defaultLoc;
-            }
-            openModal('equipment-modal');
-        }
+  let pm;
+  if (id) {
+    pm = pmTasks.find(p => p.id === id);
+    if (!pm) return;
+    Object.assign(pm, payload);
+    showToast('점검 항목을 수정했습니다.', 'success');
+  } else {
+    pm = { id: uid('PM'), ...payload, done: false, lastDone: '' };
+    pmTasks.push(pm);
+    showToast('점검 항목을 추가했습니다.', 'success');
+  }
+  syncToSheet('PMTasks', pm, 'upsert');
+  closeModal('pm-modal');
+  renderAll();
+}
 
-        function openWOForm(id = null) {
-            document.getElementById('wo-form-id').value = id || '';
-            const form = document.querySelector('#workorder-modal form');
-            form.reset();
-            populateEqSelects();
-            if (id) {
-                const wo = workOrders.find(w => w.id === id);
-                document.getElementById('wo-form-eq').value = wo.eqId;
-                document.getElementById('wo-form-title').value = wo.title;
-                document.getElementById('wo-form-priority').value = wo.priority;
-                document.getElementById('wo-form-type').value = wo.type;
-                document.getElementById('wo-form-desc').value = wo.desc;
-            }
-            openModal('workorder-modal');
-        }
+function handleSparePartSubmit(e) {
+  e.preventDefault();
+  const id = document.getElementById('sp-form-id').value;
+  const code = document.getElementById('sp-form-code').value.trim();
 
-        function openPMForm(id = null) {
-            document.getElementById('pm-form-id').value = id || '';
-            const form = document.querySelector('#pm-modal form');
-            form.reset();
-            populateEqSelects();
-            if (id) {
-                const pm = pmTasks.find(p => p.id === id);
-                document.getElementById('pm-form-eq').value = pm.eqId;
-                document.getElementById('pm-form-title').value = pm.title;
-                document.getElementById('pm-form-freq').value = pm.freq;
-            }
-            openModal('pm-modal');
-        }
+  if (spareParts.some(sp => sp.code.toLowerCase() === code.toLowerCase() && sp.id !== id)) {
+    showToast(`부품 코드 '${code}'는 이미 사용 중입니다.`, 'warning');
+    return;
+  }
 
-        function openSPForm(id = null) {
-            document.getElementById('sp-form-id').value = id || '';
-            const form = document.querySelector('#sparepart-modal form');
-            form.reset();
-            if (id) {
-                const sp = spareParts.find(s => s.id === id);
-                document.getElementById('sp-form-code').value = sp.code;
-                document.getElementById('sp-form-name').value = sp.name;
-                document.getElementById('sp-form-qty').value = sp.qty;
-                document.getElementById('sp-form-min').value = sp.minQty;
-            }
-            openModal('sparepart-modal');
-        }
+  const payload = {
+    code,
+    name: document.getElementById('sp-form-name').value.trim(),
+    category: document.getElementById('sp-form-category').value,
+    location: document.getElementById('sp-form-location').value.trim(),
+    qty: Math.max(0, num(document.getElementById('sp-form-qty').value, 0)),
+    minQty: Math.max(0, num(document.getElementById('sp-form-min').value, 0))
+  };
 
-        // --- SUBMIT HANDLERS (Upsert) ---
-        function handleLocationSubmit(e) {
-            e.preventDefault();
-            const id = document.getElementById('loc-form-id').value;
-            const newName = document.getElementById('loc-form-name').value;
-            const color = document.getElementById('loc-form-color').value;
-            
-            let loc = id ? locations.find(l => l.id === id) : {};
-            const oldName = loc.name;
-            
-            loc.name = newName;
-            loc.color = color;
-            
-            if (id) {
-                syncToSheet('Locations', loc, 'upsert');
-                if (oldName && oldName !== newName) {
-                    equipments.forEach(eq => {
-                        if (eq.location === oldName) {
-                            eq.location = newName;
-                            syncToSheet('Equipments', eq, 'upsert');
-                        }
-                    });
-                }
-                showToast('라인 정보가 수정되었습니다.', 'success');
-            } else {
-                loc.id = `LOC-${Math.floor(100 + Math.random() * 900)}`;
-                locations.push(loc);
-                syncToSheet('Locations', loc, 'upsert');
-                showToast('신규 라인이 등록되었습니다.', 'success');
-            }
-            
-            closeModal('location-modal');
-            populateLocationSelects();
-            renderLayoutMap();
-            renderEquipmentTable();
-        }
+  let sp;
+  if (id) {
+    sp = spareParts.find(s => s.id === id);
+    if (!sp) return;
+    Object.assign(sp, payload);
+    showToast('부품 정보를 수정했습니다.', 'success');
+  } else {
+    sp = { id: uid('SP'), ...payload };
+    spareParts.push(sp);
+    showToast('부품을 등록했습니다.', 'success');
+  }
+  syncToSheet('SpareParts', sp, 'upsert');
+  closeModal('sparepart-modal');
+  renderAll();
+}
 
-        function handleEquipmentSubmit(e) {
-            e.preventDefault();
-            const id = document.getElementById('eq-form-id').value;
-            let eq = id ? equipments.find(e => e.id === id) : {};
-            
-            eq.code = document.getElementById('eq-form-code').value;
-            eq.name = document.getElementById('eq-form-name').value;
-            eq.location = document.getElementById('eq-form-location').value;
-            eq.model = document.getElementById('eq-form-model').value || '기타';
+/* ---------- 15. 삭제 (확인 후 실행) ---------- */
+async function deleteLocation(id) {
+  const loc = locations.find(l => l.id === id);
+  if (!loc) return;
+  const count = equipments.filter(eq => eq.location === loc.name).length;
+  const ok = await askConfirm({
+    title: `'${loc.name}' 라인을 삭제할까요?`,
+    message: count ? `이 라인의 설비 ${count}대는 '${UNASSIGNED}' 구역으로 옮겨집니다. 설비 자체는 삭제되지 않습니다.`
+                   : '배치된 설비가 없어 바로 삭제됩니다.'
+  });
+  if (!ok) return;
 
-            if (id) {
-                syncToSheet('Equipments', eq, 'upsert');
-                showToast('설비 정보가 수정되었습니다.', 'success');
-            } else {
-                eq.id = `EQ-${Math.floor(1000 + Math.random() * 9000)}`;
-                eq.status = 'running'; eq.runtime = 0; eq.temp = 35; eq.vibration = 1.0; eq.oee = 100;
-                equipments.push(eq);
-                syncToSheet('Equipments', eq, 'upsert');
-                showToast('신규 설비가 등록되었습니다.', 'success');
-            }
-            closeModal('equipment-modal');
-            renderEquipmentTable(); 
-            renderDashboard();
-            renderLayoutMap();
-        }
+  equipments.filter(eq => eq.location === loc.name).forEach(eq => {
+    eq.location = UNASSIGNED;
+    syncToSheet('Equipments', eq, 'upsert');
+  });
+  locations = locations.filter(l => l.id !== id);
+  syncToSheet('Locations', { id }, 'delete');
+  renderAll();
+  showToast(`'${loc.name}' 라인을 삭제했습니다.`, 'warning');
+}
 
-        function handleWorkOrderSubmit(e) {
-            e.preventDefault();
-            const id = document.getElementById('wo-form-id').value;
-            const eqId = document.getElementById('wo-form-eq').value;
-            const eq = equipments.find(e => e.id === eqId);
-            let wo = id ? workOrders.find(w => w.id === id) : {};
+async function deleteEquipment(id) {
+  const eq = eqById(id);
+  if (!eq) return;
+  const woCount = workOrders.filter(w => w.eqId === id).length;
+  const pmCount = pmTasks.filter(p => p.eqId === id).length;
+  const ok = await askConfirm({
+    title: `'${eq.name}' 설비를 삭제할까요?`,
+    message: (woCount || pmCount)
+      ? `연결된 작업지시 ${woCount}건, 점검항목 ${pmCount}건도 함께 삭제됩니다.`
+      : '삭제한 설비는 복구할 수 없습니다.'
+  });
+  if (!ok) return;
 
-            wo.eqId = eqId;
-            wo.eqName = eq ? eq.name : '미정';
-            wo.title = document.getElementById('wo-form-title').value;
-            wo.priority = document.getElementById('wo-form-priority').value;
-            wo.type = document.getElementById('wo-form-type').value;
-            wo.desc = document.getElementById('wo-form-desc').value;
+  workOrders.filter(w => w.eqId === id).forEach(w => syncToSheet('WorkOrders', { id: w.id }, 'delete'));
+  pmTasks.filter(p => p.eqId === id).forEach(p => syncToSheet('PMTasks', { id: p.id }, 'delete'));
+  workOrders = workOrders.filter(w => w.eqId !== id);
+  pmTasks = pmTasks.filter(p => p.eqId !== id);
+  equipments = equipments.filter(e => e.id !== id);
+  syncToSheet('Equipments', { id }, 'delete');
+  closeModal('equipment-detail-modal');
+  renderAll();
+  showToast('설비를 삭제했습니다.', 'warning');
+}
 
-            if (id) {
-                syncToSheet('WorkOrders', wo, 'upsert');
-                showToast('작업 지시가 수정되었습니다.', 'success');
-            } else {
-                wo.id = `WO-2026-${Math.floor(1000 + Math.random() * 9000)}`;
-                wo.status = 'pending'; wo.date = new Date().toISOString().slice(0, 16).replace('T', ' ');
-                if (wo.priority === 'HIGH' && eq) { 
-                    eq.status = 'broken'; 
-                    syncToSheet('Equipments', eq, 'upsert'); 
-                }
-                workOrders.unshift(wo);
-                syncToSheet('WorkOrders', wo, 'upsert');
-                showToast('신규 작업이 등록되었습니다.', 'success');
-            }
-            closeModal('workorder-modal');
-            renderWorkOrders(); 
-            renderDashboard();
-            renderLayoutMap();
-        }
+async function deleteWorkOrder(id) {
+  const wo = workOrders.find(w => w.id === id);
+  if (!wo) return;
+  const ok = await askConfirm({ title: '작업 지시를 삭제할까요?', message: `'${wo.title}' 기록이 사라집니다.` });
+  if (!ok) return;
+  workOrders = workOrders.filter(w => w.id !== id);
+  syncToSheet('WorkOrders', { id }, 'delete');
+  renderAll();
+  showToast('작업 지시를 삭제했습니다.', 'warning');
+}
 
-        function handlePMSubmit(e) {
-            e.preventDefault();
-            const id = document.getElementById('pm-form-id').value;
-            const eqId = document.getElementById('pm-form-eq').value;
-            const eq = equipments.find(e => e.id === eqId);
-            let pm = id ? pmTasks.find(p => p.id === id) : {};
+async function deletePMTask(id) {
+  const pm = pmTasks.find(p => p.id === id);
+  if (!pm) return;
+  const ok = await askConfirm({ title: '점검 항목을 삭제할까요?', message: `'${pm.title}' 항목이 사라집니다.` });
+  if (!ok) return;
+  pmTasks = pmTasks.filter(p => p.id !== id);
+  syncToSheet('PMTasks', { id }, 'delete');
+  renderAll();
+  showToast('점검 항목을 삭제했습니다.', 'warning');
+}
 
-            pm.eqId = eqId;
-            pm.eqName = eq ? eq.name : '공통';
-            pm.title = document.getElementById('pm-form-title').value;
-            pm.freq = document.getElementById('pm-form-freq').value;
+async function deleteSparePart(id) {
+  const sp = spareParts.find(s => s.id === id);
+  if (!sp) return;
+  const ok = await askConfirm({ title: '부품을 삭제할까요?', message: `'${sp.name}' 재고 정보가 사라집니다.` });
+  if (!ok) return;
+  spareParts = spareParts.filter(s => s.id !== id);
+  syncToSheet('SpareParts', { id }, 'delete');
+  renderAll();
+  showToast('부품을 삭제했습니다.', 'warning');
+}
 
-            if (id) {
-                syncToSheet('PMTasks', pm, 'upsert');
-                showToast('PM 항목이 수정되었습니다.', 'success');
-            } else {
-                pm.id = `PM-${Math.floor(100 + Math.random() * 900)}`;
-                pm.done = false;
-                pmTasks.push(pm);
-                syncToSheet('PMTasks', pm, 'upsert');
-                showToast('신규 PM 항목이 등록되었습니다.', 'success');
-            }
-            closeModal('pm-modal');
-            renderPMList(); renderDashboard();
-        }
+/* ---------- 16. 통계 (등록 데이터 기반) ---------- */
+function makeChart(key, canvasId, config) {
+  const el = document.getElementById(canvasId);
+  if (!el) return;
+  charts[key]?.destroy();
+  charts[key] = new Chart(el, config);
+}
 
-        function handleSparePartSubmit(e) {
-            e.preventDefault();
-            const id = document.getElementById('sp-form-id').value;
-            let sp = id ? spareParts.find(s => s.id === id) : {};
+function renderAnalyticsCharts() {
+  if (typeof Chart === 'undefined') return;
+  Chart.defaults.color = '#94a3b8';
+  Chart.defaults.font.family = "'Pretendard','Malgun Gothic',sans-serif";
+  Chart.defaults.font.size = 11;
 
-            sp.code = document.getElementById('sp-form-code').value;
-            sp.name = document.getElementById('sp-form-name').value;
-            sp.qty = parseInt(document.getElementById('sp-form-qty').value);
-            sp.minQty = parseInt(document.getElementById('sp-form-min').value);
-            sp.category = '기타부품';
+  const grid = { color: 'rgba(148,163,184,0.12)' };
+  const axes = { x: { grid, ticks: { color: '#94a3b8' } }, y: { grid, ticks: { color: '#94a3b8' }, beginAtZero: true } };
 
-            if (id) {
-                syncToSheet('SpareParts', sp, 'upsert');
-                showToast('부품 정보가 수정되었습니다.', 'success');
-            } else {
-                sp.id = `SP-${Math.floor(100 + Math.random() * 900)}`;
-                spareParts.push(sp);
-                syncToSheet('SpareParts', sp, 'upsert');
-                showToast('신규 부품이 등록되었습니다.', 'success');
-            }
-            closeModal('sparepart-modal');
-            renderSparePartsTable();
-        }
+  // 최근 6개월 보전비용
+  const months = [];
+  const base = new Date();
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(base.getFullYear(), base.getMonth() - i, 1);
+    months.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
+  }
+  const costByMonth = months.map(m =>
+    workOrders.filter(w => String(w.date || '').startsWith(m)).reduce((a, w) => a + num(w.cost), 0));
 
-        // --- EDIT TRIGGERS ---
-        function editLocation(id) { openLocationForm(id); }
-        function editEquipment(id) { openEqForm(id); }
-        function editWorkOrder(id) { openWOForm(id); }
-        function editPMTask(id) { openPMForm(id); }
-        function editSparePart(id) { openSPForm(id); }
+  makeChart('monthly', 'chartMonthlyCost', {
+    type: 'bar',
+    data: { labels: months.map(m => `${Number(m.slice(5))}월`),
+            datasets: [{ label: '보전비용(천원)', data: costByMonth, backgroundColor: 'rgba(56,189,248,0.55)', borderRadius: 6 }] },
+    options: { maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: axes }
+  });
 
-        // --- DELETE HANDLERS ---
-        function deleteLocation(id) {
-            const loc = locations.find(l => l.id === id);
-            if (!loc) return;
-            
-            equipments.forEach(eq => {
-                if (eq.location === loc.name) {
-                    eq.location = '미지정';
-                    syncToSheet('Equipments', eq, 'upsert');
-                }
-            });
-            
-            locations = locations.filter(l => l.id !== id);
-            syncToSheet('Locations', { id: id }, 'delete');
-            
-            populateLocationSelects();
-            renderLayoutMap(); 
-            renderEquipmentTable();
-            showToast(`'${loc.name}' 구역이 삭제되었습니다.`, 'warning');
-        }
+  // 작업 유형 비중
+  const types = ['고장수리', '예방보전', '개조/개선'];
+  const typeCounts = types.map(t => workOrders.filter(w => w.type === t).length);
+  makeChart('pie', 'chartWorkTypePie', {
+    type: 'doughnut',
+    data: { labels: types, datasets: [{ data: typeCounts, backgroundColor: ['#f43f5e', '#10b981', '#6366f1'], borderColor: '#0f172a', borderWidth: 2 }] },
+    options: { maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+  });
 
-        function deleteEquipment(id) {
-            equipments = equipments.filter(e => e.id !== id);
-            syncToSheet('Equipments', { id: id }, 'delete');
-            renderEquipmentTable(); renderDashboard(); renderLayoutMap();
-            showToast('설비가 삭제되었습니다.', 'warning');
-        }
-        function deleteWorkOrder(id) {
-            workOrders = workOrders.filter(w => w.id !== id);
-            syncToSheet('WorkOrders', { id: id }, 'delete');
-            renderWorkOrders(); renderDashboard();
-            showToast('작업 지시가 삭제되었습니다.', 'warning');
-        }
-        function deletePMTask(id) {
-            pmTasks = pmTasks.filter(p => p.id !== id);
-            syncToSheet('PMTasks', { id: id }, 'delete');
-            renderPMList(); renderDashboard();
-            showToast('PM 항목이 삭제되었습니다.', 'warning');
-        }
-        function deleteSparePart(id) {
-            spareParts = spareParts.filter(s => s.id !== id);
-            syncToSheet('SpareParts', { id: id }, 'delete');
-            renderSparePartsTable();
-            showToast('부품이 삭제되었습니다.', 'warning');
-        }
+  // 라인별 설비 상태
+  const lineNames = [...locations.map(l => l.name),
+                     ...(equipments.some(e => !isKnownLocation(e.location)) ? [UNASSIGNED] : [])];
+  makeChart('lineStatus', 'chartLineStatus', {
+    type: 'bar',
+    data: {
+      labels: lineNames,
+      datasets: Object.entries(STATUS).map(([key, s]) => ({
+        label: s.label,
+        data: lineNames.map(n => equipments.filter(e => normalizeLoc(e.location) === n && e.status === key).length),
+        backgroundColor: s.hex, borderRadius: 4
+      }))
+    },
+    options: {
+      maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } },
+      scales: { x: { stacked: true, grid, ticks: { color: '#94a3b8' } },
+                y: { stacked: true, grid, beginAtZero: true, ticks: { precision: 0, color: '#94a3b8' } } }
+    }
+  });
 
-        // --- MISC HANDLERS ---
-        function updateWOStatus(id, newStatus) {
-            const wo = workOrders.find(w => w.id === id);
-            if (wo) {
-                wo.status = newStatus;
-                if (newStatus === 'completed') {
-                    const eq = equipments.find(e => e.id === wo.eqId);
-                    if (eq) { 
-                        eq.status = 'running'; 
-                        syncToSheet('Equipments', eq, 'upsert'); 
-                    }
-                }
-                syncToSheet('WorkOrders', wo, 'upsert');
-                renderWorkOrders(); 
-                renderDashboard(); 
-                renderEquipmentTable();
-                renderLayoutMap();
-                showToast(`작업 상태가 변경되었습니다.`, 'success');
-            }
-        }
+  // 설비별 고장 건수 상위 5
+  const failure = {};
+  workOrders.filter(w => w.type === '고장수리').forEach(w => {
+    const name = eqNameOf(w);
+    failure[name] = (failure[name] || 0) + 1;
+  });
+  const top = Object.entries(failure).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  makeChart('topFailure', 'chartTopFailure', {
+    type: 'bar',
+    data: { labels: top.map(t => t[0]), datasets: [{ label: '고장 건수', data: top.map(t => t[1]), backgroundColor: '#f43f5e', borderRadius: 4 }] },
+    options: {
+      indexAxis: 'y', maintainAspectRatio: false, plugins: { legend: { display: false } },
+      scales: { x: { grid, beginAtZero: true, ticks: { precision: 0, color: '#94a3b8' } }, y: { grid: { display: false }, ticks: { color: '#94a3b8' } } }
+    }
+  });
+}
 
-        function togglePMTask(id) {
-            const pm = pmTasks.find(p => p.id === id);
-            if (pm) {
-                pm.done = !pm.done;
-                syncToSheet('PMTasks', pm, 'upsert');
-                renderPMList(); renderDashboard();
-            }
-        }
+/* ---------- 17. 사이드바 너비 조절 ---------- */
+function initResizer() {
+  const sidebar = document.getElementById('sidebar');
+  const resizer = document.getElementById('resizer');
+  if (!sidebar || !resizer) return;
+  let resizing = false;
 
-        function adjustPartQty(id, delta) {
-            const sp = spareParts.find(s => s.id === id);
-            if (sp) {
-                sp.qty = Math.max(0, sp.qty + delta);
-                syncToSheet('SpareParts', sp, 'upsert');
-                renderSparePartsTable();
-            }
-        }
+  const setWidth = px => sidebar.style.setProperty('--sidebar-width', `${Math.min(600, Math.max(180, px))}px`);
 
-        function openEquipmentDetail(eqId) {
-            const eq = equipments.find(e => e.id === eqId);
-            if (!eq) return;
-            document.getElementById('eq-modal-content').innerHTML = `
-                <div class="border-b border-slate-800 pb-4">
-                    <h2 class="text-xl font-bold text-white">${eq.name} <span class="text-sm font-normal text-slate-400">(${eq.code})</span></h2>
-                    <p class="text-xs text-slate-400 mt-1">위치: <span class="text-slate-200">${eq.location}</span> | 모델: ${eq.model}</p>
-                </div>
-                <div class="grid grid-cols-3 gap-3 my-4 bg-slate-950 p-3 rounded-xl text-center">
-                    <div><span class="text-[11px] text-slate-500 block">진동</span><span class="text-sm font-bold text-slate-200">${eq.vibration}</span></div>
-                    <div><span class="text-[11px] text-slate-500 block">온도</span><span class="text-sm font-bold text-slate-200">${eq.temp}°C</span></div>
-                    <div><span class="text-[11px] text-slate-500 block">OEE</span><span class="text-sm font-bold text-emerald-400">${eq.oee}%</span></div>
-                </div>
-            `;
-            openModal('equipment-detail-modal');
-        }
+  resizer.addEventListener('mousedown', () => {
+    resizing = true;
+    document.body.style.cursor = 'col-resize';
+    document.body.classList.add('select-none');
+  });
+  document.addEventListener('mousemove', e => { if (resizing) setWidth(e.clientX); });
+  document.addEventListener('mouseup', () => {
+    if (!resizing) return;
+    resizing = false;
+    document.body.style.cursor = '';
+    document.body.classList.remove('select-none');
+  });
+  // 키보드로도 조절 가능하게
+  resizer.addEventListener('keydown', e => {
+    const cur = parseInt(getComputedStyle(sidebar).width, 10) || 256;
+    if (e.key === 'ArrowLeft') { setWidth(cur - 20); e.preventDefault(); }
+    if (e.key === 'ArrowRight') { setWidth(cur + 20); e.preventDefault(); }
+  });
+}
 
-        function openModal(id) { document.getElementById(id)?.classList.remove('hidden'); }
-        function closeModal(id) { document.getElementById(id)?.classList.add('hidden'); }
-        
-        function showToast(msg, type = 'info') {
-            const toast = document.createElement('div');
-            toast.className = `px-4 py-3 rounded-xl border text-xs font-medium shadow-2xl flex items-center gap-2 transform transition-all duration-300 pointer-events-auto ${type === 'success' ? 'bg-emerald-900/90 border-emerald-500 text-emerald-200' : type === 'warning' ? 'bg-rose-900/90 border-rose-500 text-rose-200' : 'bg-slate-900/90 border-brand-500 text-slate-100'}`;
-            toast.innerHTML = `<i class="fa-solid fa-circle-info"></i> <span>${msg}</span>`;
-            document.getElementById('toast-container').appendChild(toast);
-            setTimeout(() => { toast.classList.add('opacity-0', 'translate-y-2'); setTimeout(() => toast.remove(), 300); }, 2500);
-        }
+/* ---------- 18. 시작 ---------- */
+window.addEventListener('DOMContentLoaded', () => {
+  updateClock();
+  setInterval(updateClock, 1000);
+  initResizer();
+  switchTab('dashboard');
 
-        // Charts
-        function initDashboardCharts() {
-            if(charts.downtime) return;
-            const c1 = document.getElementById('chartDowntimeCauses');
-            const c2 = document.getElementById('chartVibrationTrend');
-            if(c1) charts.downtime = new Chart(c1, { type: 'bar', data: { labels: ['과열', '마모', '센서', '과부하'], datasets: [{ data: [12, 8, 5, 3], backgroundColor: '#f43f5e' }] }, options: { maintainAspectRatio: false } });
-            if(c2) charts.vibration = new Chart(c2, { type: 'line', data: { labels: ['08시', '10시', '12시', '14시'], datasets: [{ label: '온도', data: [38, 41, 45, 48], borderColor: '#10b981' }] }, options: { maintainAspectRatio: false } });
-        }
-        function renderAnalyticsCharts() {
-            if(charts.monthly) return;
-            const c3 = document.getElementById('chartMonthlyCost');
-            const c4 = document.getElementById('chartWorkTypePie');
-            if(c3) charts.monthly = new Chart(c3, { type: 'line', data: { labels: ['4월', '5월', '6월', '7월'], datasets: [{ data: [380, 510, 290, 340], borderColor: '#38bdf8' }] }, options: { maintainAspectRatio: false } });
-            if(c4) charts.pie = new Chart(c4, { type: 'doughnut', data: { labels: ['예방', '고장', '개선'], datasets: [{ data: [65, 25, 10], backgroundColor: ['#10b981', '#f43f5e', '#6366f1'] }] }, options: { maintainAspectRatio: false } });
-        }
+  // ESC로 닫기 / 바깥 클릭으로 닫기
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeTopModal(); });
+  document.querySelectorAll('.modal').forEach(m => {
+    m.addEventListener('mousedown', e => { if (e.target === m && m.id !== 'confirm-modal') m.classList.add('hidden'); });
+  });
 
-        // --- SIDEBAR RESIZER LOGIC ---
-        function initResizer() {
-            const sidebar = document.getElementById('sidebar');
-            const resizer = document.getElementById('resizer');
-            let isResizing = false;
+  resetExpiredPM();
+  renderAll();
+  loadFromSheet(); // 시트 연동 시 최신 데이터로 대체
+});
 
-            if (!resizer || !sidebar) return;
-
-            resizer.addEventListener('mousedown', (e) => {
-                isResizing = true;
-                document.body.style.cursor = 'col-resize';
-                document.body.classList.add('select-none');
-            });
-
-            document.addEventListener('mousemove', (e) => {
-                if (!isResizing) return;
-                let newWidth = e.clientX;
-                if (newWidth < 180) newWidth = 180;
-                if (newWidth > 600) newWidth = 600;
-                sidebar.style.setProperty('--sidebar-width', `${newWidth}px`);
-            });
-
-            document.addEventListener('mouseup', () => {
-                if (isResizing) {
-                    isResizing = false;
-                    document.body.style.cursor = 'default';
-                    document.body.classList.remove('select-none');
-                }
-            });
-        }
-
-        window.onload = function() {
-            populateLocationSelects();
-            setInterval(updateClock, 1000); updateClock();
-            switchTab('dashboard');
-            initResizer();
-        };
-    </script>
+</script>
 </body>
 </html>
