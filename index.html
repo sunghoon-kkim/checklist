@@ -45,22 +45,6 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #64748b;
         }
-        .status-pulse-running {
-            box-shadow: 0 0 10px rgba(16, 185, 129, 0.6);
-            animation: pulse-green 2s infinite;
-        }
-        .status-pulse-broken {
-            box-shadow: 0 0 12px rgba(244, 63, 94, 0.8);
-            animation: pulse-red 1s infinite;
-        }
-        @keyframes pulse-green {
-            0%, 100% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.03); opacity: 0.85; }
-        }
-        @keyframes pulse-red {
-            0%, 100% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.04); opacity: 0.7; }
-        }
     </style>
 </head>
 <body class="bg-slate-950 text-slate-100 font-sans min-h-screen flex flex-col antialiased selection:bg-brand-500 selection:text-white">
@@ -73,7 +57,7 @@
             </div>
             <div>
                 <h1 class="text-lg font-bold tracking-wide text-white flex items-center gap-2">
-                    SMART FMS <span class="text-xs font-normal bg-brand-900/80 text-brand-300 border border-brand-700/50 px-2 py-0.5 rounded-full">공무팀 보전관리 v2.5</span>
+                    SMART FMS <span class="text-xs font-normal bg-brand-900/80 text-brand-300 border border-brand-700/50 px-2 py-0.5 rounded-full">공무팀 보전관리 v3.0</span>
                 </h1>
                 <p class="text-xs text-slate-400 hidden sm:block">스마트 공장 설비 가동 모니터링 & 예방보전 시스템</p>
             </div>
@@ -149,15 +133,6 @@
                     <span>통계 및 KPI 분석</span>
                 </button>
             </nav>
-
-            <div class="hidden md:block border-t border-slate-800 pt-4 mt-4 text-xs text-slate-500">
-                <div class="flex items-center space-x-2 text-slate-400 mb-1">
-                    <i class="fa-solid fa-headset text-brand-500"></i>
-                    <span class="font-semibold">공무팀 직통 내선</span>
-                </div>
-                <p>긴급 고장 수리: ext. 701~703</p>
-                <p>당직 당당자: 김보전 책임 (010-1234-5678)</p>
-            </div>
         </aside>
 
         <main class="flex-1 bg-slate-950 p-4 md:p-6 overflow-y-auto space-y-6">
@@ -237,21 +212,6 @@
                         <div id="dash-recent-orders" class="space-y-3 flex-1 overflow-y-auto max-h-[280px] pr-1"></div>
                     </div>
                 </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
-                        <h3 class="font-bold text-slate-100 mb-4 flex items-center gap-2">
-                            <i class="fa-solid fa-chart-column text-indigo-400"></i> 라인별 정지 원인 (이번달)
-                        </h3>
-                        <div class="h-60"><canvas id="chartDowntimeCauses"></canvas></div>
-                    </div>
-                    <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
-                        <h3 class="font-bold text-slate-100 mb-4 flex items-center gap-2">
-                            <i class="fa-solid fa-wave-square text-emerald-400"></i> 주요 설비 진동 / 온도 트렌드
-                        </h3>
-                        <div class="h-60"><canvas id="chartVibrationTrend"></canvas></div>
-                    </div>
-                </div>
             </section>
 
             <!-- TAB 2: INTERACTIVE FACTORY FLOOR MAP -->
@@ -261,36 +221,25 @@
                         <div>
                             <h2 class="text-lg font-bold text-white flex items-center gap-2">
                                 <i class="fa-solid fa-map-location-dot text-brand-500"></i>
-                                생산 라인 & 유틸리티 설비 스마트 배치도
+                                사용자 지정 공장 레이아웃
                             </h2>
-                            <p class="text-xs text-slate-400 mt-0.5">설비를 클릭하면 상세 정보 및 실시간 센서 수치를 확인할 수 있습니다.</p>
+                            <p class="text-xs text-slate-400 mt-0.5">우측의 [라인 신설] 버튼으로 새로운 구역을 자유롭게 만들고, 해당 구역에 설비를 배치하세요.</p>
                         </div>
-                        <!-- Status Legend -->
-                        <div class="flex items-center space-x-4 text-xs">
-                            <div class="flex items-center space-x-1.5"><span class="w-3 h-3 rounded-full bg-emerald-500"></span><span class="text-slate-300">정상 가동</span></div>
-                            <div class="flex items-center space-x-1.5"><span class="w-3 h-3 rounded-full bg-amber-500"></span><span class="text-slate-300">점검/대기</span></div>
-                            <div class="flex items-center space-x-1.5"><span class="w-3 h-3 rounded-full bg-rose-500"></span><span class="text-slate-300">고장 정지</span></div>
+                        <!-- Status Legend & Add Line Button -->
+                        <div class="flex items-center gap-4">
+                            <div class="hidden sm:flex items-center space-x-4 text-xs bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-800">
+                                <div class="flex items-center space-x-1.5"><span class="w-3 h-3 rounded-full bg-emerald-500"></span><span class="text-slate-300">가동</span></div>
+                                <div class="flex items-center space-x-1.5"><span class="w-3 h-3 rounded-full bg-amber-500"></span><span class="text-slate-300">점검</span></div>
+                                <div class="flex items-center space-x-1.5"><span class="w-3 h-3 rounded-full bg-rose-500"></span><span class="text-slate-300">고장</span></div>
+                            </div>
+                            <button onclick="openLocationForm()" class="bg-brand-600 hover:bg-brand-500 text-white px-3 py-1.5 rounded-xl text-sm font-medium flex items-center gap-1.5 transition-all shadow">
+                                <i class="fa-solid fa-folder-plus"></i> 라인 신설
+                            </button>
                         </div>
                     </div>
-                    <div class="bg-slate-950 p-6 rounded-2xl border border-slate-800 space-y-8 overflow-x-auto">
-                        <div>
-                            <div class="flex items-center gap-2 mb-3">
-                                <span class="bg-brand-900/80 text-brand-300 text-xs font-bold px-2.5 py-1 rounded-md">가공 A 라인</span>
-                            </div>
-                            <div id="map-line-a" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4"></div>
-                        </div>
-                        <div>
-                            <div class="flex items-center gap-2 mb-3">
-                                <span class="bg-indigo-900/80 text-indigo-300 text-xs font-bold px-2.5 py-1 rounded-md">조립 B 라인</span>
-                            </div>
-                            <div id="map-line-b" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4"></div>
-                        </div>
-                        <div>
-                            <div class="flex items-center gap-2 mb-3">
-                                <span class="bg-slate-800 text-slate-300 text-xs font-bold px-2.5 py-1 rounded-md">동력 및 유틸리티 동</span>
-                            </div>
-                            <div id="map-utility" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4"></div>
-                        </div>
+                    <!-- 동적 레이아웃 생성 컨테이너 -->
+                    <div id="layout-container" class="bg-slate-950 p-6 rounded-2xl border border-slate-800 space-y-8 overflow-x-auto min-h-[400px]">
+                        <!-- JS 코드가 여기에 라인과 설비를 그려넣습니다. -->
                     </div>
                 </div>
             </section>
@@ -304,10 +253,7 @@
                             <input type="text" id="eq-search" oninput="filterEquipments()" placeholder="설비명, 설비코드 검색..." class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-sm focus:outline-none focus:border-brand-500">
                         </div>
                         <select id="eq-filter-location" onchange="filterEquipments()" class="bg-slate-950 text-slate-300 border border-slate-800 rounded-xl px-3 py-2 text-sm">
-                            <option value="ALL">전체 위치</option>
-                            <option value="A라인">A라인</option>
-                            <option value="B라인">B라인</option>
-                            <option value="동력동">동력동</option>
+                            <!-- JS에서 동적 생성됨 -->
                         </select>
                         <select id="eq-filter-status" onchange="filterEquipments()" class="bg-slate-950 text-slate-300 border border-slate-800 rounded-xl px-3 py-2 text-sm">
                             <option value="ALL">전체 상태</option>
@@ -317,7 +263,7 @@
                         </select>
                     </div>
                     <button onclick="openEqForm()" class="bg-brand-600 hover:bg-brand-500 text-white px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2 shadow">
-                        <i class="fa-solid fa-plus"></i> 신규 등록
+                        <i class="fa-solid fa-plus"></i> 설비 등록
                     </button>
                 </div>
 
@@ -327,7 +273,7 @@
                             <thead class="bg-slate-950 text-xs uppercase text-slate-400 border-b border-slate-800">
                                 <tr>
                                     <th class="px-5 py-3.5">설비 코드/명</th>
-                                    <th class="px-5 py-3.5">위치</th>
+                                    <th class="px-5 py-3.5">위치 (라인)</th>
                                     <th class="px-5 py-3.5">상태</th>
                                     <th class="px-5 py-3.5">진동 / 온도</th>
                                     <th class="px-5 py-3.5 text-right">관리</th>
@@ -427,7 +373,7 @@
                     </div>
                 </div>
             </section>
-
+            
             <!-- TAB 7: ANALYTICS -->
             <section id="tab-analytics" class="tab-content hidden space-y-6">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -449,6 +395,73 @@
         <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
             <button onclick="closeModal('equipment-detail-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
             <div id="eq-modal-content"></div>
+        </div>
+    </div>
+
+    <!-- LOCATION ADD/EDIT MODAL -->
+    <div id="location-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-sm w-full p-6 shadow-2xl relative">
+            <button onclick="closeModal('location-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+            <h3 class="text-lg font-bold text-white mb-4"><i class="fa-solid fa-folder-plus text-brand-500"></i> 공장 라인 / 구역 신설 및 수정</h3>
+            <form onsubmit="handleLocationSubmit(event)" class="space-y-4">
+                <input type="hidden" id="loc-form-id">
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">라인 / 구역 이름 설정</label>
+                    <input type="text" id="loc-form-name" required placeholder="예: 가공 A라인, 프레스동 등" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">테마 컬러</label>
+                    <select id="loc-form-color" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+                        <option value="blue">Blue (블루)</option>
+                        <option value="indigo">Indigo (인디고)</option>
+                        <option value="emerald">Emerald (에메랄드)</option>
+                        <option value="amber">Amber (앰버)</option>
+                        <option value="rose">Rose (로즈)</option>
+                        <option value="slate">Slate (슬레이트)</option>
+                    </select>
+                </div>
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" onclick="closeModal('location-modal')" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm">취소</button>
+                    <button type="submit" class="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-xl text-sm shadow">저장하기</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- EQUIPMENT ADD/EDIT MODAL -->
+    <div id="equipment-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl relative">
+            <button onclick="closeModal('equipment-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+            <h3 class="text-lg font-bold text-white mb-4"><i class="fa-solid fa-gears text-brand-500"></i> 설비 등록 및 수정</h3>
+            <form onsubmit="handleEquipmentSubmit(event)" class="space-y-4">
+                <input type="hidden" id="eq-form-id">
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">설비 코드</label>
+                        <input type="text" id="eq-form-code" required class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">설비명</label>
+                        <input type="text" id="eq-form-name" required class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">배치 위치 (라인)</label>
+                        <select id="eq-form-location" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm">
+                            <!-- JS에서 동적 생성됨 -->
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">제조사/모델</label>
+                        <input type="text" id="eq-form-model" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm">
+                    </div>
+                </div>
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" onclick="closeModal('equipment-modal')" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm">취소</button>
+                    <button type="submit" class="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-xl text-sm shadow">저장하기</button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -488,43 +501,6 @@
                 <div class="flex justify-end gap-2 pt-2">
                     <button type="button" onclick="closeModal('workorder-modal')" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm">취소</button>
                     <button type="submit" class="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-sm shadow">저장하기</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- EQUIPMENT ADD/EDIT MODAL -->
-    <div id="equipment-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl relative">
-            <button onclick="closeModal('equipment-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
-            <h3 class="text-lg font-bold text-white mb-4"><i class="fa-solid fa-gears text-brand-500"></i> 설비 등록 및 수정</h3>
-            <form onsubmit="handleEquipmentSubmit(event)" class="space-y-4">
-                <input type="hidden" id="eq-form-id">
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs text-slate-400 mb-1">설비 코드</label>
-                        <input type="text" id="eq-form-code" required class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm">
-                    </div>
-                    <div>
-                        <label class="block text-xs text-slate-400 mb-1">설비명</label>
-                        <input type="text" id="eq-form-name" required class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm">
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs text-slate-400 mb-1">설치 위치</label>
-                        <select id="eq-form-location" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm">
-                            <option value="A라인">A라인</option><option value="B라인">B라인</option><option value="동력동">동력동</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs text-slate-400 mb-1">제조사/모델</label>
-                        <input type="text" id="eq-form-model" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm">
-                    </div>
-                </div>
-                <div class="flex justify-end gap-2 pt-2">
-                    <button type="button" onclick="closeModal('equipment-modal')" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm">취소</button>
-                    <button type="submit" class="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-xl text-sm shadow">저장하기</button>
                 </div>
             </form>
         </div>
@@ -574,9 +550,7 @@
                 <input type="hidden" id="pm-form-id">
                 <div>
                     <label class="block text-xs text-slate-400 mb-1">대상 설비</label>
-                    <select id="pm-form-eq" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm">
-                        <!-- Populated by JS -->
-                    </select>
+                    <select id="pm-form-eq" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm"></select>
                 </div>
                 <div>
                     <label class="block text-xs text-slate-400 mb-1">점검 항목명</label>
@@ -600,11 +574,17 @@
     <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col space-y-2 pointer-events-none"></div>
 
     <script>
-        // DATA STATE
+        // --- 🚀 사용자 수정 가능 라인(구역) 데이터 초기값 ---
+        let locations = [
+            { id: 'LOC-1', name: '가공 A라인', color: 'blue' },
+            { id: 'LOC-2', name: '조립 B라인', color: 'indigo' },
+            { id: 'LOC-3', name: '동력 유틸리티동', color: 'slate' }
+        ];
+
         let equipments = [
-            { id: 'EQ-101', code: 'CNC-001', name: 'CNC 선반 #1', location: 'A라인', model: '화천 CUTEX-180', status: 'running', runtime: 1420, temp: 42, vibration: 1.2, lastPM: '2026-07-20', nextPM: '2026-08-20', oee: 92 },
-            { id: 'EQ-103', code: 'MCT-001', name: '5축 머시닝센터 #1', location: 'A라인', model: '두산 DNM-5700', status: 'broken', runtime: 2100, temp: 68, vibration: 4.8, lastPM: '2026-06-15', nextPM: '2026-08-10', oee: 45 },
-            { id: 'EQ-106', code: 'COMP-01', name: '에어 콤프레샤', location: '동력동', model: '유진 MAVIC-100', status: 'running', runtime: 8500, temp: 72, vibration: 1.1, lastPM: '2026-07-28', nextPM: '2026-08-28', oee: 98 }
+            { id: 'EQ-101', code: 'CNC-001', name: 'CNC 선반 #1', location: '가공 A라인', model: '화천 CUTEX-180', status: 'running', runtime: 1420, temp: 42, vibration: 1.2, lastPM: '2026-07-20', nextPM: '2026-08-20', oee: 92 },
+            { id: 'EQ-103', code: 'MCT-001', name: '5축 머시닝센터 #1', location: '가공 A라인', model: '두산 DNM-5700', status: 'broken', runtime: 2100, temp: 68, vibration: 4.8, lastPM: '2026-06-15', nextPM: '2026-08-10', oee: 45 },
+            { id: 'EQ-106', code: 'COMP-01', name: '에어 콤프레샤', location: '동력 유틸리티동', model: '유진 MAVIC-100', status: 'running', runtime: 8500, temp: 72, vibration: 1.1, lastPM: '2026-07-28', nextPM: '2026-08-28', oee: 98 }
         ];
 
         let workOrders = [
@@ -626,7 +606,6 @@
         // 🚀 APPS SCRIPT SYNC CONFIG
         const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzh2AFsil_F-qGvCYPyoOz0Iw5f4xlPnWgMQCmWyobbHzS-bwdtePglzYRvha7eBEe0Tg/exec';
 
-        // CRUD 액션을 포함한 동기화 함수
         function syncToSheet(sheetName, dataObj, action = 'upsert') {
             if (!APPS_SCRIPT_URL) return;
             fetch(APPS_SCRIPT_URL, {
@@ -658,6 +637,16 @@
         function updateClock() {
             const now = new Date();
             document.getElementById('live-clock').textContent = now.toISOString().slice(0, 19).replace('T', ' ');
+        }
+
+        // 라인명(구역) 선택 Select Box를 동적으로 구성
+        function populateLocationSelects() {
+            const options = locations.map(l => `<option value="${l.name}">${l.name}</option>`).join('');
+            const filterSelect = document.getElementById('eq-filter-location');
+            if(filterSelect) filterSelect.innerHTML = `<option value="ALL">전체 위치</option>` + options + `<option value="미지정">미지정</option>`;
+            
+            const formSelect = document.getElementById('eq-form-location');
+            if(formSelect) formSelect.innerHTML = options + `<option value="미지정">미지정</option>`;
         }
 
         function populateEqSelects() {
@@ -699,33 +688,157 @@
             `).join('');
 
             initDashboardCharts();
+            populateLocationSelects();
             populateEqSelects();
+        }
+
+        // 라인 테마 컬러 가져오기
+        function getLocationColors(color) {
+            const map = {
+                blue: 'bg-brand-900/80 text-brand-300 border-brand-700',
+                indigo: 'bg-indigo-900/80 text-indigo-300 border-indigo-700',
+                slate: 'bg-slate-800 text-slate-300 border-slate-600',
+                emerald: 'bg-emerald-900/80 text-emerald-300 border-emerald-700',
+                amber: 'bg-amber-900/80 text-amber-300 border-amber-700',
+                rose: 'bg-rose-900/80 text-rose-300 border-rose-700'
+            };
+            return map[color] || map['slate'];
+        }
+
+        // 이벤트 버블링 방지를 위한 맵 전용 래퍼 함수
+        function editEqFromMap(e, id) { e.stopPropagation(); editEquipment(id); }
+        function deleteEqFromMap(e, id) { e.stopPropagation(); deleteEquipment(id); }
+
+        // --- 🚀 DRAG AND DROP HANDLERS ---
+        function handleDragStart(e, id) {
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', id);
+            // 드래그 시작 시 잔상을 남기고 기존 카드는 반투명 처리
+            setTimeout(() => e.target.classList.add('opacity-40', 'scale-95'), 0);
+        }
+
+        function handleDragEnd(e) {
+            e.target.classList.remove('opacity-40', 'scale-95');
+            // 드래그가 끝나면 모든 하이라이트 초기화
+            document.querySelectorAll('.drop-zone').forEach(zone => {
+                zone.classList.remove('border-brand-500', 'bg-slate-800/80');
+            });
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault(); // 드롭을 허용하기 위해 필수적인 처리
+            e.currentTarget.classList.add('border-brand-500', 'bg-slate-800/80');
+        }
+
+        function handleDragLeave(e) {
+            // 드래그 중인 마우스가 구역 밖으로 나갈 때만 하이라이트 해제 (깜빡임 방지)
+            if (!e.currentTarget.contains(e.relatedTarget)) {
+                e.currentTarget.classList.remove('border-brand-500', 'bg-slate-800/80');
+            }
+        }
+
+        function handleDrop(e, targetLocName) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('border-brand-500', 'bg-slate-800/80');
+
+            // 드래그 시작 시 저장했던 설비 ID를 가져옴
+            const eqId = e.dataTransfer.getData('text/plain');
+            if (!eqId) return;
+
+            const eq = equipments.find(e => e.id === eqId);
+            // 옮기려는 위치가 기존 위치와 다를 때만 작동
+            if (eq && eq.location !== targetLocName) {
+                eq.location = targetLocName;
+                
+                // 앱스 스크립트를 통해 스프레드시트에 실시간 자동 반영
+                syncToSheet('Equipments', eq, 'upsert');
+                
+                // 화면 리렌더링
+                renderLayoutMap();
+                renderEquipmentTable();
+                showToast(`'${eq.name}' 설비가 '${targetLocName}'(으)로 이동되었습니다.`, 'success');
+            }
         }
 
         function renderLayoutMap() {
             const createCard = (eq) => `
-                <div onclick="openEquipmentDetail('${eq.id}')" class="bg-slate-900 border-2 ${eq.status === 'running' ? 'border-emerald-500/40' : 'border-rose-500'} rounded-xl p-4 cursor-pointer">
-                    <h4 class="font-bold text-sm text-slate-100">${eq.name}</h4>
-                    <p class="text-xs text-slate-400 mt-1">진동: ${eq.vibration} | 온도: ${eq.temp}°C</p>
+                <div draggable="true" 
+                     ondragstart="handleDragStart(event, '${eq.id}')" 
+                     ondragend="handleDragEnd(event)"
+                     onclick="openEquipmentDetail('${eq.id}')" 
+                     class="bg-slate-900 border-2 ${eq.status === 'running' ? 'border-emerald-500/40' : eq.status === 'warning' ? 'border-amber-500/40' : 'border-rose-500'} rounded-xl p-4 cursor-grab active:cursor-grabbing relative group transition-all hover:bg-slate-800 shadow-md">
+                    <div class="absolute top-2 right-2 hidden group-hover:flex gap-1 z-10">
+                        <button onclick="editEqFromMap(event, '${eq.id}')" class="bg-slate-700/80 p-1.5 rounded text-slate-300 hover:text-white hover:bg-brand-600 transition-colors" title="수정"><i class="fa-solid fa-pen text-[10px]"></i></button>
+                        <button onclick="deleteEqFromMap(event, '${eq.id}')" class="bg-slate-700/80 p-1.5 rounded text-slate-300 hover:text-white hover:bg-rose-600 transition-colors" title="삭제"><i class="fa-solid fa-trash text-[10px]"></i></button>
+                    </div>
+                    <div class="flex items-center gap-2 mb-1">
+                        <i class="fa-solid fa-grip-vertical text-slate-500 text-xs cursor-grab"></i>
+                        <h4 class="font-bold text-sm text-slate-100 pr-10 truncate">${eq.name}</h4>
+                    </div>
+                    <p class="text-[10px] text-slate-400 mb-2 truncate">${eq.model}</p>
+                    <div class="flex justify-between items-center text-xs mt-auto pt-2 border-t border-slate-800">
+                        <span class="text-slate-400">진동: <span class="text-slate-200 font-mono">${eq.vibration}</span></span>
+                        <span class="text-slate-400">온도: <span class="text-slate-200 font-mono">${eq.temp}°C</span></span>
+                    </div>
                 </div>
             `;
-            document.getElementById('map-line-a').innerHTML = equipments.filter(e => e.location === 'A라인').map(createCard).join('');
-            document.getElementById('map-line-b').innerHTML = equipments.filter(e => e.location === 'B라인').map(createCard).join('');
-            document.getElementById('map-utility').innerHTML = equipments.filter(e => e.location === '동력동').map(createCard).join('');
+            
+            const addEqCard = (locName) => `
+                <div onclick="openEqForm(null, '${locName}')" class="border-2 border-dashed border-slate-700/50 hover:border-brand-500/50 flex flex-col items-center justify-center p-4 cursor-pointer hover:bg-slate-900/50 rounded-xl transition-all h-full min-h-[100px] group">
+                    <div class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center group-hover:bg-brand-600 transition-colors mb-2">
+                        <i class="fa-solid fa-plus text-slate-400 group-hover:text-white"></i>
+                    </div>
+                    <span class="text-xs text-slate-500 group-hover:text-brand-400 font-medium">여기에 설비 추가</span>
+                </div>
+            `;
+
+            if (locations.length === 0) {
+                document.getElementById('layout-container').innerHTML = `<div class="text-center py-12 text-slate-500"><i class="fa-solid fa-folder-plus text-4xl mb-3 block"></i>등록된 라인이 없습니다. 우측 상단의 '라인 신설' 버튼을 눌러 공장 구역을 만들어주세요.</div>`;
+                return;
+            }
+
+            document.getElementById('layout-container').innerHTML = locations.map(loc => {
+                const eqs = equipments.filter(e => e.location === loc.name);
+                const themeClass = getLocationColors(loc.color);
+                
+                return `
+                    <div class="drop-zone relative bg-slate-950 border border-slate-800 rounded-xl p-4 pt-10 transition-all duration-200"
+                         ondragover="handleDragOver(event)"
+                         ondragenter="handleDragOver(event)"
+                         ondragleave="handleDragLeave(event)"
+                         ondrop="handleDrop(event, '${loc.name}')">
+                        <div class="absolute -top-3 left-4 flex justify-between items-center w-[calc(100%-2rem)]">
+                            <div class="flex items-center gap-2">
+                                <span class="${themeClass} border text-sm font-bold px-4 py-1.5 rounded-lg shadow-lg flex items-center gap-2">
+                                    <i class="fa-solid fa-network-wired"></i> ${loc.name}
+                                </span>
+                            </div>
+                            <div class="space-x-1 bg-slate-900 p-1 rounded-lg border border-slate-800 shadow-md flex items-center">
+                                <button onclick="editLocation('${loc.id}')" class="text-xs bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white px-2.5 py-1.5 rounded transition-colors flex items-center gap-1.5" title="라인 이름/색상 수정"><i class="fa-solid fa-pen"></i> <span class="hidden sm:inline">수정</span></button>
+                                <button onclick="deleteLocation('${loc.id}')" class="text-xs bg-slate-800 text-slate-300 hover:bg-rose-900/80 hover:text-rose-400 px-2.5 py-1.5 rounded transition-colors flex items-center gap-1.5" title="이 라인 삭제"><i class="fa-solid fa-trash"></i> <span class="hidden sm:inline">삭제</span></button>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4 mt-2 min-h-[120px]">
+                            ${eqs.map(createCard).join('')}
+                            ${addEqCard(loc.name)}
+                        </div>
+                    </div>
+                `;
+            }).join('');
         }
 
         // --- EQUIPMENTS ---
         function renderEquipmentTable(data = equipments) {
             const tbody = document.getElementById('equipment-table-body');
             tbody.innerHTML = data.map(eq => `
-                <tr class="hover:bg-slate-900/50">
+                <tr class="hover:bg-slate-900/50 transition-colors">
                     <td class="px-5 py-4"><div class="font-bold text-slate-100">${eq.name}</div><div class="text-xs text-slate-500">${eq.code}</div></td>
-                    <td class="px-5 py-4 text-slate-300">${eq.location}</td>
-                    <td class="px-5 py-4"><span class="text-xs font-bold ${eq.status === 'running' ? 'text-emerald-400' : 'text-rose-400'}">${eq.status}</span></td>
+                    <td class="px-5 py-4"><span class="bg-slate-800 text-slate-300 text-xs px-2 py-1 rounded">${eq.location}</span></td>
+                    <td class="px-5 py-4"><span class="text-xs font-bold ${eq.status === 'running' ? 'text-emerald-400' : 'text-rose-400'} border ${eq.status === 'running' ? 'border-emerald-500/30 bg-emerald-500/10' : 'border-rose-500/30 bg-rose-500/10'} px-2 py-1 rounded-full">${eq.status}</span></td>
                     <td class="px-5 py-4 text-xs font-mono text-slate-300">${eq.vibration}mm/s / ${eq.temp}°C</td>
                     <td class="px-5 py-4 text-right space-x-1">
-                        <button onclick="editEquipment('${eq.id}')" class="text-xs bg-slate-800 text-slate-200 px-2.5 py-1.5 rounded"><i class="fa-solid fa-pen"></i></button>
-                        <button onclick="deleteEquipment('${eq.id}')" class="text-xs bg-rose-950/50 text-rose-400 px-2.5 py-1.5 rounded"><i class="fa-solid fa-trash"></i></button>
+                        <button onclick="editEquipment('${eq.id}')" class="text-xs bg-slate-800 text-slate-200 px-2.5 py-1.5 rounded hover:bg-slate-700 transition-colors"><i class="fa-solid fa-pen"></i></button>
+                        <button onclick="deleteEquipment('${eq.id}')" class="text-xs bg-rose-950/50 text-rose-400 px-2.5 py-1.5 rounded hover:bg-rose-900 transition-colors"><i class="fa-solid fa-trash"></i></button>
                     </td>
                 </tr>
             `).join('');
@@ -747,21 +860,21 @@
         // --- WORK ORDERS ---
         function renderWorkOrders() {
             const renderCard = (wo) => `
-                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow space-y-2">
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow space-y-2 relative group hover:border-slate-600 transition-colors">
                     <div class="flex justify-between items-start">
-                        <span class="text-[10px] font-bold text-slate-300">${wo.priority} | ${wo.type}</span>
-                        <div class="space-x-1">
-                            <button onclick="editWorkOrder('${wo.id}')" class="text-slate-500 hover:text-white px-1"><i class="fa-solid fa-pen"></i></button>
-                            <button onclick="deleteWorkOrder('${wo.id}')" class="text-slate-500 hover:text-rose-400 px-1"><i class="fa-solid fa-trash"></i></button>
+                        <span class="text-[10px] font-bold text-slate-300 bg-slate-800 px-1.5 py-0.5 rounded">${wo.priority} | ${wo.type}</span>
+                        <div class="space-x-1 hidden group-hover:flex">
+                            <button onclick="editWorkOrder('${wo.id}')" class="bg-slate-800 text-slate-300 hover:text-white px-2 py-1 rounded text-[10px]"><i class="fa-solid fa-pen"></i></button>
+                            <button onclick="deleteWorkOrder('${wo.id}')" class="bg-slate-800 text-slate-300 hover:text-rose-400 px-2 py-1 rounded text-[10px]"><i class="fa-solid fa-trash"></i></button>
                         </div>
                     </div>
-                    <h4 class="text-xs font-bold text-slate-100">${wo.title}</h4>
-                    <div class="text-[11px] text-slate-400 pt-2 flex justify-between">
+                    <h4 class="text-xs font-bold text-slate-100 pt-1">${wo.title}</h4>
+                    <div class="text-[11px] text-slate-400 flex justify-between">
                         <span><i class="fa-solid fa-gears"></i> ${wo.eqName}</span>
                     </div>
                     <div class="pt-2 flex justify-end gap-1">
-                        ${wo.status === 'pending' ? `<button onclick="updateWOStatus('${wo.id}', 'inprogress')" class="text-xs bg-blue-600/30 text-blue-300 px-2 py-1 rounded">수리 시작</button>` : ''}
-                        ${wo.status === 'inprogress' ? `<button onclick="updateWOStatus('${wo.id}', 'completed')" class="text-xs bg-emerald-600/30 text-emerald-300 px-2 py-1 rounded">조치 완료</button>` : ''}
+                        ${wo.status === 'pending' ? `<button onclick="updateWOStatus('${wo.id}', 'inprogress')" class="text-xs bg-blue-600/20 hover:bg-blue-600/40 border border-blue-500/30 text-blue-300 px-2.5 py-1.5 rounded transition-colors">수리 시작</button>` : ''}
+                        ${wo.status === 'inprogress' ? `<button onclick="updateWOStatus('${wo.id}', 'completed')" class="text-xs bg-emerald-600/20 hover:bg-emerald-600/40 border border-emerald-500/30 text-emerald-300 px-2.5 py-1.5 rounded transition-colors">조치 완료</button>` : ''}
                     </div>
                 </div>
             `;
@@ -786,20 +899,20 @@
             document.getElementById('pm-completion-rate').textContent = total > 0 ? `${Math.round((done/total)*100)}% (${done}/${total})` : '0%';
 
             document.getElementById('pm-list-container').innerHTML = pmTasks.map(pm => `
-                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 flex items-center justify-between">
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 flex items-center justify-between hover:bg-slate-900/50 transition-colors">
                     <div class="flex items-center space-x-3">
-                        <button onclick="togglePMTask('${pm.id}')" class="w-6 h-6 rounded-lg border ${pm.done ? 'bg-amber-500 border-amber-500' : 'border-slate-700 flex items-center justify-center'}">
+                        <button onclick="togglePMTask('${pm.id}')" class="w-6 h-6 rounded-lg border flex items-center justify-center transition-colors ${pm.done ? 'bg-amber-500 border-amber-500' : 'border-slate-600 hover:border-amber-500'}">
                             ${pm.done ? '<i class="fa-solid fa-check text-xs text-slate-900"></i>' : ''}
                         </button>
                         <div>
-                            <span class="text-xs bg-slate-800 px-1.5 py-0.5 rounded mr-2 text-slate-300">${pm.freq}</span>
+                            <span class="text-[10px] bg-slate-800 px-1.5 py-0.5 rounded mr-1.5 text-slate-400 font-medium">${pm.freq}</span>
                             <span class="text-sm font-bold ${pm.done ? 'line-through text-slate-500' : 'text-slate-200'}">${pm.title}</span>
-                            <p class="text-xs text-slate-500 mt-0.5">${pm.eqName}</p>
+                            <p class="text-xs text-slate-500 mt-1 pl-1"><i class="fa-solid fa-link text-[10px] mr-1"></i>${pm.eqName}</p>
                         </div>
                     </div>
-                    <div class="space-x-2">
-                        <button onclick="editPMTask('${pm.id}')" class="text-slate-400 hover:text-white px-1.5"><i class="fa-solid fa-pen"></i></button>
-                        <button onclick="deletePMTask('${pm.id}')" class="text-slate-400 hover:text-rose-400 px-1.5"><i class="fa-solid fa-trash"></i></button>
+                    <div class="space-x-1 flex">
+                        <button onclick="editPMTask('${pm.id}')" class="bg-slate-900 text-slate-400 hover:text-white px-2.5 py-1.5 rounded transition-colors"><i class="fa-solid fa-pen text-xs"></i></button>
+                        <button onclick="deletePMTask('${pm.id}')" class="bg-slate-900 text-slate-400 hover:text-rose-400 px-2.5 py-1.5 rounded transition-colors"><i class="fa-solid fa-trash text-xs"></i></button>
                     </div>
                 </div>
             `).join('');
@@ -809,31 +922,47 @@
         function renderSparePartsTable() {
             const tbody = document.getElementById('spare-parts-table-body');
             tbody.innerHTML = spareParts.map(sp => `
-                <tr class="hover:bg-slate-900/50">
+                <tr class="hover:bg-slate-900/50 transition-colors">
                     <td class="px-5 py-4"><div class="font-bold text-slate-200">${sp.name}</div><div class="text-xs text-slate-500">${sp.code}</div></td>
                     <td class="px-5 py-4 font-mono font-bold ${sp.qty <= sp.minQty ? 'text-rose-400' : 'text-slate-200'}">${sp.qty} 개</td>
                     <td class="px-5 py-4 font-mono text-xs text-slate-500">${sp.minQty} 개</td>
                     <td class="px-5 py-4 text-right space-x-1">
-                        <button onclick="adjustPartQty('${sp.id}', 1)" class="bg-slate-800 text-slate-200 px-2 py-1 rounded text-xs"><i class="fa-solid fa-plus"></i></button>
-                        <button onclick="adjustPartQty('${sp.id}', -1)" class="bg-slate-800 text-slate-200 px-2 py-1 rounded text-xs"><i class="fa-solid fa-minus"></i></button>
-                        <button onclick="editSparePart('${sp.id}')" class="bg-slate-800 text-slate-200 px-2 py-1 rounded text-xs ml-2"><i class="fa-solid fa-pen"></i></button>
-                        <button onclick="deleteSparePart('${sp.id}')" class="bg-rose-950/50 text-rose-400 px-2 py-1 rounded text-xs"><i class="fa-solid fa-trash"></i></button>
+                        <button onclick="adjustPartQty('${sp.id}', 1)" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-2.5 py-1 rounded text-xs transition-colors"><i class="fa-solid fa-plus"></i></button>
+                        <button onclick="adjustPartQty('${sp.id}', -1)" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-2.5 py-1 rounded text-xs transition-colors"><i class="fa-solid fa-minus"></i></button>
+                        <button onclick="editSparePart('${sp.id}')" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-2.5 py-1 rounded text-xs ml-2 transition-colors"><i class="fa-solid fa-pen"></i></button>
+                        <button onclick="deleteSparePart('${sp.id}')" class="bg-rose-950/50 hover:bg-rose-900 text-rose-400 px-2.5 py-1 rounded text-xs transition-colors"><i class="fa-solid fa-trash"></i></button>
                     </td>
                 </tr>
             `).join('');
         }
 
         // --- FORM OPENERS (Add / Edit) ---
-        function openEqForm(id = null) {
+        function openLocationForm(id = null) {
+            document.getElementById('loc-form-id').value = id || '';
+            const form = document.querySelector('#location-modal form');
+            form.reset();
+            if (id) {
+                const loc = locations.find(l => l.id === id);
+                document.getElementById('loc-form-name').value = loc.name;
+                document.getElementById('loc-form-color').value = loc.color;
+            }
+            openModal('location-modal');
+        }
+
+        function openEqForm(id = null, defaultLoc = null) {
             document.getElementById('eq-form-id').value = id || '';
             const form = document.querySelector('#equipment-modal form');
             form.reset();
+            populateLocationSelects(); // 폼을 열때마다 최신 위치 리스트 불러오기
+
             if (id) {
                 const eq = equipments.find(e => e.id === id);
                 document.getElementById('eq-form-code').value = eq.code;
                 document.getElementById('eq-form-name').value = eq.name;
                 document.getElementById('eq-form-location').value = eq.location;
                 document.getElementById('eq-form-model').value = eq.model;
+            } else if (defaultLoc) {
+                document.getElementById('eq-form-location').value = defaultLoc;
             }
             openModal('equipment-modal');
         }
@@ -883,6 +1012,43 @@
         }
 
         // --- SUBMIT HANDLERS (Upsert) ---
+        function handleLocationSubmit(e) {
+            e.preventDefault();
+            const id = document.getElementById('loc-form-id').value;
+            const newName = document.getElementById('loc-form-name').value;
+            const color = document.getElementById('loc-form-color').value;
+            
+            let loc = id ? locations.find(l => l.id === id) : {};
+            const oldName = loc.name;
+            
+            loc.name = newName;
+            loc.color = color;
+            
+            if (id) {
+                syncToSheet('Locations', loc, 'upsert');
+                // 이름이 바뀌었으면 해당 구역의 설비들의 Location 정보도 모두 업데이트
+                if (oldName && oldName !== newName) {
+                    equipments.forEach(eq => {
+                        if (eq.location === oldName) {
+                            eq.location = newName;
+                            syncToSheet('Equipments', eq, 'upsert');
+                        }
+                    });
+                }
+                showToast('라인 정보가 수정되었습니다.', 'success');
+            } else {
+                loc.id = `LOC-${Math.floor(100 + Math.random() * 900)}`;
+                locations.push(loc);
+                syncToSheet('Locations', loc, 'upsert');
+                showToast('신규 라인이 등록되었습니다.', 'success');
+            }
+            
+            closeModal('location-modal');
+            populateLocationSelects();
+            renderLayoutMap();
+            renderEquipmentTable();
+        }
+
         function handleEquipmentSubmit(e) {
             e.preventDefault();
             const id = document.getElementById('eq-form-id').value;
@@ -904,7 +1070,9 @@
                 showToast('신규 설비가 등록되었습니다.', 'success');
             }
             closeModal('equipment-modal');
-            renderEquipmentTable(); renderDashboard();
+            renderEquipmentTable(); 
+            renderDashboard();
+            renderLayoutMap(); // 맵 즉시 갱신
         }
 
         function handleWorkOrderSubmit(e) {
@@ -927,13 +1095,18 @@
             } else {
                 wo.id = `WO-2026-${Math.floor(1000 + Math.random() * 9000)}`;
                 wo.status = 'pending'; wo.date = new Date().toISOString().slice(0, 16).replace('T', ' ');
-                if (wo.priority === 'HIGH' && eq) { eq.status = 'broken'; syncToSheet('Equipments', eq, 'upsert'); }
+                if (wo.priority === 'HIGH' && eq) { 
+                    eq.status = 'broken'; 
+                    syncToSheet('Equipments', eq, 'upsert'); 
+                }
                 workOrders.unshift(wo);
                 syncToSheet('WorkOrders', wo, 'upsert');
                 showToast('신규 작업이 등록되었습니다.', 'success');
             }
             closeModal('workorder-modal');
-            renderWorkOrders(); renderDashboard();
+            renderWorkOrders(); 
+            renderDashboard();
+            renderLayoutMap(); // 맵 상태 갱신
         }
 
         function handlePMSubmit(e) {
@@ -987,12 +1160,34 @@
         }
 
         // --- EDIT TRIGGERS ---
+        function editLocation(id) { openLocationForm(id); }
         function editEquipment(id) { openEqForm(id); }
         function editWorkOrder(id) { openWOForm(id); }
         function editPMTask(id) { openPMForm(id); }
         function editSparePart(id) { openSPForm(id); }
 
         // --- DELETE HANDLERS ---
+        function deleteLocation(id) {
+            const loc = locations.find(l => l.id === id);
+            if (!loc) return;
+            
+            // 삭제되는 라인에 있던 설비들은 '미지정'으로 강제 이관
+            equipments.forEach(eq => {
+                if (eq.location === loc.name) {
+                    eq.location = '미지정';
+                    syncToSheet('Equipments', eq, 'upsert');
+                }
+            });
+            
+            locations = locations.filter(l => l.id !== id);
+            syncToSheet('Locations', { id: id }, 'delete');
+            
+            populateLocationSelects();
+            renderLayoutMap(); 
+            renderEquipmentTable();
+            showToast(`'${loc.name}' 구역이 삭제되었습니다.`, 'warning');
+        }
+
         function deleteEquipment(id) {
             equipments = equipments.filter(e => e.id !== id);
             syncToSheet('Equipments', { id: id }, 'delete');
@@ -1025,13 +1220,20 @@
                 wo.status = newStatus;
                 if (newStatus === 'completed') {
                     const eq = equipments.find(e => e.id === wo.eqId);
-                    if (eq) { eq.status = 'running'; syncToSheet('Equipments', eq, 'upsert'); }
+                    if (eq) { 
+                        eq.status = 'running'; 
+                        syncToSheet('Equipments', eq, 'upsert'); 
+                    }
                 }
                 syncToSheet('WorkOrders', wo, 'upsert');
-                renderWorkOrders(); renderDashboard(); renderEquipmentTable();
-                showToast(`상태가 변경되었습니다.`, 'success');
+                renderWorkOrders(); 
+                renderDashboard(); 
+                renderEquipmentTable();
+                renderLayoutMap(); // 맵 상태 색상 갱신
+                showToast(`작업 상태가 변경되었습니다.`, 'success');
             }
         }
+
         function togglePMTask(id) {
             const pm = pmTasks.find(p => p.id === id);
             if (pm) {
@@ -1040,6 +1242,7 @@
                 renderPMList(); renderDashboard();
             }
         }
+
         function adjustPartQty(id, delta) {
             const sp = spareParts.find(s => s.id === id);
             if (sp) {
@@ -1055,7 +1258,7 @@
             document.getElementById('eq-modal-content').innerHTML = `
                 <div class="border-b border-slate-800 pb-4">
                     <h2 class="text-xl font-bold text-white">${eq.name} <span class="text-sm font-normal text-slate-400">(${eq.code})</span></h2>
-                    <p class="text-xs text-slate-400 mt-1">위치: ${eq.location} | 상태: ${eq.status}</p>
+                    <p class="text-xs text-slate-400 mt-1">위치: <span class="text-slate-200">${eq.location}</span> | 모델: ${eq.model}</p>
                 </div>
                 <div class="grid grid-cols-3 gap-3 my-4 bg-slate-950 p-3 rounded-xl text-center">
                     <div><span class="text-[11px] text-slate-500 block">진동</span><span class="text-sm font-bold text-slate-200">${eq.vibration}</span></div>
@@ -1077,7 +1280,7 @@
             setTimeout(() => { toast.classList.add('opacity-0', 'translate-y-2'); setTimeout(() => toast.remove(), 300); }, 2500);
         }
 
-        // Charts Init Placeholder (Simplified for brevity)
+        // Charts
         function initDashboardCharts() {
             if(charts.downtime) return;
             const c1 = document.getElementById('chartDowntimeCauses');
@@ -1094,6 +1297,7 @@
         }
 
         window.onload = function() {
+            populateLocationSelects();
             setInterval(updateClock, 1000); updateClock();
             switchTab('dashboard');
         };
