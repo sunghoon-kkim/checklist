@@ -29,6 +29,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
     <style>
         /* Custom scrollbars and pulse effects */
         ::-webkit-scrollbar {
@@ -45,25 +46,55 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #64748b;
         }
+        
+        /* Drag and Drop visual feedback */
+        .drag-over {
+            border-color: #0284c7 !important; /* brand-500 */
+            background-color: rgba(15, 23, 42, 0.8) !important; 
+        }
+        .dragging {
+            opacity: 0.5;
+            transform: scale(0.95);
+        }
+        body.is-dragging .drop-zone * {
+            pointer-events: none; /* 드래그 중 자식 요소 이벤트 방지로 깜빡임 방지 */
+        }
+
+        /* 데스크톱 환경 전용 사이드바 크기 조절 (CSS 변수 활용) */
+        @media (min-width: 768px) {
+            #sidebar {
+                width: var(--sidebar-width, 256px) !important;
+                flex-shrink: 0;
+            }
+        }
+
+        /* 모바일 환경 탭 가로 스크롤바 숨김 */
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
     </style>
 </head>
 <body class="bg-slate-950 text-slate-100 font-sans min-h-screen flex flex-col antialiased selection:bg-brand-500 selection:text-white">
 
     <!-- Top Navigation Header -->
-    <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-30 px-4 py-3 flex flex-wrap justify-between items-center shadow-lg">
+    <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-30 px-3 py-3 flex flex-wrap justify-between items-center shadow-lg gap-y-3">
         <div class="flex items-center space-x-3">
-            <div class="bg-brand-600 text-white p-2.5 rounded-xl shadow-md flex items-center justify-center">
-                <i class="fa-solid fa-industry text-xl"></i>
+            <div class="bg-brand-600 text-white p-2 md:p-2.5 rounded-xl shadow-md flex items-center justify-center">
+                <i class="fa-solid fa-industry text-lg md:text-xl"></i>
             </div>
             <div>
-                <h1 class="text-lg font-bold tracking-wide text-white flex items-center gap-2">
-                    SMART FMS <span class="text-xs font-normal bg-brand-900/80 text-brand-300 border border-brand-700/50 px-2 py-0.5 rounded-full">공무팀 보전관리 v3.0</span>
+                <h1 class="text-base md:text-lg font-bold tracking-wide text-white flex items-center gap-2">
+                    대웅제약 <span class="text-[10px] md:text-xs font-normal bg-brand-900/80 text-brand-300 border border-brand-700/50 px-2 py-0.5 rounded-full hidden sm:inline-block">공무팀 보전관리 v3.0</span>
                 </h1>
-                <p class="text-xs text-slate-400 hidden sm:block">스마트 공장 설비 가동 모니터링 & 예방보전 시스템</p>
+                <p class="text-[10px] md:text-xs text-slate-400 hidden sm:block">스마트 공장 설비 가동 모니터링 & 예방보전 시스템</p>
             </div>
         </div>
 
-        <div class="hidden lg:flex items-center space-x-6 text-xs border-x border-slate-800 px-6">
+        <div class="hidden xl:flex items-center space-x-6 text-xs border-x border-slate-800 px-6">
             <div class="text-center">
                 <span class="text-slate-400 block">전체 설비</span>
                 <span id="header-total-eq" class="text-sm font-bold text-white">0대</span>
@@ -82,16 +113,17 @@
             </div>
         </div>
 
-        <div class="flex items-center space-x-3">
-            <button onclick="openWOForm()" class="bg-rose-600 hover:bg-rose-500 text-white text-xs md:text-sm font-medium px-3.5 py-2 rounded-lg flex items-center gap-1.5 shadow-md transition-all">
+        <div class="flex items-center space-x-2 md:space-x-3 ml-auto">
+            <button onclick="openWOForm()" class="bg-rose-600 hover:bg-rose-500 text-white text-[11px] md:text-sm font-medium px-2.5 md:px-3.5 py-1.5 md:py-2 rounded-lg flex items-center gap-1.5 shadow-md transition-all">
                 <i class="fa-solid fa-triangle-exclamation"></i>
-                <span>고장/수리 요청</span>
+                <span class="hidden sm:inline">고장/수리 요청</span>
+                <span class="sm:hidden">고장접수</span>
             </button>
-            <button onclick="openEqForm()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs md:text-sm font-medium px-3.5 py-2 rounded-lg flex items-center gap-1.5 transition-all">
+            <button onclick="openEqForm()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-[11px] md:text-sm font-medium px-2.5 md:px-3.5 py-1.5 md:py-2 rounded-lg flex items-center gap-1.5 transition-all">
                 <i class="fa-solid fa-plus"></i>
                 <span class="hidden sm:inline">설비 등록</span>
             </button>
-            <div id="live-clock" class="text-xs text-slate-400 font-mono bg-slate-950 px-3 py-2 rounded-lg border border-slate-800 hidden md:block">
+            <div id="live-clock" class="text-[10px] md:text-xs text-brand-300 font-mono bg-brand-950/30 px-2 md:px-3 py-1.5 md:py-2 rounded-lg border border-brand-800/50">
                 0000-00-00 00:00:00
             </div>
         </div>
@@ -99,41 +131,47 @@
 
     <!-- Main Container -->
     <div class="flex-1 flex flex-col md:flex-row overflow-hidden">
-        <aside class="w-full md:w-64 bg-slate-900/90 border-r border-slate-800 p-3 flex md:flex-col justify-between shrink-0 overflow-x-auto md:overflow-y-auto">
-            <nav class="flex md:flex-col space-x-2 md:space-x-0 md:space-y-1.5 w-full">
-                <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn active-nav flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all w-full text-left">
-                    <i class="fa-solid fa-chart-pie w-5 text-center"></i>
+        <aside id="sidebar" class="w-full bg-slate-900/90 border-r border-slate-800 p-2 md:p-3 flex md:flex-col justify-between shrink-0 overflow-hidden md:overflow-y-auto">
+            <nav class="flex md:flex-col space-x-2 md:space-x-0 md:space-y-1.5 w-full overflow-x-auto hide-scrollbar pb-1 md:pb-0">
+                <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn active-nav flex items-center space-x-2 md:space-x-3 px-3 py-2 md:px-3.5 md:py-2.5 rounded-xl text-xs md:text-sm font-medium transition-all w-auto md:w-full text-left shrink-0 whitespace-nowrap">
+                    <i class="fa-solid fa-chart-pie w-4 md:w-5 text-center"></i>
                     <span>종합 대시보드</span>
                 </button>
-                <button onclick="switchTab('layout')" id="nav-layout" class="nav-btn text-slate-400 hover:bg-slate-800 hover:text-slate-200 flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all w-full text-left">
-                    <i class="fa-solid fa-map-location-dot w-5 text-center"></i>
+                <button onclick="switchTab('layout')" id="nav-layout" class="nav-btn text-slate-400 hover:bg-slate-800 hover:text-slate-200 flex items-center space-x-2 md:space-x-3 px-3 py-2 md:px-3.5 md:py-2.5 rounded-xl text-xs md:text-sm font-medium transition-all w-auto md:w-full text-left shrink-0 whitespace-nowrap">
+                    <i class="fa-solid fa-map-location-dot w-4 md:w-5 text-center"></i>
                     <span>공장 배치도 맵</span>
                 </button>
-                <button onclick="switchTab('equipments')" id="nav-equipments" class="nav-btn text-slate-400 hover:bg-slate-800 hover:text-slate-200 flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all w-full text-left">
-                    <i class="fa-solid fa-gears w-5 text-center"></i>
+                <button onclick="switchTab('equipments')" id="nav-equipments" class="nav-btn text-slate-400 hover:bg-slate-800 hover:text-slate-200 flex items-center space-x-2 md:space-x-3 px-3 py-2 md:px-3.5 md:py-2.5 rounded-xl text-xs md:text-sm font-medium transition-all w-auto md:w-full text-left shrink-0 whitespace-nowrap">
+                    <i class="fa-solid fa-gears w-4 md:w-5 text-center"></i>
                     <span>설비 마스터 관리</span>
                 </button>
-                <button onclick="switchTab('workorders')" id="nav-workorders" class="nav-btn text-slate-400 hover:bg-slate-800 hover:text-slate-200 flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all w-full text-left justify-between">
-                    <div class="flex items-center space-x-3">
-                        <i class="fa-solid fa-wrench w-5 text-center"></i>
+                <button onclick="switchTab('workorders')" id="nav-workorders" class="nav-btn text-slate-400 hover:bg-slate-800 hover:text-slate-200 flex items-center space-x-2 md:space-x-3 px-3 py-2 md:px-3.5 md:py-2.5 rounded-xl text-xs md:text-sm font-medium transition-all w-auto md:w-full text-left justify-between shrink-0 whitespace-nowrap">
+                    <div class="flex items-center space-x-2 md:space-x-3">
+                        <i class="fa-solid fa-wrench w-4 md:w-5 text-center"></i>
                         <span>작업 지시 & 고장수리</span>
                     </div>
-                    <span id="pending-wo-badge" class="bg-rose-500/20 text-rose-400 text-xs px-2 py-0.5 rounded-full font-bold border border-rose-500/30">0</span>
+                    <span id="pending-wo-badge" class="bg-rose-500/20 text-rose-400 text-[10px] px-1.5 py-0.5 rounded-full font-bold border border-rose-500/30 ml-2">0</span>
                 </button>
-                <button onclick="switchTab('pm')" id="nav-pm" class="nav-btn text-slate-400 hover:bg-slate-800 hover:text-slate-200 flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all w-full text-left">
-                    <i class="fa-solid fa-calendar-check w-5 text-center"></i>
-                    <span>예방 보전 (PM) 일정</span>
+                <button onclick="switchTab('pm')" id="nav-pm" class="nav-btn text-slate-400 hover:bg-slate-800 hover:text-slate-200 flex items-center space-x-2 md:space-x-3 px-3 py-2 md:px-3.5 md:py-2.5 rounded-xl text-xs md:text-sm font-medium transition-all w-auto md:w-full text-left shrink-0 whitespace-nowrap">
+                    <i class="fa-solid fa-calendar-check w-4 md:w-5 text-center"></i>
+                    <span>예방 보전 (PM)</span>
                 </button>
-                <button onclick="switchTab('spares')" id="nav-spares" class="nav-btn text-slate-400 hover:bg-slate-800 hover:text-slate-200 flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all w-full text-left">
-                    <i class="fa-solid fa-boxes-packing w-5 text-center"></i>
+                <button onclick="switchTab('spares')" id="nav-spares" class="nav-btn text-slate-400 hover:bg-slate-800 hover:text-slate-200 flex items-center space-x-2 md:space-x-3 px-3 py-2 md:px-3.5 md:py-2.5 rounded-xl text-xs md:text-sm font-medium transition-all w-auto md:w-full text-left shrink-0 whitespace-nowrap">
+                    <i class="fa-solid fa-boxes-packing w-4 md:w-5 text-center"></i>
                     <span>예비 부품 관리</span>
                 </button>
-                <button onclick="switchTab('analytics')" id="nav-analytics" class="nav-btn text-slate-400 hover:bg-slate-800 hover:text-slate-200 flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all w-full text-left">
-                    <i class="fa-solid fa-chart-line w-5 text-center"></i>
-                    <span>통계 및 KPI 분석</span>
+                <button onclick="switchTab('analytics')" id="nav-analytics" class="nav-btn text-slate-400 hover:bg-slate-800 hover:text-slate-200 flex items-center space-x-2 md:space-x-3 px-3 py-2 md:px-3.5 md:py-2.5 rounded-xl text-xs md:text-sm font-medium transition-all w-auto md:w-full text-left shrink-0 whitespace-nowrap">
+                    <i class="fa-solid fa-chart-line w-4 md:w-5 text-center"></i>
+                    <span>통계 리포트</span>
                 </button>
             </nav>
         </aside>
+
+        <!-- 사이드바 크기 조절 리사이저 (데스크톱 전용) -->
+        <div id="resizer" class="hidden md:flex w-1 bg-slate-800 hover:bg-brand-500 cursor-col-resize shrink-0 transition-colors z-10 justify-center items-center group relative shadow-md">
+            <div class="absolute inset-y-0 -left-2 -right-2 cursor-col-resize"></div>
+            <div class="h-10 w-0.5 bg-slate-500 group-hover:bg-white rounded-full transition-colors"></div>
+        </div>
 
         <main class="flex-1 bg-slate-950 p-4 md:p-6 overflow-y-auto space-y-6">
             <!-- TAB 1: DASHBOARD VIEW -->
@@ -223,9 +261,8 @@
                                 <i class="fa-solid fa-map-location-dot text-brand-500"></i>
                                 사용자 지정 공장 레이아웃
                             </h2>
-                            <p class="text-xs text-slate-400 mt-0.5">우측의 [라인 신설] 버튼으로 새로운 구역을 자유롭게 만들고, 해당 구역에 설비를 배치하세요.</p>
+                            <p class="text-xs text-slate-400 mt-0.5">우측의 [라인 신설] 버튼으로 새로운 구역을 자유롭게 만들고, 해당 구역에 설비를 배치하세요. 카드를 드래그 앤 드롭하여 라인 이동이 가능합니다.</p>
                         </div>
-                        <!-- Status Legend & Add Line Button -->
                         <div class="flex items-center gap-4">
                             <div class="hidden sm:flex items-center space-x-4 text-xs bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-800">
                                 <div class="flex items-center space-x-1.5"><span class="w-3 h-3 rounded-full bg-emerald-500"></span><span class="text-slate-300">가동</span></div>
@@ -237,10 +274,7 @@
                             </button>
                         </div>
                     </div>
-                    <!-- 동적 레이아웃 생성 컨테이너 -->
-                    <div id="layout-container" class="bg-slate-950 p-6 rounded-2xl border border-slate-800 space-y-8 overflow-x-auto min-h-[400px]">
-                        <!-- JS 코드가 여기에 라인과 설비를 그려넣습니다. -->
-                    </div>
+                    <div id="layout-container" class="bg-slate-950 p-6 rounded-2xl border border-slate-800 space-y-8 overflow-x-auto min-h-[400px]"></div>
                 </div>
             </section>
 
@@ -252,9 +286,7 @@
                             <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-500 text-sm"></i>
                             <input type="text" id="eq-search" oninput="filterEquipments()" placeholder="설비명, 설비코드 검색..." class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-sm focus:outline-none focus:border-brand-500">
                         </div>
-                        <select id="eq-filter-location" onchange="filterEquipments()" class="bg-slate-950 text-slate-300 border border-slate-800 rounded-xl px-3 py-2 text-sm">
-                            <!-- JS에서 동적 생성됨 -->
-                        </select>
+                        <select id="eq-filter-location" onchange="filterEquipments()" class="bg-slate-950 text-slate-300 border border-slate-800 rounded-xl px-3 py-2 text-sm"></select>
                         <select id="eq-filter-status" onchange="filterEquipments()" class="bg-slate-950 text-slate-300 border border-slate-800 rounded-xl px-3 py-2 text-sm">
                             <option value="ALL">전체 상태</option>
                             <option value="running">정상 가동</option>
@@ -448,9 +480,7 @@
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs text-slate-400 mb-1">배치 위치 (라인)</label>
-                        <select id="eq-form-location" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm">
-                            <!-- JS에서 동적 생성됨 -->
-                        </select>
+                        <select id="eq-form-location" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm"></select>
                     </div>
                     <div>
                         <label class="block text-xs text-slate-400 mb-1">제조사/모델</label>
@@ -636,10 +666,20 @@
 
         function updateClock() {
             const now = new Date();
-            document.getElementById('live-clock').textContent = now.toISOString().slice(0, 19).replace('T', ' ');
+            const options = { 
+                timeZone: 'Asia/Seoul', 
+                year: 'numeric', 
+                month: '2-digit', 
+                day: '2-digit', 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                second: '2-digit', 
+                hour12: false 
+            };
+            const kstString = new Intl.DateTimeFormat('ko-KR', options).format(now).replace(/\./g, '-').replace(/ /g, '').replace(/-$/, ' ');
+            document.getElementById('live-clock').textContent = kstString;
         }
 
-        // 라인명(구역) 선택 Select Box를 동적으로 구성
         function populateLocationSelects() {
             const options = locations.map(l => `<option value="${l.name}">${l.name}</option>`).join('');
             const filterSelect = document.getElementById('eq-filter-location');
@@ -692,7 +732,6 @@
             populateEqSelects();
         }
 
-        // 라인 테마 컬러 가져오기
         function getLocationColors(color) {
             const map = {
                 blue: 'bg-brand-900/80 text-brand-300 border-brand-700',
@@ -705,55 +744,53 @@
             return map[color] || map['slate'];
         }
 
-        // 이벤트 버블링 방지를 위한 맵 전용 래퍼 함수
         function editEqFromMap(e, id) { e.stopPropagation(); editEquipment(id); }
         function deleteEqFromMap(e, id) { e.stopPropagation(); deleteEquipment(id); }
 
-        // --- 🚀 DRAG AND DROP HANDLERS ---
+        // --- DRAG AND DROP HANDLERS ---
+        let draggedEqId = null;
+
         function handleDragStart(e, id) {
+            draggedEqId = id;
             e.dataTransfer.effectAllowed = 'move';
             e.dataTransfer.setData('text/plain', id);
-            // 드래그 시작 시 잔상을 남기고 기존 카드는 반투명 처리
-            setTimeout(() => e.target.classList.add('opacity-40', 'scale-95'), 0);
+            setTimeout(() => {
+                e.target.classList.add('dragging');
+                document.body.classList.add('is-dragging');
+            }, 0);
         }
 
         function handleDragEnd(e) {
-            e.target.classList.remove('opacity-40', 'scale-95');
-            // 드래그가 끝나면 모든 하이라이트 초기화
+            e.target.classList.remove('dragging');
+            document.body.classList.remove('is-dragging');
+            draggedEqId = null;
             document.querySelectorAll('.drop-zone').forEach(zone => {
-                zone.classList.remove('border-brand-500', 'bg-slate-800/80');
+                zone.classList.remove('drag-over');
             });
         }
 
         function handleDragOver(e) {
-            e.preventDefault(); // 드롭을 허용하기 위해 필수적인 처리
-            e.currentTarget.classList.add('border-brand-500', 'bg-slate-800/80');
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            e.currentTarget.classList.add('drag-over');
         }
 
         function handleDragLeave(e) {
-            // 드래그 중인 마우스가 구역 밖으로 나갈 때만 하이라이트 해제 (깜빡임 방지)
             if (!e.currentTarget.contains(e.relatedTarget)) {
-                e.currentTarget.classList.remove('border-brand-500', 'bg-slate-800/80');
+                e.currentTarget.classList.remove('drag-over');
             }
         }
 
         function handleDrop(e, targetLocName) {
             e.preventDefault();
-            e.currentTarget.classList.remove('border-brand-500', 'bg-slate-800/80');
+            e.currentTarget.classList.remove('drag-over');
 
-            // 드래그 시작 시 저장했던 설비 ID를 가져옴
-            const eqId = e.dataTransfer.getData('text/plain');
-            if (!eqId) return;
+            if (!draggedEqId) return;
 
-            const eq = equipments.find(e => e.id === eqId);
-            // 옮기려는 위치가 기존 위치와 다를 때만 작동
+            const eq = equipments.find(e => e.id === draggedEqId);
             if (eq && eq.location !== targetLocName) {
                 eq.location = targetLocName;
-                
-                // 앱스 스크립트를 통해 스프레드시트에 실시간 자동 반영
                 syncToSheet('Equipments', eq, 'upsert');
-                
-                // 화면 리렌더링
                 renderLayoutMap();
                 renderEquipmentTable();
                 showToast(`'${eq.name}' 설비가 '${targetLocName}'(으)로 이동되었습니다.`, 'success');
@@ -772,7 +809,7 @@
                         <button onclick="deleteEqFromMap(event, '${eq.id}')" class="bg-slate-700/80 p-1.5 rounded text-slate-300 hover:text-white hover:bg-rose-600 transition-colors" title="삭제"><i class="fa-solid fa-trash text-[10px]"></i></button>
                     </div>
                     <div class="flex items-center gap-2 mb-1">
-                        <i class="fa-solid fa-grip-vertical text-slate-500 text-xs cursor-grab"></i>
+                        <i class="fa-solid fa-grip-vertical text-slate-600 text-xs cursor-grab"></i>
                         <h4 class="font-bold text-sm text-slate-100 pr-10 truncate">${eq.name}</h4>
                     </div>
                     <p class="text-[10px] text-slate-400 mb-2 truncate">${eq.model}</p>
@@ -953,7 +990,7 @@
             document.getElementById('eq-form-id').value = id || '';
             const form = document.querySelector('#equipment-modal form');
             form.reset();
-            populateLocationSelects(); // 폼을 열때마다 최신 위치 리스트 불러오기
+            populateLocationSelects();
 
             if (id) {
                 const eq = equipments.find(e => e.id === id);
@@ -1026,7 +1063,6 @@
             
             if (id) {
                 syncToSheet('Locations', loc, 'upsert');
-                // 이름이 바뀌었으면 해당 구역의 설비들의 Location 정보도 모두 업데이트
                 if (oldName && oldName !== newName) {
                     equipments.forEach(eq => {
                         if (eq.location === oldName) {
@@ -1072,7 +1108,7 @@
             closeModal('equipment-modal');
             renderEquipmentTable(); 
             renderDashboard();
-            renderLayoutMap(); // 맵 즉시 갱신
+            renderLayoutMap();
         }
 
         function handleWorkOrderSubmit(e) {
@@ -1106,7 +1142,7 @@
             closeModal('workorder-modal');
             renderWorkOrders(); 
             renderDashboard();
-            renderLayoutMap(); // 맵 상태 갱신
+            renderLayoutMap();
         }
 
         function handlePMSubmit(e) {
@@ -1171,7 +1207,6 @@
             const loc = locations.find(l => l.id === id);
             if (!loc) return;
             
-            // 삭제되는 라인에 있던 설비들은 '미지정'으로 강제 이관
             equipments.forEach(eq => {
                 if (eq.location === loc.name) {
                     eq.location = '미지정';
@@ -1229,7 +1264,7 @@
                 renderWorkOrders(); 
                 renderDashboard(); 
                 renderEquipmentTable();
-                renderLayoutMap(); // 맵 상태 색상 갱신
+                renderLayoutMap();
                 showToast(`작업 상태가 변경되었습니다.`, 'success');
             }
         }
@@ -1296,10 +1331,42 @@
             if(c4) charts.pie = new Chart(c4, { type: 'doughnut', data: { labels: ['예방', '고장', '개선'], datasets: [{ data: [65, 25, 10], backgroundColor: ['#10b981', '#f43f5e', '#6366f1'] }] }, options: { maintainAspectRatio: false } });
         }
 
+        // --- SIDEBAR RESIZER LOGIC ---
+        function initResizer() {
+            const sidebar = document.getElementById('sidebar');
+            const resizer = document.getElementById('resizer');
+            let isResizing = false;
+
+            if (!resizer || !sidebar) return;
+
+            resizer.addEventListener('mousedown', (e) => {
+                isResizing = true;
+                document.body.style.cursor = 'col-resize';
+                document.body.classList.add('select-none');
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (!isResizing) return;
+                let newWidth = e.clientX;
+                if (newWidth < 180) newWidth = 180;
+                if (newWidth > 600) newWidth = 600;
+                sidebar.style.setProperty('--sidebar-width', `${newWidth}px`);
+            });
+
+            document.addEventListener('mouseup', () => {
+                if (isResizing) {
+                    isResizing = false;
+                    document.body.style.cursor = 'default';
+                    document.body.classList.remove('select-none');
+                }
+            });
+        }
+
         window.onload = function() {
             populateLocationSelects();
             setInterval(updateClock, 1000); updateClock();
             switchTab('dashboard');
+            initResizer();
         };
     </script>
 </body>
