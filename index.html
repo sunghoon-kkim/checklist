@@ -1,0 +1,1453 @@
+<!DOCTYPE html>
+<html lang="ko" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>공무팀 통합 설비관리 시스템 (FMS)</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0284c7',
+                            600: '#0369a1',
+                            700: '#075985',
+                            900: '#0c4a6e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome Icons CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Custom scrollbars and pulse effects */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+        .status-pulse-running {
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.6);
+            animation: pulse-green 2s infinite;
+        }
+        .status-pulse-broken {
+            box-shadow: 0 0 12px rgba(244, 63, 94, 0.8);
+            animation: pulse-red 1s infinite;
+        }
+        @keyframes pulse-green {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.03); opacity: 0.85; }
+        }
+        @keyframes pulse-red {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.04); opacity: 0.7; }
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans min-h-screen flex flex-col antialiased selection:bg-brand-500 selection:text-white">
+
+    <!-- Top Navigation Header -->
+    <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-30 px-4 py-3 flex flex-wrap justify-between items-center shadow-lg">
+        <div class="flex items-center space-x-3">
+            <div class="bg-brand-600 text-white p-2.5 rounded-xl shadow-md flex items-center justify-center">
+                <i class="fa-solid fa-industry text-xl"></i>
+            </div>
+            <div>
+                <h1 class="text-lg font-bold tracking-wide text-white flex items-center gap-2">
+                    SMART FMS <span class="text-xs font-normal bg-brand-900/80 text-brand-300 border border-brand-700/50 px-2 py-0.5 rounded-full">공무팀 보전관리 v2.5</span>
+                </h1>
+                <p class="text-xs text-slate-400 hidden sm:block">스마트 공장 설비 가동 모니터링 & 예방보전 시스템</p>
+            </div>
+        </div>
+
+        <!-- System Quick Stats Header -->
+        <div class="hidden lg:flex items-center space-x-6 text-xs border-x border-slate-800 px-6">
+            <div class="text-center">
+                <span class="text-slate-400 block">전체 설비</span>
+                <span id="header-total-eq" class="text-sm font-bold text-white">0대</span>
+            </div>
+            <div class="text-center">
+                <span class="text-slate-400 block">정상 가동</span>
+                <span id="header-running-eq" class="text-sm font-bold text-emerald-400">0대</span>
+            </div>
+            <div class="text-center">
+                <span class="text-slate-400 block">고장 정지</span>
+                <span id="header-broken-eq" class="text-sm font-bold text-rose-400">0대</span>
+            </div>
+            <div class="text-center">
+                <span class="text-slate-400 block">평균 OEE</span>
+                <span id="header-oee" class="text-sm font-bold text-cyan-400">0%</span>
+            </div>
+        </div>
+
+        <div class="flex items-center space-x-3">
+            <button onclick="openModal('workorder-modal')" class="bg-rose-600 hover:bg-rose-500 text-white text-xs md:text-sm font-medium px-3.5 py-2 rounded-lg flex items-center gap-1.5 shadow-md transition-all">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                <span>고장/수리 요청</span>
+            </button>
+            <button onclick="openModal('equipment-modal')" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs md:text-sm font-medium px-3.5 py-2 rounded-lg flex items-center gap-1.5 transition-all">
+                <i class="fa-solid fa-plus"></i>
+                <span class="hidden sm:inline">설비 등록</span>
+            </button>
+            <div id="live-clock" class="text-xs text-slate-400 font-mono bg-slate-950 px-3 py-2 rounded-lg border border-slate-800 hidden md:block">
+                0000-00-00 00:00:00
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="flex-1 flex flex-col md:flex-row overflow-hidden">
+
+        <!-- Sidebar Navigation -->
+        <aside class="w-full md:w-64 bg-slate-900/90 border-r border-slate-800 p-3 flex md:flex-col justify-between shrink-0 overflow-x-auto md:overflow-y-auto">
+            <nav class="flex md:flex-col space-x-2 md:space-x-0 md:space-y-1.5 w-full">
+                <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn active-nav flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all w-full text-left">
+                    <i class="fa-solid fa-chart-pie w-5 text-center"></i>
+                    <span>종합 대시보드</span>
+                </button>
+                <button onclick="switchTab('layout')" id="nav-layout" class="nav-btn text-slate-400 hover:bg-slate-800 hover:text-slate-200 flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all w-full text-left">
+                    <i class="fa-solid fa-map-location-dot w-5 text-center"></i>
+                    <span>공장 배치도 맵</span>
+                </button>
+                <button onclick="switchTab('equipments')" id="nav-equipments" class="nav-btn text-slate-400 hover:bg-slate-800 hover:text-slate-200 flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all w-full text-left">
+                    <i class="fa-solid fa-gears w-5 text-center"></i>
+                    <span>설비 마스터 관리</span>
+                </button>
+                <button onclick="switchTab('workorders')" id="nav-workorders" class="nav-btn text-slate-400 hover:bg-slate-800 hover:text-slate-200 flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all w-full text-left justify-between">
+                    <div class="flex items-center space-x-3">
+                        <i class="fa-solid fa-wrench w-5 text-center"></i>
+                        <span>작업 지시 & 고장수리</span>
+                    </div>
+                    <span id="pending-wo-badge" class="bg-rose-500/20 text-rose-400 text-xs px-2 py-0.5 rounded-full font-bold border border-rose-500/30">0</span>
+                </button>
+                <button onclick="switchTab('pm')" id="nav-pm" class="nav-btn text-slate-400 hover:bg-slate-800 hover:text-slate-200 flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all w-full text-left">
+                    <i class="fa-solid fa-calendar-check w-5 text-center"></i>
+                    <span>예방 보전 (PM) 일정</span>
+                </button>
+                <button onclick="switchTab('spares')" id="nav-spares" class="nav-btn text-slate-400 hover:bg-slate-800 hover:text-slate-200 flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all w-full text-left">
+                    <i class="fa-solid fa-boxes-packing w-5 text-center"></i>
+                    <span>예비 부품 재고</span>
+                </button>
+                <button onclick="switchTab('analytics')" id="nav-analytics" class="nav-btn text-slate-400 hover:bg-slate-800 hover:text-slate-200 flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all w-full text-left">
+                    <i class="fa-solid fa-chart-line w-5 text-center"></i>
+                    <span>통계 및 KPI 분석</span>
+                </button>
+            </nav>
+
+            <div class="hidden md:block border-t border-slate-800 pt-4 mt-4 text-xs text-slate-500">
+                <div class="flex items-center space-x-2 text-slate-400 mb-1">
+                    <i class="fa-solid fa-headset text-brand-500"></i>
+                    <span class="font-semibold">공무팀 직통 내선</span>
+                </div>
+                <p>긴급 고장 수리: ext. 701~703</p>
+                <p>당직 당당자: 김보전 책임 (010-1234-5678)</p>
+            </div>
+        </aside>
+
+        <!-- Main Workspace Content Area -->
+        <main class="flex-1 bg-slate-950 p-4 md:p-6 overflow-y-auto space-y-6">
+
+            <!-- TAB 1: DASHBOARD VIEW -->
+            <section id="tab-dashboard" class="tab-content space-y-6">
+                <!-- Summary Metric Cards -->
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-xs font-medium text-slate-400">설비 가동률 (OEE)</p>
+                                <h3 id="dash-oee" class="text-2xl font-black text-emerald-400 mt-1">88.5%</h3>
+                            </div>
+                            <div class="bg-emerald-500/10 text-emerald-400 p-3 rounded-xl">
+                                <i class="fa-solid fa-bolt text-lg"></i>
+                            </div>
+                        </div>
+                        <div class="mt-3 text-xs text-slate-400 flex items-center gap-1">
+                            <span class="text-emerald-400 font-semibold"><i class="fa-solid fa-arrow-up"></i> +1.2%</span> 전월 대비 상승
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-xs font-medium text-slate-400">진행 중 고장 수리</p>
+                                <h3 id="dash-active-repair" class="text-2xl font-black text-rose-400 mt-1">2 건</h3>
+                            </div>
+                            <div class="bg-rose-500/10 text-rose-400 p-3 rounded-xl">
+                                <i class="fa-solid fa-screwdriver-wrench text-lg"></i>
+                            </div>
+                        </div>
+                        <div class="mt-3 text-xs text-slate-400">
+                            긴급 1건 / 일반 1건 처리 중
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-xs font-medium text-slate-400">이번주 예방보전 (PM)</p>
+                                <h3 id="dash-pm-count" class="text-2xl font-black text-amber-400 mt-1">5/8 건 완료</h3>
+                            </div>
+                            <div class="bg-amber-500/10 text-amber-400 p-3 rounded-xl">
+                                <i class="fa-solid fa-clipboard-check text-lg"></i>
+                            </div>
+                        </div>
+                        <div class="w-full bg-slate-800 rounded-full h-1.5 mt-3">
+                            <div id="dash-pm-progress" class="bg-amber-400 h-1.5 rounded-full" style="width: 62%"></div>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-xs font-medium text-slate-400">평균 고장 간격 (MTBF)</p>
+                                <h3 class="text-2xl font-black text-cyan-400 mt-1">340 시간</h3>
+                            </div>
+                            <div class="bg-cyan-500/10 text-cyan-400 p-3 rounded-xl">
+                                <i class="fa-solid fa-clock-rotate-left text-lg"></i>
+                            </div>
+                        </div>
+                        <div class="mt-3 text-xs text-slate-400">
+                            평균 복구 시간 (MTTR): <span class="text-slate-200 font-semibold">1.4 시간</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Layout Preview & Urgent Alerts -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Mini Floor Map Visual -->
+                    <div class="lg:col-span-2 bg-slate-900/80 border border-slate-800 rounded-2xl p-5 flex flex-col">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-bold text-slate-100 flex items-center gap-2">
+                                <i class="fa-solid fa-layer-group text-brand-500"></i>
+                                라인별 설비 실시간 현황
+                            </h3>
+                            <button onclick="switchTab('layout')" class="text-xs text-brand-400 hover:text-brand-300 flex items-center gap-1">
+                                전체배치도 상세보기 <i class="fa-solid fa-chevron-right"></i>
+                            </button>
+                        </div>
+                        <div id="dash-mini-map" class="grid grid-cols-2 sm:grid-cols-3 gap-3 flex-1 min-h-[240px]">
+                            <!-- Dynamic Content populated via JS -->
+                        </div>
+                    </div>
+
+                    <!-- Urgent Work Orders Side Card -->
+                    <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 flex flex-col">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-bold text-slate-100 flex items-center gap-2">
+                                <i class="fa-solid fa-bell text-rose-400"></i>
+                                최근 고장/수리 접수
+                            </h3>
+                            <span class="text-xs bg-slate-800 text-slate-400 px-2 py-0.5 rounded">실시간</span>
+                        </div>
+                        <div id="dash-recent-orders" class="space-y-3 flex-1 overflow-y-auto max-h-[280px] pr-1">
+                            <!-- Dynamic populated list -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Equipment Operating Rate Charts -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
+                        <h3 class="font-bold text-slate-100 mb-4 flex items-center gap-2">
+                            <i class="fa-solid fa-chart-column text-indigo-400"></i>
+                            라인별 정지 원인 (이번달)
+                        </h3>
+                        <div class="h-60">
+                            <canvas id="chartDowntimeCauses"></canvas>
+                        </div>
+                    </div>
+                    <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
+                        <h3 class="font-bold text-slate-100 mb-4 flex items-center gap-2">
+                            <i class="fa-solid fa-wave-square text-emerald-400"></i>
+                            주요 설비 진동 / 온도 트렌드
+                        </h3>
+                        <div class="h-60">
+                            <canvas id="chartVibrationTrend"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 2: INTERACTIVE FACTORY FLOOR MAP -->
+            <section id="tab-layout" class="tab-content hidden space-y-6">
+                <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
+                    <div class="flex flex-wrap justify-between items-center gap-4 mb-6">
+                        <div>
+                            <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                                <i class="fa-solid fa-map-location-dot text-brand-500"></i>
+                                생산 라인 & 유틸리티 설비 스마트 배치도
+                            </h2>
+                            <p class="text-xs text-slate-400 mt-0.5">설비를 클릭하면 상세 정보 및 실시간 센서 수치를 확인할 수 있습니다.</p>
+                        </div>
+                        <!-- Status Legend -->
+                        <div class="flex items-center space-x-4 text-xs">
+                            <div class="flex items-center space-x-1.5">
+                                <span class="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span>
+                                <span class="text-slate-300">정상 가동</span>
+                            </div>
+                            <div class="flex items-center space-x-1.5">
+                                <span class="w-3 h-3 rounded-full bg-amber-500 inline-block"></span>
+                                <span class="text-slate-300">점검/대기</span>
+                            </div>
+                            <div class="flex items-center space-x-1.5">
+                                <span class="w-3 h-3 rounded-full bg-rose-500 inline-block"></span>
+                                <span class="text-slate-300">고장 정지</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Factory Map Visual Grid -->
+                    <div class="bg-slate-950 p-6 rounded-2xl border border-slate-800 space-y-8 relative overflow-x-auto">
+                        <!-- Line A -->
+                        <div>
+                            <div class="flex items-center gap-2 mb-3">
+                                <span class="bg-brand-900/80 text-brand-300 text-xs font-bold px-2.5 py-1 rounded-md border border-brand-700/50">가공 A 라인</span>
+                                <span class="text-xs text-slate-500">자동화 CNC & 매시닝 센터</span>
+                            </div>
+                            <div id="map-line-a" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                                <!-- Cards populated by JS -->
+                            </div>
+                        </div>
+
+                        <!-- Line B -->
+                        <div>
+                            <div class="flex items-center gap-2 mb-3">
+                                <span class="bg-indigo-900/80 text-indigo-300 text-xs font-bold px-2.5 py-1 rounded-md border border-indigo-700/50">조립 B 라인</span>
+                                <span class="text-xs text-slate-500">사출기 & 로봇 패킹 라인</span>
+                            </div>
+                            <div id="map-line-b" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                                <!-- Cards populated by JS -->
+                            </div>
+                        </div>
+
+                        <!-- Utility Room -->
+                        <div>
+                            <div class="flex items-center gap-2 mb-3">
+                                <span class="bg-slate-800 text-slate-300 text-xs font-bold px-2.5 py-1 rounded-md border border-slate-700">동력 및 유틸리티 동</span>
+                                <span class="text-xs text-slate-500">콤프레샤, 칠러, 변전실, 보일러</span>
+                            </div>
+                            <div id="map-utility" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                                <!-- Cards populated by JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 3: EQUIPMENT MASTER MANAGEMENT -->
+            <section id="tab-equipments" class="tab-content hidden space-y-6">
+                <!-- Search and Filters Bar -->
+                <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 flex flex-wrap gap-3 items-center justify-between">
+                    <div class="flex flex-wrap items-center gap-3 flex-1">
+                        <div class="relative min-w-[240px]">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-500 text-sm"></i>
+                            <input type="text" id="eq-search" oninput="filterEquipments()" placeholder="설비명, 설비코드, 위치 검색..." class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-sm focus:outline-none focus:border-brand-500">
+                        </div>
+                        <select id="eq-filter-location" onchange="filterEquipments()" class="bg-slate-950 text-slate-300 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-brand-500">
+                            <option value="ALL">전체 위치/라인</option>
+                            <option value="A라인">A라인 (가공)</option>
+                            <option value="B라인">B라인 (조립)</option>
+                            <option value="동력동">동력동 (유틸리티)</option>
+                        </select>
+                        <select id="eq-filter-status" onchange="filterEquipments()" class="bg-slate-950 text-slate-300 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-brand-500">
+                            <option value="ALL">전체 상태</option>
+                            <option value="running">정상 가동</option>
+                            <option value="warning">점검 필요</option>
+                            <option value="broken">고장 정지</option>
+                        </select>
+                    </div>
+                    <button onclick="openModal('equipment-modal')" class="bg-brand-600 hover:bg-brand-500 text-white px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2 shadow">
+                        <i class="fa-solid fa-plus"></i> 신규 설비 등록
+                    </button>
+                </div>
+
+                <!-- Equipments Table -->
+                <div class="bg-slate-900/80 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-slate-300">
+                            <thead class="bg-slate-950 text-xs uppercase text-slate-400 border-b border-slate-800">
+                                <tr>
+                                    <th class="px-5 py-3.5">설비 코드/명</th>
+                                    <th class="px-5 py-3.5">설치 위치</th>
+                                    <th class="px-5 py-3.5">상태</th>
+                                    <th class="px-5 py-3.5">누적가동시간</th>
+                                    <th class="px-5 py-3.5">진동 / 온도</th>
+                                    <th class="px-5 py-3.5">최근 PM</th>
+                                    <th class="px-5 py-3.5 text-right">관리</th>
+                                </tr>
+                            </thead>
+                            <tbody id="equipment-table-body" class="divide-y divide-slate-800/60">
+                                <!-- Populated dynamically by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 4: WORK ORDERS & REPAIR HISTORY -->
+            <section id="tab-workorders" class="tab-content hidden space-y-6">
+                <div class="flex flex-wrap justify-between items-center gap-4">
+                    <div>
+                        <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-wrench text-rose-400"></i>
+                            작업 지시 & 고장 수리 관리
+                        </h2>
+                        <p class="text-xs text-slate-400">생산현장 고장 접수건 및 보전 수리 내역 상태 관리</p>
+                    </div>
+                    <button onclick="openModal('workorder-modal')" class="bg-rose-600 hover:bg-rose-500 text-white px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2 shadow">
+                        <i class="fa-solid fa-plus"></i> 고장수리/작업지시 생성
+                    </button>
+                </div>
+
+                <!-- Work Order Kanban Columns -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Column 1: Pending 접수대기 -->
+                    <div class="bg-slate-900/70 border border-slate-800 rounded-2xl p-4 flex flex-col">
+                        <div class="flex justify-between items-center mb-3 pb-2 border-b border-slate-800">
+                            <span class="font-bold text-slate-200 flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span> 접수 대기
+                            </span>
+                            <span id="count-pending" class="bg-slate-800 text-slate-400 text-xs px-2.5 py-0.5 rounded-full font-mono">0</span>
+                        </div>
+                        <div id="wo-col-pending" class="space-y-3 flex-1 min-h-[300px]">
+                            <!-- Cards -->
+                        </div>
+                    </div>
+
+                    <!-- Column 2: In Progress 진행중 -->
+                    <div class="bg-slate-900/70 border border-slate-800 rounded-2xl p-4 flex flex-col">
+                        <div class="flex justify-between items-center mb-3 pb-2 border-b border-slate-800">
+                            <span class="font-bold text-slate-200 flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-blue-400"></span> 수리 진행 중
+                            </span>
+                            <span id="count-inprogress" class="bg-slate-800 text-slate-400 text-xs px-2.5 py-0.5 rounded-full font-mono">0</span>
+                        </div>
+                        <div id="wo-col-inprogress" class="space-y-3 flex-1 min-h-[300px]">
+                            <!-- Cards -->
+                        </div>
+                    </div>
+
+                    <!-- Column 3: Completed 완료 -->
+                    <div class="bg-slate-900/70 border border-slate-800 rounded-2xl p-4 flex flex-col">
+                        <div class="flex justify-between items-center mb-3 pb-2 border-b border-slate-800">
+                            <span class="font-bold text-slate-200 flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span> 조치 완료
+                            </span>
+                            <span id="count-completed" class="bg-slate-800 text-slate-400 text-xs px-2.5 py-0.5 rounded-full font-mono">0</span>
+                        </div>
+                        <div id="wo-col-completed" class="space-y-3 flex-1 min-h-[300px]">
+                            <!-- Cards -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 5: PREVENTIVE MAINTENANCE (PM) -->
+            <section id="tab-pm" class="tab-content hidden space-y-6">
+                <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
+                    <div class="flex flex-wrap justify-between items-center gap-4 mb-6">
+                        <div>
+                            <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                                <i class="fa-solid fa-calendar-check text-amber-400"></i>
+                                정기 점검 및 예방보전 (PM) 체크리스트
+                            </h2>
+                            <p class="text-xs text-slate-400">일일/주간/월간 보전 점검 목록을 확인하고 완료 처리하세요.</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs text-slate-400">오늘 완료율:</span>
+                            <span id="pm-completion-rate" class="text-sm font-bold text-amber-400">75%</span>
+                        </div>
+                    </div>
+
+                    <div id="pm-list-container" class="space-y-4">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 6: SPARE PARTS INVENTORY -->
+            <section id="tab-spares" class="tab-content hidden space-y-6">
+                <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
+                    <div class="flex flex-wrap justify-between items-center gap-4 mb-6">
+                        <div>
+                            <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                                <i class="fa-solid fa-boxes-packing text-cyan-400"></i>
+                                공무 예비 부품 & 자재 재고 현황
+                            </h2>
+                            <p class="text-xs text-slate-400">주요 수리 부품 안전 재고 수준 관리 및 입출고 기록</p>
+                        </div>
+                        <button onclick="openModal('sparepart-modal')" class="bg-cyan-600 hover:bg-cyan-500 text-white px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2 shadow">
+                            <i class="fa-solid fa-plus"></i> 신규 부품 등록
+                        </button>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-slate-300">
+                            <thead class="bg-slate-950 text-xs uppercase text-slate-400 border-b border-slate-800">
+                                <tr>
+                                    <th class="px-5 py-3.5">부품 코드</th>
+                                    <th class="px-5 py-3.5">부품명</th>
+                                    <th class="px-5 py-3.5">카테고리</th>
+                                    <th class="px-5 py-3.5">현재 재고</th>
+                                    <th class="px-5 py-3.5">최소 안전재고</th>
+                                    <th class="px-5 py-3.5">보관 위치</th>
+                                    <th class="px-5 py-3.5 text-right">수량 조정</th>
+                                </tr>
+                            </thead>
+                            <tbody id="spare-parts-table-body" class="divide-y divide-slate-800">
+                                <!-- Dynamic Parts List -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 7: ANALYTICS & REPORTS -->
+            <section id="tab-analytics" class="tab-content hidden space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
+                        <h3 class="font-bold text-slate-100 mb-4 flex items-center gap-2">
+                            <i class="fa-solid fa-sack-dollar text-emerald-400"></i>
+                            월별 설비 보전 및 수리비용 추이 (만원)
+                        </h3>
+                        <div class="h-64">
+                            <canvas id="chartMonthlyCost"></canvas>
+                        </div>
+                    </div>
+                    <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
+                        <h3 class="font-bold text-slate-100 mb-4 flex items-center gap-2">
+                            <i class="fa-solid fa-chart-pie text-cyan-400"></i>
+                            유형별 작업 비중 (예방보전 vs 고장수리)
+                        </h3>
+                        <div class="h-64 flex justify-center">
+                            <canvas id="chartWorkTypePie"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- MODAL 1: EQUIPMENT DETAIL / EDIT MODAL -->
+    <div id="equipment-detail-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+            <button onclick="closeModal('equipment-detail-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-white">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+            <div id="eq-modal-content">
+                <!-- Dynamic injected detail view -->
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 2: ADD NEW WORK ORDER MODAL -->
+    <div id="workorder-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl relative">
+            <button onclick="closeModal('workorder-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-white">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+            <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-triangle-exclamation text-rose-400"></i>
+                신규 고장수리 / 작업지시 등록
+            </h3>
+            <form onsubmit="handleWorkOrderSubmit(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">대상 설비 선택</label>
+                    <select id="wo-form-eq" required class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-brand-500">
+                        <!-- Options generated dynamically -->
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">작업/고장 제목</label>
+                    <input type="text" id="wo-form-title" required placeholder="예: 메인 모터 이상 소음 및 발열" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-brand-500">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">우선 순위</label>
+                        <select id="wo-form-priority" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-brand-500">
+                            <option value="HIGH">긴급 (즉시조치)</option>
+                            <option value="MEDIUM" selected>보통</option>
+                            <option value="LOW">낮음 (정기보전시)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">작업 유형</label>
+                        <select id="wo-form-type" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-brand-500">
+                            <option value="고장수리">고장 수리</option>
+                            <option value="예방보전">예방 보전</option>
+                            <option value="개조/개선">설비 개조/개선</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">담당 보전기사</label>
+                    <input type="text" id="wo-form-assignee" placeholder="담당자 이름 (예: 김보전)" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-brand-500">
+                </div>
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">상세 현상 설명</label>
+                    <textarea id="wo-form-desc" rows="3" placeholder="증상 및 구체적 원인 추정사항 기재" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-brand-500"></textarea>
+                </div>
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" onclick="closeModal('workorder-modal')" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm">취소</button>
+                    <button type="submit" class="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-sm font-medium shadow">작업 지시 등록</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 3: ADD NEW EQUIPMENT MODAL -->
+    <div id="equipment-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl relative">
+            <button onclick="closeModal('equipment-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-white">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+            <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-gears text-brand-500"></i>
+                신규 설비 등록
+            </h3>
+            <form onsubmit="handleEquipmentSubmit(event)" class="space-y-4">
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">설비 코드</label>
+                        <input type="text" id="eq-form-code" required placeholder="예: CNC-005" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-brand-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">설비명</label>
+                        <input type="text" id="eq-form-name" required placeholder="예: 5축 머시닝센터 #5" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-brand-500">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">설치 위치</label>
+                        <select id="eq-form-location" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-brand-500">
+                            <option value="A라인">A라인 (가공)</option>
+                            <option value="B라인">B라인 (조립)</option>
+                            <option value="동력동">동력동 (유틸리티)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">제조사/모델</label>
+                        <input type="text" id="eq-form-model" placeholder="예: 두산 / DNM-5700" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-brand-500">
+                    </div>
+                </div>
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" onclick="closeModal('equipment-modal')" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm">취소</button>
+                    <button type="submit" class="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-xl text-sm font-medium shadow">설비 등록</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 4: ADD SPARE PART MODAL -->
+    <div id="sparepart-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl relative">
+            <button onclick="closeModal('sparepart-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-white">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+            <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-boxes-packing text-cyan-400"></i>
+                신규 예비 부품 등록
+            </h3>
+            <form onsubmit="handleSparePartSubmit(event)" class="space-y-4">
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">부품 코드</label>
+                        <input type="text" id="sp-form-code" required placeholder="예: BRG-6205" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-brand-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">부품명</label>
+                        <input type="text" id="sp-form-name" required placeholder="예: 베어링 6205ZZ" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-brand-500">
+                    </div>
+                </div>
+                <div class="grid grid-cols-3 gap-3">
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">초기 수량</label>
+                        <input type="number" id="sp-form-qty" required value="10" min="0" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-brand-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">안전 재고</label>
+                        <input type="number" id="sp-form-min" required value="3" min="1" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-brand-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">보관 랙 위치</label>
+                        <input type="text" id="sp-form-loc" placeholder="A-02-1" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-brand-500">
+                    </div>
+                </div>
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" onclick="closeModal('sparepart-modal')" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm">취소</button>
+                    <button type="submit" class="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl text-sm font-medium shadow">부품 등록</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION CONTAINER -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+
+    <script>
+        // APP STATE & DUMMY DATA
+        let equipments = [
+            { id: 'EQ-101', code: 'CNC-001', name: 'CNC 선반 #1', location: 'A라인', model: '화천 CUTEX-180', status: 'running', runtime: 1420, temp: 42, vibration: 1.2, lastPM: '2026-07-20', nextPM: '2026-08-20', oee: 92 },
+            { id: 'EQ-102', code: 'CNC-002', name: 'CNC 선반 #2', location: 'A라인', model: '화천 CUTEX-180', status: 'running', runtime: 1380, temp: 45, vibration: 1.5, lastPM: '2026-07-22', nextPM: '2026-08-22', oee: 89 },
+            { id: 'EQ-103', code: 'MCT-001', name: '5축 머시닝센터 #1', location: 'A라인', model: '두산 DNM-5700', status: 'broken', runtime: 2100, temp: 68, vibration: 4.8, lastPM: '2026-06-15', nextPM: '2026-08-10', oee: 45 },
+            { id: 'EQ-104', code: 'INJ-001', name: '전동 사출성형기 350T', location: 'B라인', model: 'LS Mtron WIZ-E', status: 'running', runtime: 3200, temp: 50, vibration: 0.9, lastPM: '2026-08-01', nextPM: '2026-09-01', oee: 94 },
+            { id: 'EQ-105', code: 'ROB-001', name: '다관절 취출로봇 #1', location: 'B라인', model: '현대로보틱스 YS080', status: 'warning', runtime: 1850, temp: 55, vibration: 2.8, lastPM: '2026-07-10', nextPM: '2026-08-10', oee: 78 },
+            { id: 'EQ-106', code: 'COMP-01', name: '스크류 에어 콤프레샤 100HP', location: '동력동', model: '유진 MAVIC-100', status: 'running', runtime: 8500, temp: 72, vibration: 1.1, lastPM: '2026-07-28', nextPM: '2026-08-28', oee: 98 },
+            { id: 'EQ-107', code: 'CHILL-01', name: '터보 냉동기 150USRT', location: '동력동', model: 'LG 전자 H-TYPE', status: 'running', runtime: 4300, temp: 18, vibration: 0.8, lastPM: '2026-07-15', nextPM: '2026-08-15', oee: 96 }
+        ];
+
+        let workOrders = [
+            { id: 'WO-2026-0801', eqId: 'EQ-103', eqName: '5축 머시닝센터 #1', title: '스핀들 유압 과열 및 지그 클램프 작동 불량', priority: 'HIGH', type: '고장수리', status: 'inprogress', assignee: '김보전 책임', date: '2026-08-09 09:15', desc: '가공 중 스핀들 온도가 68도까지 상승하며 자동 정지됨. 유압유 교환 및 베어링 마모 확인 필요.' },
+            { id: 'WO-2026-0802', eqId: 'EQ-105', eqName: '다관절 취출로봇 #1', title: '3축 관절 소음 및 진동 증가 알람', priority: 'MEDIUM', type: '고장수리', status: 'pending', assignee: '이보전 선임', date: '2026-08-09 11:30', desc: '취출 동작 시 드라이브 감속기 부근에서 기어 마찰음발생.' },
+            { id: 'WO-2026-0803', eqId: 'EQ-106', eqName: '스크류 에어 콤프레샤 100HP', title: '에어 필터 및 세퍼레이터 정기 교환', priority: 'LOW', type: '예방보전', status: 'completed', assignee: '박보전 사원', date: '2026-08-08 14:00', desc: '정기 소모품 교체 완료 및 토출 압력 정상 측정 (7.5 bar).' }
+        ];
+
+        let pmTasks = [
+            { id: 'PM-01', eqId: 'EQ-101', eqName: 'CNC 선반 #1', title: '절삭유 누유 확인 및 수위 점검', freq: '매일', done: true },
+            { id: 'PM-02', eqId: 'EQ-103', eqName: '5축 머시닝센터 #1', title: '스핀들 윤활유 오일러 압력 및 주입 점검', freq: '매일', done: false },
+            { id: 'PM-03', eqId: 'EQ-106', eqName: '스크류 에어 콤프레샤', title: '응축수 트랩 드레인 일일 배출', freq: '매일', done: true },
+            { id: 'PM-04', eqId: 'EQ-104', eqName: '전동 사출성형기 350T', title: '형체 유압 블록 토크 체결 상태 점검', freq: '주간', done: true },
+            { id: 'PM-05', eqId: 'EQ-107', eqName: '터보 냉동기', title: '수냉식 쿨링 타워 팬 벨트 장력 및 스케일 점검', freq: '월간', done: false }
+        ];
+
+        let spareParts = [
+            { id: 'SP-01', code: 'BRG-6205', name: '스핀들 베어링 (6205ZZ)', category: '구동부', qty: 12, minQty: 4, location: 'A-01-02' },
+            { id: 'SP-02', code: 'FLT-AIR-01', name: '에어 콤프레샤 오일필터', category: '유틸리티', qty: 2, minQty: 3, location: 'C-03-01' },
+            { id: 'SP-03', code: 'PLC-MOD-16', name: 'PLC 입출력 모듈 (16pt)', category: '전지/제어', qty: 5, minQty: 2, location: 'B-02-04' },
+            { id: 'SP-04', code: 'OIL-HYD-46', name: '작동유 ISO VG46 (20L통)', category: '케미컬', qty: 8, minQty: 5, location: 'D-01-01' },
+            { id: 'SP-05', code: 'SEN-TEMP-PT', name: '온도센서 PT100', category: '계측기', qty: 1, minQty: 2, location: 'B-01-02' }
+        ];
+
+        let charts = {};
+
+        // ==========================================
+        // 🚀 앱스 스크립트 동기화 설정
+        // ==========================================
+        // 여기에 앱스 스크립트 '웹앱 배포 URL'을 넣으세요.
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxo9Od49C26aS5QLhji312B0y2MDqYl7vCRFmj5jRlPrF9gz4PIxHGr722HYCn_GuifAA/exec';
+
+        // 데이터를 시트에 전송하는 공통 함수
+        function syncToSheet(sheetName, dataObj) {
+            if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL === 'YOUR_WEB_APP_URL_HERE') return;
+            
+            fetch(APPS_SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify({
+                    sheetName: sheetName,
+                    data: dataObj
+                })
+            }).then(response => response.json())
+              .then(res => console.log(`[${sheetName}] Sync:`, res.action))
+              .catch(err => console.error('Sync Error:', err));
+        }
+
+        // TAB SWITCHING LOGIC
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('bg-brand-600', 'text-white');
+                btn.classList.add('text-slate-400');
+            });
+
+            const activeTab = document.getElementById(`tab-${tabId}`);
+            if (activeTab) activeTab.classList.remove('hidden');
+
+            const activeNav = document.getElementById(`nav-${tabId}`);
+            if (activeNav) {
+                activeNav.classList.add('bg-brand-600', 'text-white');
+                activeNav.classList.remove('text-slate-400');
+            }
+
+            // Trigger tab specific renders
+            if (tabId === 'dashboard') renderDashboard();
+            if (tabId === 'layout') renderLayoutMap();
+            if (tabId === 'equipments') renderEquipmentTable();
+            if (tabId === 'workorders') renderWorkOrders();
+            if (tabId === 'pm') renderPMList();
+            if (tabId === 'spares') renderSparePartsTable();
+            if (tabId === 'analytics') renderAnalyticsCharts();
+        }
+
+        // REALTIME CLOCK
+        function updateClock() {
+            const now = new Date();
+            const str = now.getFullYear() + '-' +
+                String(now.getMonth() + 1).padStart(2, '0') + '-' +
+                String(now.getDate()).padStart(2, '0') + ' ' +
+                String(now.getHours()).padStart(2, '0') + ':' +
+                String(now.getMinutes()).padStart(2, '0') + ':' +
+                String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('live-clock').textContent = str;
+        }
+
+        // RENDER DASHBOARD VIEW
+        function renderDashboard() {
+            // Stats recalculation
+            const total = equipments.length;
+            const running = equipments.filter(e => e.status === 'running').length;
+            const broken = equipments.filter(e => e.status === 'broken').length;
+            const avgOee = Math.round(equipments.reduce((acc, e) => acc + e.oee, 0) / total);
+
+            document.getElementById('header-total-eq').textContent = `${total}대`;
+            document.getElementById('header-running-eq').textContent = `${running}대`;
+            document.getElementById('header-broken-eq').textContent = `${broken}대`;
+            document.getElementById('header-oee').textContent = `${avgOee}%`;
+            document.getElementById('dash-oee').textContent = `${avgOee}%`;
+
+            const activeWO = workOrders.filter(w => w.status !== 'completed').length;
+            document.getElementById('dash-active-repair').textContent = `${activeWO} 건`;
+
+            // Mini Floor Grid
+            const miniMap = document.getElementById('dash-mini-map');
+            miniMap.innerHTML = equipments.map(eq => {
+                let badgeColor = eq.status === 'running' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' :
+                                 eq.status === 'warning' ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' :
+                                 'bg-rose-500/20 text-rose-400 border-rose-500/30 animate-pulse';
+                let statusLabel = eq.status === 'running' ? '가동중' : eq.status === 'warning' ? '점검필요' : '고장정지';
+
+                return `
+                    <div onclick="openEquipmentDetail('${eq.id}')" class="bg-slate-950 p-3 rounded-xl border border-slate-800 hover:border-slate-700 cursor-pointer transition">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="text-xs font-mono text-slate-400">${eq.code}</span>
+                            <span class="text-[10px] px-2 py-0.5 rounded-full font-bold border ${badgeColor}">${statusLabel}</span>
+                        </div>
+                        <h4 class="text-xs font-bold text-slate-200 truncate">${eq.name}</h4>
+                        <div class="mt-2 flex items-center justify-between text-[11px] text-slate-400">
+                            <span><i class="fa-solid fa-temperature-three text-slate-500"></i> ${eq.temp}°C</span>
+                            <span><i class="fa-solid fa-wave-square text-slate-500"></i> ${eq.vibration}mm/s</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Recent Urgent Work Orders
+            const recentOrders = document.getElementById('dash-recent-orders');
+            recentOrders.innerHTML = workOrders.slice(0, 4).map(wo => {
+                let prioColor = wo.priority === 'HIGH' ? 'text-rose-400 bg-rose-500/10' : 'text-amber-400 bg-amber-500/10';
+                return `
+                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold ${prioColor} px-2 py-0.5 rounded font-mono">[${wo.priority}] ${wo.type}</span>
+                            <span class="text-[10px] text-slate-500">${wo.date}</span>
+                        </div>
+                        <p class="text-xs font-semibold text-slate-200 mt-1.5 truncate">${wo.title}</p>
+                        <p class="text-[11px] text-slate-400 mt-1">설비: ${wo.eqName} | 담당: ${wo.assignee || '미정'}</p>
+                    </div>
+                `;
+            }).join('');
+
+            // Populate dashboard mini charts
+            initDashboardCharts();
+        }
+
+        // RENDER FACTORY FLOOR MAP
+        function renderLayoutMap() {
+            const lineA = equipments.filter(e => e.location === 'A라인');
+            const lineB = equipments.filter(e => e.location === 'B라인');
+            const util = equipments.filter(e => e.location === '동력동');
+
+            const createCard = (eq) => {
+                let borderStyle = eq.status === 'running' ? 'border-emerald-500/40 status-pulse-running' :
+                                  eq.status === 'warning' ? 'border-amber-500/50' :
+                                  'border-rose-500 status-pulse-broken';
+
+                return `
+                    <div onclick="openEquipmentDetail('${eq.id}')" class="bg-slate-900/90 border-2 ${borderStyle} rounded-xl p-4 cursor-pointer hover:bg-slate-800/90 transition shadow-lg">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="text-xs font-mono text-slate-400">${eq.code}</span>
+                            <span class="text-xs font-bold px-2 py-0.5 rounded ${eq.status === 'running' ? 'bg-emerald-500/20 text-emerald-400' : eq.status === 'warning' ? 'bg-amber-500/20 text-amber-400' : 'bg-rose-500/20 text-rose-400'}">
+                                ${eq.status === 'running' ? '가동중' : eq.status === 'warning' ? '점검' : '정지'}
+                            </span>
+                        </div>
+                        <h4 class="font-bold text-sm text-slate-100">${eq.name}</h4>
+                        <p class="text-xs text-slate-400 mt-1">${eq.model}</p>
+                        <div class="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-slate-800 text-xs">
+                            <div>
+                                <span class="text-slate-500 block text-[10px]">베어링 온도</span>
+                                <span class="font-bold ${eq.temp > 60 ? 'text-rose-400' : 'text-slate-200'}">${eq.temp} °C</span>
+                            </div>
+                            <div>
+                                <span class="text-slate-500 block text-[10px]">진동 수치</span>
+                                <span class="font-bold ${eq.vibration > 3.0 ? 'text-rose-400' : 'text-slate-200'}">${eq.vibration} mm/s</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            };
+
+            document.getElementById('map-line-a').innerHTML = lineA.map(createCard).join('');
+            document.getElementById('map-line-b').innerHTML = lineB.map(createCard).join('');
+            document.getElementById('map-utility').innerHTML = util.map(createCard).join('');
+        }
+
+        // RENDER EQUIPMENT MASTER TABLE
+        function renderEquipmentTable() {
+            const tbody = document.getElementById('equipment-table-body');
+            tbody.innerHTML = equipments.map(eq => {
+                let statusBadge = eq.status === 'running' ? '<span class="bg-emerald-500/20 text-emerald-400 text-xs px-2.5 py-1 rounded-full font-bold">정상 가동</span>' :
+                                  eq.status === 'warning' ? '<span class="bg-amber-500/20 text-amber-400 text-xs px-2.5 py-1 rounded-full font-bold">점검 필요</span>' :
+                                  '<span class="bg-rose-500/20 text-rose-400 text-xs px-2.5 py-1 rounded-full font-bold">고장 정지</span>';
+
+                return `
+                    <tr class="hover:bg-slate-900/50 transition">
+                        <td class="px-5 py-4">
+                            <div class="font-bold text-slate-100">${eq.name}</div>
+                            <div class="text-xs text-slate-500 font-mono">${eq.code} | ${eq.model}</div>
+                        </td>
+                        <td class="px-5 py-4 text-slate-300">${eq.location}</td>
+                        <td class="px-5 py-4">${statusBadge}</td>
+                        <td class="px-5 py-4 font-mono text-slate-300">${eq.runtime.toLocaleString()} Hrs</td>
+                        <td class="px-5 py-4 text-xs font-mono">
+                            <span class="${eq.vibration > 3.0 ? 'text-rose-400 font-bold' : 'text-slate-300'}">${eq.vibration}mm/s</span> /
+                            <span class="${eq.temp > 60 ? 'text-rose-400 font-bold' : 'text-slate-300'}">${eq.temp}°C</span>
+                        </td>
+                        <td class="px-5 py-4 text-xs text-slate-400">${eq.lastPM}</td>
+                        <td class="px-5 py-4 text-right space-x-2">
+                            <button onclick="openEquipmentDetail('${eq.id}')" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg transition">상세/이력</button>
+                            <button onclick="deleteEquipment('${eq.id}')" class="text-xs bg-rose-950/40 hover:bg-rose-900/60 text-rose-400 px-2 py-1.5 rounded-lg border border-rose-800/40 transition"><i class="fa-solid fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            // Update WO Form Eq Select options
+            const woEqSelect = document.getElementById('wo-form-eq');
+            if (woEqSelect) {
+                woEqSelect.innerHTML = equipments.map(e => `<option value="${e.id}">${e.code} - ${e.name} (${e.location})</option>`).join('');
+            }
+        }
+
+        // FILTER EQUIPMENT SEARCH
+        function filterEquipments() {
+            const query = document.getElementById('eq-search').value.toLowerCase();
+            const location = document.getElementById('eq-filter-location').value;
+            const status = document.getElementById('eq-filter-status').value;
+
+            const filtered = equipments.filter(eq => {
+                const matchQuery = eq.name.toLowerCase().includes(query) || eq.code.toLowerCase().includes(query) || eq.model.toLowerCase().includes(query);
+                const matchLoc = location === 'ALL' || eq.location === location;
+                const matchStatus = status === 'ALL' || eq.status === status;
+                return matchQuery && matchLoc && matchStatus;
+            });
+
+            const tbody = document.getElementById('equipment-table-body');
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-slate-500">검색 조건에 해당되는 설비가 없습니다.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(eq => {
+                let statusBadge = eq.status === 'running' ? '<span class="bg-emerald-500/20 text-emerald-400 text-xs px-2.5 py-1 rounded-full font-bold">정상 가동</span>' :
+                                  eq.status === 'warning' ? '<span class="bg-amber-500/20 text-amber-400 text-xs px-2.5 py-1 rounded-full font-bold">점검 필요</span>' :
+                                  '<span class="bg-rose-500/20 text-rose-400 text-xs px-2.5 py-1 rounded-full font-bold">고장 정지</span>';
+
+                return `
+                    <tr class="hover:bg-slate-900/50 transition">
+                        <td class="px-5 py-4">
+                            <div class="font-bold text-slate-100">${eq.name}</div>
+                            <div class="text-xs text-slate-500 font-mono">${eq.code} | ${eq.model}</div>
+                        </td>
+                        <td class="px-5 py-4 text-slate-300">${eq.location}</td>
+                        <td class="px-5 py-4">${statusBadge}</td>
+                        <td class="px-5 py-4 font-mono text-slate-300">${eq.runtime.toLocaleString()} Hrs</td>
+                        <td class="px-5 py-4 text-xs font-mono">
+                            <span class="${eq.vibration > 3.0 ? 'text-rose-400 font-bold' : 'text-slate-300'}">${eq.vibration}mm/s</span> /
+                            <span class="${eq.temp > 60 ? 'text-rose-400 font-bold' : 'text-slate-300'}">${eq.temp}°C</span>
+                        </td>
+                        <td class="px-5 py-4 text-xs text-slate-400">${eq.lastPM}</td>
+                        <td class="px-5 py-4 text-right space-x-2">
+                            <button onclick="openEquipmentDetail('${eq.id}')" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg transition">상세/이력</button>
+                            <button onclick="deleteEquipment('${eq.id}')" class="text-xs bg-rose-950/40 hover:bg-rose-900/60 text-rose-400 px-2 py-1.5 rounded-lg border border-rose-800/40 transition"><i class="fa-solid fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // OPEN EQUIPMENT DETAIL MODAL
+        function openEquipmentDetail(eqId) {
+            const eq = equipments.find(e => e.id === eqId);
+            if (!eq) return;
+
+            const history = workOrders.filter(w => w.eqId === eqId);
+
+            const content = document.getElementById('eq-modal-content');
+            content.innerHTML = `
+                <div class="flex justify-between items-start border-b border-slate-800 pb-4">
+                    <div>
+                        <span class="text-xs font-mono bg-brand-900/80 text-brand-300 px-2.5 py-1 rounded border border-brand-700/50">${eq.code}</span>
+                        <h2 class="text-xl font-bold text-white mt-2">${eq.name}</h2>
+                        <p class="text-xs text-slate-400">${eq.location} | 모델명: ${eq.model}</p>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-xs font-bold px-3 py-1 rounded-full ${eq.status === 'running' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}">
+                            ${eq.status === 'running' ? '정상가동' : '고장정지/점검'}
+                        </span>
+                        <p class="text-xs text-slate-400 mt-2">가동률 OEE: <strong class="text-emerald-400">${eq.oee}%</strong></p>
+                    </div>
+                </div>
+
+                <!-- Specs Grid -->
+                <div class="grid grid-cols-3 gap-3 my-4 bg-slate-950 p-3 rounded-xl border border-slate-800 text-center">
+                    <div>
+                        <span class="text-[11px] text-slate-500 block">누적 가동시간</span>
+                        <span class="text-sm font-mono font-bold text-slate-200">${eq.runtime} hrs</span>
+                    </div>
+                    <div>
+                        <span class="text-[11px] text-slate-500 block">진동 센서 수치</span>
+                        <span class="text-sm font-mono font-bold ${eq.vibration > 3 ? 'text-rose-400' : 'text-slate-200'}">${eq.vibration} mm/s</span>
+                    </div>
+                    <div>
+                        <span class="text-[11px] text-slate-500 block">베어링 센서 온도</span>
+                        <span class="text-sm font-mono font-bold ${eq.temp > 60 ? 'text-rose-400' : 'text-slate-200'}">${eq.temp} °C</span>
+                    </div>
+                </div>
+
+                <!-- Repair History Section -->
+                <div class="mt-5">
+                    <h4 class="text-sm font-bold text-slate-200 mb-2 flex items-center gap-2">
+                        <i class="fa-solid fa-clock-rotate-left text-brand-500"></i> 최근 보전/수리 이력 (${history.length}건)
+                    </h4>
+                    <div class="space-y-2 max-h-48 overflow-y-auto pr-1">
+                        ${history.length === 0 ? '<p class="text-xs text-slate-500 py-3 text-center">수리 기록이 없습니다.</p>' : 
+                        history.map(h => `
+                            <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs">
+                                <div class="flex justify-between font-bold text-slate-300">
+                                    <span>${h.title}</span>
+                                    <span class="text-slate-500">${h.date}</span>
+                                </div>
+                                <p class="text-slate-400 mt-1">${h.desc}</p>
+                                <div class="text-[11px] text-slate-500 mt-1">담당자: ${h.assignee || '미정'}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+
+            openModal('equipment-detail-modal');
+        }
+
+        // RENDER WORK ORDERS KANBAN
+        function renderWorkOrders() {
+            const pendingCol = document.getElementById('wo-col-pending');
+            const inprogressCol = document.getElementById('wo-col-inprogress');
+            const completedCol = document.getElementById('wo-col-completed');
+
+            const pendingWO = workOrders.filter(w => w.status === 'pending');
+            const inprogressWO = workOrders.filter(w => w.status === 'inprogress');
+            const completedWO = workOrders.filter(w => w.status === 'completed');
+
+            document.getElementById('count-pending').textContent = pendingWO.length;
+            document.getElementById('count-inprogress').textContent = inprogressWO.length;
+            document.getElementById('count-completed').textContent = completedWO.length;
+            document.getElementById('pending-wo-badge').textContent = pendingWO.length + inprogressWO.length;
+
+            const renderCard = (wo) => {
+                let badgePrio = wo.priority === 'HIGH' ? 'bg-rose-500/20 text-rose-400' : 'bg-slate-800 text-slate-300';
+                
+                return `
+                    <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow space-y-2">
+                        <div class="flex justify-between items-start">
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded ${badgePrio}">${wo.priority} | ${wo.type}</span>
+                            <span class="text-[10px] text-slate-500 font-mono">${wo.id}</span>
+                        </div>
+                        <h4 class="text-xs font-bold text-slate-100">${wo.title}</h4>
+                        <p class="text-[11px] text-slate-400 line-clamp-2">${wo.desc}</p>
+                        <div class="text-[11px] text-slate-400 pt-2 border-t border-slate-900 flex justify-between items-center">
+                            <span><i class="fa-solid fa-gears"></i> ${wo.eqName}</span>
+                            <span>담당: ${wo.assignee || '미정'}</span>
+                        </div>
+                        
+                        <!-- State Action Buttons -->
+                        <div class="pt-2 flex justify-end gap-1">
+                            ${wo.status === 'pending' ? `<button onclick="updateWOStatus('${wo.id}', 'inprogress')" class="text-xs bg-blue-600/30 hover:bg-blue-600/50 text-blue-300 px-2.5 py-1 rounded border border-blue-500/30">수리 시작</button>` : ''}
+                            ${wo.status === 'inprogress' ? `<button onclick="updateWOStatus('${wo.id}', 'completed')" class="text-xs bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-300 px-2.5 py-1 rounded border border-emerald-500/30">조치 완료</button>` : ''}
+                            <button onclick="deleteWorkOrder('${wo.id}')" class="text-xs text-slate-500 hover:text-rose-400 px-1.5 py-1"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </div>
+                `;
+            };
+
+            pendingCol.innerHTML = pendingWO.length ? pendingWO.map(renderCard).join('') : `<p class="text-xs text-slate-600 text-center py-6">대기 중 항목이 없습니다.</p>`;
+            inprogressCol.innerHTML = inprogressWO.length ? inprogressWO.map(renderCard).join('') : `<p class="text-xs text-slate-600 text-center py-6">진행 중 항목이 없습니다.</p>`;
+            completedCol.innerHTML = completedWO.length ? completedWO.map(renderCard).join('') : `<p class="text-xs text-slate-600 text-center py-6">완료된 항목이 없습니다.</p>`;
+        }
+
+        function updateWOStatus(woId, newStatus) {
+            const wo = workOrders.find(w => w.id === woId);
+            if (wo) {
+                wo.status = newStatus;
+                // If completed, check if equipment status should revert to running
+                if (newStatus === 'completed') {
+                    const eq = equipments.find(e => e.id === wo.eqId);
+                    if (eq) {
+                        eq.status = 'running';
+                        syncToSheet('Equipments', eq); // [시트 연동] 설비 상태 복구 동기화
+                    }
+                }
+                
+                syncToSheet('WorkOrders', wo); // [시트 연동] 작업 상태 변경 동기화
+                
+                showToast(`작업 상태가 변경되었습니다. (${wo.id})`, 'success');
+                renderWorkOrders();
+                renderDashboard();
+            }
+        }
+
+        // RENDER PREVENTIVE MAINTENANCE CHECKLIST
+        function renderPMList() {
+            const container = document.getElementById('pm-list-container');
+            const doneCount = pmTasks.filter(p => p.done).length;
+            const totalCount = pmTasks.length;
+            const pct = Math.round((doneCount / totalCount) * 100);
+            document.getElementById('pm-completion-rate').textContent = `${pct}% (${doneCount}/${totalCount})`;
+
+            container.innerHTML = pmTasks.map(pm => `
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <button onclick="togglePMTask('${pm.id}')" class="w-6 h-6 rounded-lg border border-slate-700 flex items-center justify-center ${pm.done ? 'bg-amber-500 text-slate-950 border-amber-500' : 'hover:border-slate-500'} transition">
+                            ${pm.done ? '<i class="fa-solid fa-check text-xs"></i>' : ''}
+                        </button>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-bold bg-slate-800 text-slate-300 px-2 py-0.5 rounded">${pm.freq}</span>
+                                <h4 class="text-sm font-bold ${pm.done ? 'line-through text-slate-500' : 'text-slate-200'}">${pm.title}</h4>
+                            </div>
+                            <p class="text-xs text-slate-500 mt-1">대상 설비: ${pm.eqName}</p>
+                        </div>
+                    </div>
+                    <span class="text-xs ${pm.done ? 'text-emerald-400 font-bold' : 'text-amber-400'}">${pm.done ? '점검완료' : '미점검'}</span>
+                </div>
+            `).join('');
+        }
+
+        function togglePMTask(pmId) {
+            const task = pmTasks.find(p => p.id === pmId);
+            if (task) {
+                task.done = !task.done;
+                renderPMList();
+                showToast(task.done ? 'PM 점검이 완료되었습니다.' : '점검이 미완료 상태로 전환되었습니다.', 'info');
+            }
+        }
+
+        // RENDER SPARE PARTS TABLE
+        function renderSparePartsTable() {
+            const tbody = document.getElementById('spare-parts-table-body');
+            tbody.innerHTML = spareParts.map(sp => {
+                const isLow = sp.qty <= sp.minQty;
+                return `
+                    <tr class="hover:bg-slate-900/50 transition">
+                        <td class="px-5 py-4 font-mono text-xs text-brand-400">${sp.code}</td>
+                        <td class="px-5 py-4 font-bold text-slate-200">${sp.name}</td>
+                        <td class="px-5 py-4 text-xs text-slate-400">${sp.category}</td>
+                        <td class="px-5 py-4">
+                            <span class="font-mono font-bold ${isLow ? 'text-rose-400' : 'text-slate-200'}">${sp.qty} 개</span>
+                            ${isLow ? '<span class="ml-2 text-[10px] bg-rose-500/20 text-rose-400 px-1.5 py-0.5 rounded font-bold">부족</span>' : ''}
+                        </td>
+                        <td class="px-5 py-4 font-mono text-xs text-slate-500">${sp.minQty} 개</td>
+                        <td class="px-5 py-4 font-mono text-xs text-slate-300">${sp.location}</td>
+                        <td class="px-5 py-4 text-right space-x-1">
+                            <button onclick="adjustPartQty('${sp.id}', 1)" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-2.5 py-1 rounded text-xs"><i class="fa-solid fa-plus"></i></button>
+                            <button onclick="adjustPartQty('${sp.id}', -1)" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-2.5 py-1 rounded text-xs"><i class="fa-solid fa-minus"></i></button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function adjustPartQty(id, delta) {
+            const part = spareParts.find(s => s.id === id);
+            if (part) {
+                part.qty = Math.max(0, part.qty + delta);
+                renderSparePartsTable();
+                showToast(`${part.name} 재고가 조정되었습니다. (현재: ${part.qty}개)`, 'info');
+            }
+        }
+
+        // CHART INITIALIZATION
+        function initDashboardCharts() {
+            // Chart 1: Downtime Causes
+            const ctx1 = document.getElementById('chartDowntimeCauses')?.getContext('2d');
+            if (ctx1 && !charts.downtime) {
+                charts.downtime = new Chart(ctx1, {
+                    type: 'bar',
+                    data: {
+                        labels: ['스핀들 과열', '유압 벨트 마모', '센서 오작동', '전원 과부하', '기타소모품'],
+                        datasets: [{
+                            label: '정지시간(시간)',
+                            data: [12.5, 8.2, 5.0, 3.1, 2.4],
+                            backgroundColor: 'rgba(244, 63, 94, 0.7)',
+                            borderColor: '#f43f5e',
+                            borderWidth: 1,
+                            borderRadius: 6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            x: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { display: false } },
+                            y: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { color: '#334155' } }
+                        }
+                    }
+                });
+            }
+
+            // Chart 2: Vibration & Temp Trend
+            const ctx2 = document.getElementById('chartVibrationTrend')?.getContext('2d');
+            if (ctx2 && !charts.vibration) {
+                charts.vibration = new Chart(ctx2, {
+                    type: 'line',
+                    data: {
+                        labels: ['08:00', '10:00', '12:00', '14:00', '16:00', '18:00'],
+                        datasets: [
+                            {
+                                label: '평균 온도(°C)',
+                                data: [38, 41, 45, 48, 44, 42],
+                                borderColor: '#10b981',
+                                tension: 0.3,
+                                fill: false
+                            },
+                            {
+                                label: '진동 (mm/s)',
+                                data: [1.1, 1.3, 1.8, 2.5, 1.6, 1.4],
+                                borderColor: '#3b82f6',
+                                tension: 0.3,
+                                fill: false
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { labels: { color: '#cbd5e1', font: { size: 11 } } } },
+                        scales: {
+                            x: { ticks: { color: '#94a3b8' }, grid: { display: false } },
+                            y: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } }
+                        }
+                    }
+                });
+            }
+        }
+
+        function renderAnalyticsCharts() {
+            // Chart 3: Monthly Maintenance Cost
+            const ctx3 = document.getElementById('chartMonthlyCost')?.getContext('2d');
+            if (ctx3 && !charts.monthlyCost) {
+                charts.monthlyCost = new Chart(ctx3, {
+                    type: 'line',
+                    data: {
+                        labels: ['3월', '4월', '5월', '6월', '7월', '8월'],
+                        datasets: [{
+                            label: '보전비용 (만원)',
+                            data: [420, 380, 510, 290, 340, 210],
+                            borderColor: '#38bdf8',
+                            backgroundColor: 'rgba(56, 189, 248, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            x: { ticks: { color: '#94a3b8' }, grid: { display: false } },
+                            y: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } }
+                        }
+                    }
+                });
+            }
+
+            // Chart 4: Work Type Pie
+            const ctx4 = document.getElementById('chartWorkTypePie')?.getContext('2d');
+            if (ctx4 && !charts.workPie) {
+                charts.workPie = new Chart(ctx4, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['정기 예방보전', '돌발 고장수리', '설비 개조/개선'],
+                        datasets: [{
+                            data: [65, 25, 10],
+                            backgroundColor: ['#10b981', '#f43f5e', '#6366f1'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { position: 'bottom', labels: { color: '#cbd5e1' } } }
+                    }
+                });
+            }
+        }
+
+        // FORMS SUBMIT HANDLERS
+        function handleWorkOrderSubmit(e) {
+            e.preventDefault();
+            const eqId = document.getElementById('wo-form-eq').value;
+            const eq = equipments.find(e => e.id === eqId);
+
+            const newWO = {
+                id: `WO-2026-${Math.floor(1000 + Math.random() * 9000)}`,
+                eqId: eqId,
+                eqName: eq ? eq.name : '미정',
+                title: document.getElementById('wo-form-title').value,
+                priority: document.getElementById('wo-form-priority').value,
+                type: document.getElementById('wo-form-type').value,
+                status: 'pending',
+                assignee: document.getElementById('wo-form-assignee').value || '미정',
+                date: new Date().toISOString().slice(0, 16).replace('T', ' '),
+                desc: document.getElementById('wo-form-desc').value
+            };
+
+            // If urgent broken repair, switch machine status to broken
+            if (newWO.priority === 'HIGH' && eq) {
+                eq.status = 'broken';
+                syncToSheet('Equipments', eq); // [시트 연동] 긴급 고장시 설비 상태 동기화
+            }
+
+            workOrders.unshift(newWO);
+            closeModal('workorder-modal');
+            e.target.reset();
+
+            syncToSheet('WorkOrders', newWO); // [시트 연동] 신규 작업지시 시트 등록
+
+            showToast('신규 수리/작업 지시가 정상 등록되었습니다.', 'success');
+            renderWorkOrders();
+            renderDashboard();
+        }
+
+        function handleEquipmentSubmit(e) {
+            e.preventDefault();
+            const newEq = {
+                id: `EQ-${Math.floor(200 + Math.random() * 800)}`,
+                code: document.getElementById('eq-form-code').value,
+                name: document.getElementById('eq-form-name').value,
+                location: document.getElementById('eq-form-location').value,
+                model: document.getElementById('eq-form-model').value || '기타',
+                status: 'running',
+                runtime: 0,
+                temp: 35,
+                vibration: 1.0,
+                lastPM: new Date().toISOString().slice(0, 10),
+                nextPM: '2026-09-01',
+                oee: 95
+            };
+
+            equipments.push(newEq);
+            closeModal('equipment-modal');
+            e.target.reset();
+
+            syncToSheet('Equipments', newEq); // [시트 연동] 신규 설비 시트 등록
+
+            showToast('신규 설비가 성공적으로 등록되었습니다.', 'success');
+            renderEquipmentTable();
+            renderDashboard();
+        }
+
+        function handleSparePartSubmit(e) {
+            e.preventDefault();
+            const newSp = {
+                id: `SP-${Math.floor(10 + Math.random() * 90)}`,
+                code: document.getElementById('sp-form-code').value,
+                name: document.getElementById('sp-form-name').value,
+                category: '기타부품',
+                qty: parseInt(document.getElementById('sp-form-qty').value),
+                minQty: parseInt(document.getElementById('sp-form-min').value),
+                location: document.getElementById('sp-form-loc').value || 'A-01'
+            };
+
+            spareParts.push(newSp);
+            closeModal('sparepart-modal');
+            e.target.reset();
+            
+            syncToSheet('SpareParts', newSp); // [시트 연동] 신규 부품 시트 등록
+
+            showToast('예비 부품이 추가 등록되었습니다.', 'success');
+            renderSparePartsTable();
+        }
+
+        function deleteEquipment(id) {
+            equipments = equipments.filter(e => e.id !== id);
+            renderEquipmentTable();
+            renderDashboard();
+            showToast('설비가 삭제되었습니다.', 'warning');
+        }
+
+        function deleteWorkOrder(id) {
+            workOrders = workOrders.filter(w => w.id !== id);
+            renderWorkOrders();
+            renderDashboard();
+            showToast('작업 지시가 삭제되었습니다.', 'warning');
+        }
+
+        function adjustPartQty(id, delta) {
+            const part = spareParts.find(s => s.id === id);
+            if (part) {
+                part.qty = Math.max(0, part.qty + delta);
+                
+                syncToSheet('SpareParts', part); // [시트 연동] 부품 수량 증감 동기화
+                
+                renderSparePartsTable();
+                showToast(`${part.name} 재고가 조정되었습니다. (현재: ${part.qty}개)`, 'info');
+            }
+        }
+
+        // MODAL HELPERS
+        function openModal(modalId) {
+            document.getElementById(modalId)?.classList.remove('hidden');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId)?.classList.add('hidden');
+        }
+
+        // CUSTOM TOAST NOTIFICATIONS
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+
+            let typeStyles = type === 'success' ? 'bg-emerald-900/90 border-emerald-500 text-emerald-200' :
+                             type === 'warning' ? 'bg-amber-900/90 border-amber-500 text-amber-200' :
+                             'bg-slate-900/90 border-brand-500 text-slate-100';
+
+            toast.className = `px-4 py-3 rounded-xl border text-xs font-medium shadow-2xl flex items-center gap-2 transform transition-all duration-300 pointer-events-auto ${typeStyles}`;
+            toast.innerHTML = `<i class="fa-solid fa-circle-info text-sm"></i> <span>${message}</span>`;
+
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // INITIALIZATION ON LOAD
+        window.onload = function() {
+            setInterval(updateClock, 1000);
+            updateClock();
+            switchTab('dashboard');
+        };
+    </script>
+</body>
+</html>
