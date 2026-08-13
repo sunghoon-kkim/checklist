@@ -652,6 +652,16 @@ tailwind.config = {
             <input type="text" id="eq-form-formulation" maxlength="20" placeholder="예: 공통" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
           </div>
         </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label for="eq-form-team" class="block text-xs text-slate-400 mb-1">팀</label>
+            <input type="text" id="eq-form-team" maxlength="20" placeholder="예: 공무팀" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+          </div>
+          <div>
+            <label for="eq-form-part" class="block text-xs text-slate-400 mb-1">파트</label>
+            <input type="text" id="eq-form-part" maxlength="20" placeholder="예: 설비파트" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+          </div>
+        </div>
       </fieldset>
 
       <!-- ▸ 위치 정보 -->
@@ -692,91 +702,30 @@ tailwind.config = {
             <input type="text" id="eq-form-model" maxlength="40" placeholder="예: DNM-5700" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
           </div>
         </div>
-        <div class="grid grid-cols-3 gap-3">
-          <div>
-            <label for="eq-form-serial" class="block text-xs text-slate-400 mb-1">Serial #</label>
-            <input type="text" id="eq-form-serial" maxlength="40" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
-          </div>
-          <div>
-            <label for="eq-form-madein" class="block text-xs text-slate-400 mb-1">제조국</label>
-            <input type="text" id="eq-form-madein" maxlength="20" placeholder="예: 한국" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
-          </div>
+        <div class="grid grid-cols-2 gap-3">
           <div>
             <label for="eq-form-capacity" class="block text-xs text-slate-400 mb-1">기계능력</label>
             <input type="text" id="eq-form-capacity" maxlength="30" placeholder="예: 2Ton/hr" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
           </div>
-        </div>
-        <div class="grid grid-cols-2 gap-3">
           <div>
             <label for="eq-form-supplier" class="block text-xs text-slate-400 mb-1">공급업체</label>
             <input type="text" id="eq-form-supplier" maxlength="40" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
           </div>
-          <div>
-            <label for="eq-form-asvendor" class="block text-xs text-slate-400 mb-1">AS업체</label>
-            <input type="text" id="eq-form-asvendor" maxlength="40" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
-          </div>
-        </div>
-      </fieldset>
-
-      <!-- ▸ 운영 정보 -->
-      <fieldset class="space-y-3 border-t border-slate-800 pt-4">
-        <legend class="text-xs font-bold text-slate-300 flex items-center gap-1.5 mb-1"><i class="fa-solid fa-gear text-brand-400"></i> 운영 정보</legend>
-        <div class="grid grid-cols-3 gap-3">
-          <div>
-            <label for="eq-form-status" class="block text-xs text-slate-400 mb-1">설비상태</label>
-            <select id="eq-form-status" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
-              <option value="running">운영설비 [Running]</option>
-              <option value="warning">점검 필요</option>
-              <option value="broken">고장 정지</option>
-            </select>
-          </div>
-          <div>
-            <label for="eq-form-grade" class="block text-xs text-slate-400 mb-1">설비등급</label>
-            <select id="eq-form-grade" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
-              <option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="">미지정</option>
-            </select>
-          </div>
-          <div>
-            <label for="eq-form-department" class="block text-xs text-slate-400 mb-1">사용부서</label>
-            <input type="text" id="eq-form-department" maxlength="20" placeholder="예: 설비파트" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
-          </div>
-        </div>
-        <div class="grid grid-cols-3 gap-3">
-          <div>
-            <label for="eq-form-installdate" class="block text-xs text-slate-400 mb-1">설치일자</label>
-            <input type="date" id="eq-form-installdate" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
-          </div>
-          <div>
-            <label for="eq-form-utility" class="block text-xs text-slate-400 mb-1">사용 Utility</label>
-            <input type="text" id="eq-form-utility" maxlength="30" placeholder="예: 380V" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
-          </div>
-          <div>
-            <label for="eq-form-cost" class="block text-xs text-slate-400 mb-1">구입금액</label>
-            <input type="text" id="eq-form-cost" maxlength="30" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
-          </div>
         </div>
         <div>
-          <label for="eq-form-disposaldate" class="block text-xs text-slate-400 mb-1">폐기일자</label>
-          <input type="date" id="eq-form-disposaldate" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+          <label for="eq-form-installdate" class="block text-xs text-slate-400 mb-1">설치일자</label>
+          <input type="date" id="eq-form-installdate" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
         </div>
       </fieldset>
 
-      <!-- ▸ GMP / 법정 관리 -->
+      <!-- ▸ 관리 구분 -->
       <fieldset class="space-y-3 border-t border-slate-800 pt-4">
-        <legend class="text-xs font-bold text-slate-300 flex items-center gap-1.5 mb-1"><i class="fa-solid fa-shield-halved text-brand-400"></i> GMP / 법정 관리</legend>
+        <legend class="text-xs font-bold text-slate-300 flex items-center gap-1.5 mb-1"><i class="fa-solid fa-shield-halved text-brand-400"></i> 관리 구분</legend>
         <div class="grid grid-cols-3 gap-3">
           <div>
             <label for="eq-form-gmpequip" class="block text-xs text-slate-400 mb-1">GMP설비여부</label>
             <select id="eq-form-gmpequip" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
-              <option value="GMP">GMP</option><option value="Non-GMP">Non-GMP</option>
-            </select>
-          </div>
-          <div>
-            <label for="eq-form-gmp" class="block text-xs text-slate-400 mb-1">품질 영향도</label>
-            <select id="eq-form-gmp" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
-              <option value="직접영향">직접영향 (Direct)</option>
-              <option value="간접영향">간접영향 (Indirect)</option>
-              <option value="해당없음" selected>해당없음 (No impact)</option>
+              <option value="GMP">GMP</option><option value="NON-GMP">NON-GMP</option>
             </select>
           </div>
           <div>
@@ -785,26 +734,18 @@ tailwind.config = {
               <option value="N">N</option><option value="Y">Y</option>
             </select>
           </div>
-        </div>
-        <div class="grid grid-cols-2 gap-3">
           <div>
-            <label for="eq-form-qual" class="block text-xs text-slate-400 mb-1">최근 적격성평가일</label>
-            <input type="date" id="eq-form-qual" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
-          </div>
-          <div>
-            <label for="eq-form-requal" class="block text-xs text-slate-400 mb-1">차기 재평가 예정일</label>
-            <input type="date" id="eq-form-requal" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+            <label for="eq-form-revstatus" class="block text-xs text-slate-400 mb-1">Revision 진행상태</label>
+            <select id="eq-form-revstatus" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+              <option value="제개정완료">제개정완료</option><option value="제개정중">제개정중</option><option value="미진행">미진행</option>
+            </select>
           </div>
         </div>
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label for="eq-form-legacycode" class="block text-xs text-slate-400 mb-1">기존관리번호</label>
-            <input type="text" id="eq-form-legacycode" maxlength="60" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
-          </div>
-          <div>
-            <label for="eq-form-revision" class="block text-xs text-slate-400 mb-1">Revision 번호</label>
-            <input type="text" id="eq-form-revision" maxlength="20" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
-          </div>
+        <div>
+          <label for="eq-form-latestver" class="block text-xs text-slate-400 mb-1">최신Version 여부</label>
+          <select id="eq-form-latestver" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+            <option value="Y">Y</option><option value="N">N</option>
+          </select>
         </div>
       </fieldset>
 
@@ -2315,7 +2256,7 @@ function equipmentCard(eq) {
       <p class="text-[10px] text-slate-500 mb-2 truncate">${esc(eq.code)}${eq.eqCategory ? ' · '+esc(eq.eqCategory) : ''}${eq.gmpEquip === 'GMP' ? ' · <span class="text-brand-300">GMP</span>' : ''}</p>
       <div class="flex justify-between items-center text-[11px] pt-2 border-t border-slate-800">
         <span class="text-slate-500">${esc(eq.eqCategory || eq.eqType || '')}</span>
-        <span class="text-slate-400">${eq.grade ? '등급'+esc(eq.grade) : ''}</span>
+        <span class="text-slate-400">${eq.manufacturer ? esc(eq.manufacturer) : ''}</span>
       </div>
     </div>`;
 }
@@ -2386,7 +2327,7 @@ function renderEquipmentTable() {
   const stat = document.getElementById('eq-filter-status')?.value || 'ALL';
 
   const rows = equipments.filter(eq =>
-    (!q || `${eq.name} ${eq.code} ${eq.model || ''} ${eq.manufacturer || ''} ${eq.eqCategory || ''} ${eq.detailLocation || ''} ${eq.legacyCode || ''}`.toLowerCase().includes(q)) &&
+    (!q || `${eq.name} ${eq.code} ${eq.model || ''} ${eq.manufacturer || ''} ${eq.eqCategory || ''} ${eq.detailLocation || ''}`.toLowerCase().includes(q)) &&
     (loc === 'ALL' || normalizeLoc(eq.location) === loc) &&
     (stat === 'ALL' || eq.status === stat)
   );
@@ -2397,15 +2338,13 @@ function renderEquipmentTable() {
     return `
       <tr class="hover:bg-slate-900/50 transition-colors cursor-pointer" onclick="openEquipmentDetail('${esc(eq.id)}')">
         <td class="px-5 py-4">
-          <div class="font-bold text-slate-100 flex items-center gap-2">${esc(eq.name)}
-            ${eq.gmpImpact && eq.gmpImpact !== '해당없음' ? `<span class="border text-[10px] px-1.5 py-0.5 rounded ${GMP_BADGE[eq.gmpImpact]}">${esc(eq.gmpImpact)}</span>` : ''}
-          </div>
+          <div class="font-bold text-slate-100">${esc(eq.name)}</div>
           <div class="text-xs text-slate-500">${esc(eq.code)}</div>
         </td>
         <td class="px-5 py-4"><div class="text-xs text-slate-300">${esc(eq.detailLocation || normalizeLoc(eq.location))}</div><div class="text-[11px] text-slate-500">${esc(normalizeLoc(eq.location))}</div></td>
         <td class="px-5 py-4"><span class="text-xs font-bold ${st.chip} border px-2 py-1 rounded-full whitespace-nowrap">${st.label}</span></td>
-        <td class="px-5 py-4 text-xs font-mono text-slate-300 whitespace-nowrap">${0}mm/s · ${0}°C</td>
-        <td class="px-5 py-4 text-xs">${eq.grade ? '<span class="font-bold '+(eq.grade==='A'?'text-rose-400':eq.grade==='B'?'text-amber-400':'text-slate-400')+'">'+esc(eq.grade)+'</span>' : '<span class="text-slate-600">-</span>'} ${eq.gmpEquip==='GMP'?'<span class="text-brand-300 ml-1">GMP</span>':''}</td>
+        <td class="px-5 py-4 text-xs text-slate-400">${esc(eq.manufacturer || '-')}</td>
+        <td class="px-5 py-4 text-xs">${eq.gmpEquip==='GMP'?'<span class="text-brand-300 font-bold">GMP</span>':'<span class="text-slate-500">NON-GMP</span>'}</td>
         <td class="px-5 py-4 text-right space-x-1 whitespace-nowrap">
           <button type="button" onclick="event.stopPropagation();openEqForm('${esc(eq.id)}')" aria-label="수정" class="text-xs bg-slate-800 text-slate-200 px-2.5 py-1.5 rounded hover:bg-slate-700 transition-colors"><i class="fa-solid fa-pen"></i></button>
           <button type="button" onclick="event.stopPropagation();deleteEquipment('${esc(eq.id)}')" aria-label="삭제" class="text-xs bg-rose-950/50 text-rose-400 px-2.5 py-1.5 rounded hover:bg-rose-900 transition-colors"><i class="fa-solid fa-trash"></i></button>
@@ -2423,7 +2362,6 @@ function openEquipmentDetail(eqId) {
   const relatedWO = workOrders.filter(w => w.eqId === eqId).slice(0, 5);
   const relatedPM = pmTasks.filter(p => p.eqId === eqId);
 
-  const GRADE_COLOR = { A: 'text-rose-400 border-rose-500/30 bg-rose-500/10', B: 'text-amber-400 border-amber-500/30 bg-amber-500/10', C: 'text-slate-400 border-slate-600 bg-slate-800' };
   const detailField = (label, val) => val && val !== 'N/A' ? `<div class="flex justify-between gap-2"><span class="text-slate-500 shrink-0">${label}</span><span class="text-slate-200 text-right">${esc(val)}</span></div>` : '';
 
   document.getElementById('eq-modal-content').innerHTML = `
@@ -2431,15 +2369,11 @@ function openEquipmentDetail(eqId) {
       <div class="flex items-center gap-2 flex-wrap">
         <h2 class="text-xl font-bold text-white">${esc(eq.name)}</h2>
         <span class="text-xs font-bold ${st.chip} border px-2 py-1 rounded-full">${st.label}</span>
-        ${eq.grade ? `<span class="text-[11px] font-bold border px-2 py-0.5 rounded ${GRADE_COLOR[eq.grade] || GRADE_COLOR.C}">등급 ${esc(eq.grade)}</span>` : ''}
       </div>
       <p class="text-xs text-slate-400 mt-1.5">${esc(eq.code)} · ${esc(eq.detailLocation || normalizeLoc(eq.location))} · ${esc(eq.manufacturer || '')} ${esc(eq.model || '')}</p>
       <div class="flex items-center gap-2 mt-2 flex-wrap text-[11px]">
         ${eq.gmpEquip === 'GMP' ? '<span class="border px-2 py-0.5 rounded bg-brand-900/80 border-brand-700 text-brand-300">GMP</span>' : ''}
-
         ${eq.legalEquip === 'Y' ? '<span class="border px-2 py-0.5 rounded bg-amber-500/10 border-amber-500/30 text-amber-300">법정설비</span>' : ''}
-        
-        
       </div>
     </div>
 
@@ -2462,27 +2396,21 @@ function openEquipmentDetail(eqId) {
         ${detailField('설비유형', eq.eqType)}
         ${detailField('설비종류', eq.eqCategory)}
         ${detailField('제형', eq.formulation)}
+        ${detailField('팀', eq.team)}
+        ${detailField('파트', eq.part)}
         ${detailField('공장', eq.factory)}
         ${detailField('설비위치', eq.detailLocation)}
         ${detailField('실번호', eq.roomNo)}
         ${detailField('배치 라인', normalizeLoc(eq.location))}
         ${detailField('제조사', eq.manufacturer)}
         ${detailField('모델', eq.model)}
-        ${detailField('Serial #', eq.serialNo)}
-        ${detailField('제조국', eq.madeIn)}
         ${detailField('기계능력', eq.capacity)}
         ${detailField('공급업체', eq.supplier)}
-        ${detailField('AS업체', eq.asVendor)}
-        ${detailField('설비등급', eq.grade)}
-        ${detailField('사용부서', eq.department)}
         ${detailField('설치일자', eq.installDate)}
-        ${detailField('사용 Utility', eq.utility)}
-        ${detailField('구입금액', eq.purchaseCost)}
-        ${detailField('폐기일자', eq.disposalDate)}
         ${detailField('GMP설비', eq.gmpEquip)}
         ${detailField('법정설비', eq.legalEquip)}
-        ${detailField('기존관리번호', eq.legacyCode)}
-        ${detailField('Revision', eq.revisionNo)}
+        ${detailField('Revision 진행상태', eq.revisionStatus)}
+        ${detailField('최신Version 여부', eq.latestVersion)}
       </div>
     </details>
 
@@ -3641,34 +3569,23 @@ function openEqForm(id = null, defaultLoc = null) {
     document.getElementById('eq-form-name').value = eq.name || '';
     document.getElementById('eq-form-location').value = normalizeLoc(eq.location);
     document.getElementById('eq-form-model').value = eq.model || '';
-    document.getElementById('eq-form-status').value = eq.status || 'running';
 
-    document.getElementById('eq-form-gmp').value = eq.gmpImpact || '해당없음';
-    document.getElementById('eq-form-qual').value = eq.qualDate || '';
-    document.getElementById('eq-form-requal').value = eq.requalDate || '';
-    // 확장 필드
     document.getElementById('eq-form-eqtype').value = eq.eqType || '설비';
     document.getElementById('eq-form-category').value = eq.eqCategory || '';
     document.getElementById('eq-form-formulation').value = eq.formulation || '';
+    document.getElementById('eq-form-team').value = eq.team || '';
+    document.getElementById('eq-form-part').value = eq.part || '';
     document.getElementById('eq-form-factory').value = eq.factory || '';
     document.getElementById('eq-form-detailloc').value = eq.detailLocation || '';
     document.getElementById('eq-form-roomno').value = eq.roomNo || '';
     document.getElementById('eq-form-manufacturer').value = eq.manufacturer || '';
-    document.getElementById('eq-form-serial').value = eq.serialNo || '';
-    document.getElementById('eq-form-madein').value = eq.madeIn || '';
     document.getElementById('eq-form-capacity').value = eq.capacity || '';
     document.getElementById('eq-form-supplier').value = eq.supplier || '';
-    document.getElementById('eq-form-asvendor').value = eq.asVendor || '';
-    document.getElementById('eq-form-grade').value = eq.grade || '';
-    document.getElementById('eq-form-department').value = eq.department || '';
     document.getElementById('eq-form-installdate').value = eq.installDate || '';
-    document.getElementById('eq-form-utility').value = eq.utility || '';
-    document.getElementById('eq-form-cost').value = eq.purchaseCost || '';
-    document.getElementById('eq-form-disposaldate').value = eq.disposalDate || '';
-    document.getElementById('eq-form-gmpequip').value = eq.gmpEquip || 'Non-GMP';
+    document.getElementById('eq-form-gmpequip').value = eq.gmpEquip || 'NON-GMP';
     document.getElementById('eq-form-legal').value = eq.legalEquip || 'N';
-    document.getElementById('eq-form-legacycode').value = eq.legacyCode || '';
-    document.getElementById('eq-form-revision').value = eq.revisionNo || '';
+    document.getElementById('eq-form-revstatus').value = eq.revisionStatus || '미진행';
+    document.getElementById('eq-form-latestver').value = eq.latestVersion || 'Y';
   } else if (defaultLoc) {
     document.getElementById('eq-form-location').value = defaultLoc;
   }
@@ -3788,34 +3705,23 @@ function handleEquipmentSubmit(e) {
     name: document.getElementById('eq-form-name').value.trim(),
     location: document.getElementById('eq-form-location').value || UNASSIGNED,
     model: document.getElementById('eq-form-model').value.trim() || '',
-    status: document.getElementById('eq-form-status').value,
 
-    gmpImpact: document.getElementById('eq-form-gmp').value,
-    qualDate: document.getElementById('eq-form-qual').value,
-    requalDate: document.getElementById('eq-form-requal').value,
-    // 확장 필드
     eqType: document.getElementById('eq-form-eqtype').value,
     eqCategory: document.getElementById('eq-form-category').value.trim(),
     formulation: document.getElementById('eq-form-formulation').value.trim(),
+    team: document.getElementById('eq-form-team').value.trim(),
+    part: document.getElementById('eq-form-part').value.trim(),
     factory: document.getElementById('eq-form-factory').value.trim(),
     detailLocation: document.getElementById('eq-form-detailloc').value.trim(),
     roomNo: document.getElementById('eq-form-roomno').value.trim(),
     manufacturer: document.getElementById('eq-form-manufacturer').value.trim(),
-    serialNo: document.getElementById('eq-form-serial').value.trim(),
-    madeIn: document.getElementById('eq-form-madein').value.trim(),
     capacity: document.getElementById('eq-form-capacity').value.trim(),
     supplier: document.getElementById('eq-form-supplier').value.trim(),
-    asVendor: document.getElementById('eq-form-asvendor').value.trim(),
-    grade: document.getElementById('eq-form-grade').value,
-    department: document.getElementById('eq-form-department').value.trim(),
     installDate: document.getElementById('eq-form-installdate').value,
-    utility: document.getElementById('eq-form-utility').value.trim(),
-    purchaseCost: document.getElementById('eq-form-cost').value.trim(),
-    disposalDate: document.getElementById('eq-form-disposaldate').value,
     gmpEquip: document.getElementById('eq-form-gmpequip').value,
     legalEquip: document.getElementById('eq-form-legal').value,
-    legacyCode: document.getElementById('eq-form-legacycode').value.trim(),
-    revisionNo: document.getElementById('eq-form-revision').value.trim()
+    revisionStatus: document.getElementById('eq-form-revstatus').value,
+    latestVersion: document.getElementById('eq-form-latestver').value
   };
 
   let eq;
@@ -3826,12 +3732,12 @@ function handleEquipmentSubmit(e) {
     // 설비명이 바뀌면 작업지시·점검항목의 표시명도 맞춰 둡니다.
     workOrders.filter(w => w.eqId === id).forEach(w => { w.eqName = eq.name; });
     pmTasks.filter(p => p.eqId === id).forEach(p => { p.eqName = eq.name; });
-    audit('설비', '수정', `${eq.code} ${eq.name} 정보 수정 (위치 ${eq.location}, 상태 ${statusOf(eq.status).label})`, eq.id);
+    audit('설비', '수정', `${eq.code} ${eq.name} 정보 수정 (위치 ${eq.location})`, eq.id);
     showToast('설비 정보를 수정했습니다.', 'success');
   } else {
-    eq = { id: uid('EQ'), ...payload };
+    eq = { id: uid('EQ'), status: 'running', ...payload };
     equipments.push(eq);
-    audit('설비', '등록', `${eq.code} ${eq.name} 등록 (${eq.location}, 품질영향 ${eq.gmpImpact})`, eq.id);
+    audit('설비', '등록', `${eq.code} ${eq.name} 등록 (${eq.location})`, eq.id);
     showToast('설비를 등록했습니다.', 'success');
   }
   syncToSheet('Equipments', eq, 'upsert');
