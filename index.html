@@ -24,29 +24,97 @@ tailwind.config = {
   ::-webkit-scrollbar-track { background: #1e293b; }
   ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
   ::-webkit-scrollbar-thumb:hover { background: #64748b; }
-
   .drag-over { border-color: #0284c7 !important; background-color: rgba(2,132,199,0.06) !important; }
   .dragging { opacity: .4; }
   body.is-dragging .drop-zone * { pointer-events: none; }
-
   @media (min-width: 768px) {
     #sidebar { width: var(--sidebar-width, 256px) !important; flex-shrink: 0; }
   }
-
   .hide-scrollbar::-webkit-scrollbar { display: none; }
   .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-  /* 키보드 접근성: 포커스 링을 항상 보이게 */
   :focus-visible { outline: 2px solid #38bdf8; outline-offset: 2px; border-radius: 6px; }
-
   .toast-enter { opacity: 0; transform: translateY(8px); }
-
   @media (prefers-reduced-motion: reduce) {
     * { transition-duration: .01ms !important; animation-duration: .01ms !important; }
   }
+
+  /* ===== 라이트 테마 오버라이드 ===== */
+  body.light { background:#f8fafc; color:#1e293b; }
+  body.light .bg-slate-950,
+  body.light .bg-slate-950\/30,
+  body.light .bg-slate-950\/50,
+  body.light .bg-slate-950\/80,
+  body.light .bg-slate-950\/85 { background-color:#f1f5f9 !important; }
+  body.light .bg-slate-900,
+  body.light .bg-slate-900\/70,
+  body.light .bg-slate-900\/80,
+  body.light .bg-slate-900\/90,
+  body.light .bg-slate-900\/95 { background-color:#ffffff !important; }
+  body.light .bg-slate-800,
+  body.light .bg-slate-800\/90 { background-color:#e2e8f0 !important; }
+  body.light .bg-slate-700,
+  body.light .bg-slate-700\/60 { background-color:#cbd5e1 !important; }
+  body.light .bg-slate-600 { background-color:#94a3b8 !important; }
+  body.light .bg-slate-500 { background-color:#64748b !important; }
+
+  body.light .hover\:bg-slate-900:hover,
+  body.light .hover\:bg-slate-900\/50:hover { background-color:#f1f5f9 !important; }
+  body.light .hover\:bg-slate-800:hover { background-color:#e2e8f0 !important; }
+  body.light .hover\:bg-slate-700:hover { background-color:#cbd5e1 !important; }
+  body.light .hover\:bg-slate-600:hover { background-color:#94a3b8 !important; }
+
+  body.light .text-slate-100 { color:#0f172a !important; }
+  body.light .text-slate-200 { color:#1e293b !important; }
+  body.light .text-slate-300 { color:#334155 !important; }
+  body.light .text-slate-400 { color:#64748b !important; }
+  body.light .text-slate-500 { color:#94a3b8 !important; }
+  body.light .text-slate-600 { color:#94a3b8 !important; }
+  body.light .hover\:text-slate-200:hover { color:#1e293b !important; }
+  body.light .text-white { color:#0f172a !important; }
+
+  body.light .border-slate-800,
+  body.light .border-slate-700,
+  body.light .border-slate-700\/50,
+  body.light .border-slate-600 { border-color:#e2e8f0 !important; }
+  body.light .hover\:border-slate-700:hover,
+  body.light .hover\:border-slate-600:hover { border-color:#cbd5e1 !important; }
+  body.light .divide-slate-800,
+  body.light .divide-slate-800\/60 > * + * { border-color:#e2e8f0 !important; }
+
+  body.light ::-webkit-scrollbar-track { background:#e2e8f0; }
+  body.light ::-webkit-scrollbar-thumb { background:#94a3b8; }
 </style>
 </head>
 <body class="bg-slate-950 text-slate-100 font-sans min-h-screen flex flex-col antialiased selection:bg-brand-500 selection:text-white">
+
+<!-- ================= LOGIN SCREEN ================= -->
+<div id="login-screen" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950 p-4">
+  <div class="w-full max-w-sm">
+    <div class="text-center mb-8">
+      <div class="bg-brand-600 text-white p-3 rounded-2xl shadow-lg inline-flex items-center justify-center mb-4">
+        <i class="fa-solid fa-industry text-2xl"></i>
+      </div>
+      <h1 class="text-lg font-bold text-white">대웅제약 공무팀 FMS</h1>
+      <p class="text-xs text-slate-400 mt-1">통합 설비관리 시스템 · 로그인이 필요합니다</p>
+    </div>
+    <form id="login-form" onsubmit="handleLoginSubmit(event)" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4 shadow-2xl">
+      <div id="login-error" class="hidden bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs rounded-lg px-3 py-2"></div>
+      <div>
+        <label for="login-id" class="block text-xs text-slate-400 mb-1">아이디</label>
+        <input type="text" id="login-id" required autocomplete="username" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2.5 text-sm focus:border-brand-500 outline-none">
+      </div>
+      <div>
+        <label for="login-pw" class="block text-xs text-slate-400 mb-1">비밀번호</label>
+        <input type="password" id="login-pw" required autocomplete="current-password" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2.5 text-sm focus:border-brand-500 outline-none">
+      </div>
+      <button type="submit" class="w-full bg-brand-600 hover:bg-brand-500 text-white font-medium py-2.5 rounded-xl text-sm shadow transition-colors">로그인</button>
+      <p class="text-[11px] text-slate-600 text-center leading-relaxed">이 로그인은 브라우저 내에서만 검증되는 간단한 접근 제한입니다.<br>사내 공용 PC에서는 사용 후 반드시 로그아웃해 주세요.</p>
+    </form>
+  </div>
+</div>
+
+<!-- ================= APP ROOT ================= -->
+<div id="app-root" class="hidden flex flex-col flex-1 min-h-0">
 
 <!-- ================= HEADER ================= -->
 <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-30 px-3 py-3 flex flex-wrap justify-between items-center shadow-lg gap-y-3">
@@ -76,8 +144,8 @@ tailwind.config = {
       <span id="header-broken-eq" class="text-sm font-bold text-rose-400">0대</span>
     </div>
     <div class="text-center">
-      <span class="text-slate-400 block">평균 OEE</span>
-      <span id="header-oee" class="text-sm font-bold text-cyan-400">0%</span>
+      <span class="text-slate-400 block">마감 임박</span>
+      <span id="header-due" class="text-sm font-bold text-amber-400">0건</span>
     </div>
   </div>
 
@@ -91,6 +159,7 @@ tailwind.config = {
       <i class="fa-solid fa-plus"></i>
       <span class="hidden sm:inline">설비 등록</span>
     </button>
+    <button type="button" id="theme-toggle-btn" onclick="toggleTheme()" title="다크/라이트 테마 전환" class="text-[11px] md:text-xs font-medium px-2.5 py-1.5 md:py-2 rounded-lg border flex items-center gap-1.5 transition-colors bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700"><i class="fa-solid fa-moon"></i></button>
     <button type="button" id="user-chip" onclick="openUserForm()" title="작업자 변경 · 모든 기록에 함께 남습니다"
       class="text-[11px] md:text-xs font-medium px-2.5 py-1.5 md:py-2 rounded-lg border flex items-center gap-1.5 transition-colors bg-amber-500/10 border-amber-500/40 text-amber-300 hover:bg-amber-500/20">
       <i class="fa-solid fa-user-pen"></i><span id="user-chip-name" class="hidden sm:inline">작업자 미지정</span>
@@ -103,49 +172,22 @@ tailwind.config = {
       <span class="w-px h-3 bg-slate-700 hidden lg:inline-block"></span>
       <span id="live-clock" class="text-brand-300">0000-00-00 00:00:00</span>
     </div>
+    <button type="button" onclick="openModal('account-modal'); renderAccountsList();" title="로그인 계정 관리"
+      class="text-[11px] md:text-xs font-medium px-2.5 py-1.5 md:py-2 rounded-lg border flex items-center gap-1.5 transition-colors bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700">
+      <i class="fa-solid fa-user-shield"></i>
+    </button>
+    <button type="button" onclick="handleLogout()" title="로그아웃"
+      class="text-[11px] md:text-xs font-medium px-2.5 py-1.5 md:py-2 rounded-lg border flex items-center gap-1.5 transition-colors bg-rose-500/10 border-rose-500/30 text-rose-300 hover:bg-rose-500/20">
+      <i class="fa-solid fa-right-from-bracket"></i>
+    </button>
   </div>
 </header>
 
 <!-- ================= MAIN ================= -->
 <div class="flex-1 flex flex-col md:flex-row overflow-hidden">
   <aside id="sidebar" class="w-full bg-slate-900/90 border-r border-slate-800 p-2 md:p-3 flex md:flex-col justify-between shrink-0 overflow-hidden md:overflow-y-auto">
-    <nav class="flex md:flex-col space-x-2 md:space-x-0 md:space-y-1.5 w-full overflow-x-auto hide-scrollbar pb-1 md:pb-0">
-      <button type="button" onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn text-slate-400 hover:bg-slate-800 hover:text-slate-200 flex items-center space-x-2 md:space-x-3 px-3 py-2 md:px-3.5 md:py-2.5 rounded-xl text-xs md:text-sm font-medium transition-colors w-auto md:w-full text-left shrink-0 whitespace-nowrap">
-        <i class="fa-solid fa-chart-pie w-4 md:w-5 text-center"></i><span>종합 대시보드</span>
-      </button>
-      <button type="button" onclick="switchTab('layout')" id="nav-layout" class="nav-btn text-slate-400 hover:bg-slate-800 hover:text-slate-200 flex items-center space-x-2 md:space-x-3 px-3 py-2 md:px-3.5 md:py-2.5 rounded-xl text-xs md:text-sm font-medium transition-colors w-auto md:w-full text-left shrink-0 whitespace-nowrap">
-        <i class="fa-solid fa-map-location-dot w-4 md:w-5 text-center"></i><span>공장 배치도 맵</span>
-      </button>
-      <button type="button" onclick="switchTab('equipments')" id="nav-equipments" class="nav-btn text-slate-400 hover:bg-slate-800 hover:text-slate-200 flex items-center space-x-2 md:space-x-3 px-3 py-2 md:px-3.5 md:py-2.5 rounded-xl text-xs md:text-sm font-medium transition-colors w-auto md:w-full text-left shrink-0 whitespace-nowrap">
-        <i class="fa-solid fa-gears w-4 md:w-5 text-center"></i><span>설비 마스터 관리</span>
-      </button>
-      <button type="button" onclick="switchTab('workorders')" id="nav-workorders" class="nav-btn text-slate-400 hover:bg-slate-800 hover:text-slate-200 flex items-center space-x-2 md:space-x-3 px-3 py-2 md:px-3.5 md:py-2.5 rounded-xl text-xs md:text-sm font-medium transition-colors w-auto md:w-full text-left justify-between shrink-0 whitespace-nowrap">
-        <div class="flex items-center space-x-2 md:space-x-3">
-          <i class="fa-solid fa-wrench w-4 md:w-5 text-center"></i><span>작업 지시 &amp; 고장수리</span>
-        </div>
-        <span id="pending-wo-badge" class="bg-rose-500/20 text-rose-400 text-[10px] px-1.5 py-0.5 rounded-full font-bold border border-rose-500/30 ml-2">0</span>
-      </button>
-      <button type="button" onclick="switchTab('pm')" id="nav-pm" class="nav-btn text-slate-400 hover:bg-slate-800 hover:text-slate-200 flex items-center space-x-2 md:space-x-3 px-3 py-2 md:px-3.5 md:py-2.5 rounded-xl text-xs md:text-sm font-medium transition-colors w-auto md:w-full text-left shrink-0 whitespace-nowrap">
-        <i class="fa-solid fa-calendar-check w-4 md:w-5 text-center"></i><span>예방 보전 (PM)</span>
-      </button>
-      <button type="button" onclick="switchTab('calibration')" id="nav-calibration" class="nav-btn text-slate-400 hover:bg-slate-800 hover:text-slate-200 flex items-center space-x-2 md:space-x-3 px-3 py-2 md:px-3.5 md:py-2.5 rounded-xl text-xs md:text-sm font-medium transition-colors w-auto md:w-full text-left justify-between shrink-0 whitespace-nowrap">
-        <div class="flex items-center space-x-2 md:space-x-3">
-          <i class="fa-solid fa-ruler-combined w-4 md:w-5 text-center"></i><span>계측기 교정 관리</span>
-        </div>
-        <span id="calib-badge" class="bg-rose-500/20 text-rose-400 text-[10px] px-1.5 py-0.5 rounded-full font-bold border border-rose-500/30 ml-2 hidden">0</span>
-      </button>
-      <button type="button" onclick="switchTab('spares')" id="nav-spares" class="nav-btn text-slate-400 hover:bg-slate-800 hover:text-slate-200 flex items-center space-x-2 md:space-x-3 px-3 py-2 md:px-3.5 md:py-2.5 rounded-xl text-xs md:text-sm font-medium transition-colors w-auto md:w-full text-left justify-between shrink-0 whitespace-nowrap">
-        <div class="flex items-center space-x-2 md:space-x-3">
-          <i class="fa-solid fa-boxes-packing w-4 md:w-5 text-center"></i><span>예비 부품 관리</span>
-        </div>
-        <span id="low-stock-badge" class="bg-amber-500/20 text-amber-400 text-[10px] px-1.5 py-0.5 rounded-full font-bold border border-amber-500/30 ml-2 hidden">0</span>
-      </button>
-      <button type="button" onclick="switchTab('analytics')" id="nav-analytics" class="nav-btn text-slate-400 hover:bg-slate-800 hover:text-slate-200 flex items-center space-x-2 md:space-x-3 px-3 py-2 md:px-3.5 md:py-2.5 rounded-xl text-xs md:text-sm font-medium transition-colors w-auto md:w-full text-left shrink-0 whitespace-nowrap">
-        <i class="fa-solid fa-chart-line w-4 md:w-5 text-center"></i><span>통계 리포트</span>
-      </button>
-      <button type="button" onclick="switchTab('audit')" id="nav-audit" class="nav-btn text-slate-400 hover:bg-slate-800 hover:text-slate-200 flex items-center space-x-2 md:space-x-3 px-3 py-2 md:px-3.5 md:py-2.5 rounded-xl text-xs md:text-sm font-medium transition-colors w-auto md:w-full text-left shrink-0 whitespace-nowrap">
-        <i class="fa-solid fa-clipboard-list w-4 md:w-5 text-center"></i><span>감사 추적</span>
-      </button>
+    <nav id="nav-tabs-container" class="flex md:flex-col space-x-2 md:space-x-0 md:space-y-1.5 w-full overflow-x-auto hide-scrollbar pb-1 md:pb-0">
+      <!-- 탭 버튼들이 JS에서 동적으로 렌더됩니다 (드래그앤드롭 가능) -->
     </nav>
   </aside>
 
@@ -162,11 +204,11 @@ tailwind.config = {
         <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4">
           <div class="flex justify-between items-start">
             <div>
-              <p class="text-xs font-medium text-slate-400">평균 설비 가동률 (OEE)</p>
-              <h3 id="dash-oee" class="text-2xl font-black text-emerald-400 mt-1">0%</h3>
-              <p id="dash-oee-sub" class="text-[11px] text-slate-500 mt-1">설비 0대 기준</p>
+              <p class="text-xs font-medium text-slate-400">오늘 할 일</p>
+              <h3 id="dash-today-count" class="text-2xl font-black text-emerald-400 mt-1">0 건</h3>
+              <p id="dash-today-sub" class="text-[11px] text-slate-500 mt-1"></p>
             </div>
-            <div class="bg-emerald-500/10 text-emerald-400 p-3 rounded-xl"><i class="fa-solid fa-bolt text-lg"></i></div>
+            <div class="bg-emerald-500/10 text-emerald-400 p-3 rounded-xl"><i class="fa-solid fa-list-check text-lg"></i></div>
           </div>
         </div>
         <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4">
@@ -209,6 +251,17 @@ tailwind.config = {
           <span id="alert-count" class="text-xs text-slate-500">0건</span>
         </div>
         <div id="dash-alerts" class="grid grid-cols-1 md:grid-cols-2 gap-2"></div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
+          <h3 class="font-bold text-slate-100 flex items-center gap-2 mb-4"><i class="fa-solid fa-list-check text-emerald-400"></i> 오늘 해야 할 일</h3>
+          <div id="dash-today-list" class="space-y-2 max-h-[300px] overflow-y-auto pr-1"></div>
+        </div>
+        <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
+          <h3 class="font-bold text-slate-100 flex items-center gap-2 mb-4"><i class="fa-solid fa-calendar-week text-brand-400"></i> 이번 주 예정</h3>
+          <div id="dash-week-list" class="space-y-2 max-h-[300px] overflow-y-auto pr-1"></div>
+        </div>
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -281,8 +334,8 @@ tailwind.config = {
                 <th scope="col" class="px-5 py-3.5">설비 코드/명</th>
                 <th scope="col" class="px-5 py-3.5">위치 (라인)</th>
                 <th scope="col" class="px-5 py-3.5">상태</th>
-                <th scope="col" class="px-5 py-3.5">진동 / 온도</th>
-                <th scope="col" class="px-5 py-3.5">OEE</th>
+                <th scope="col" class="px-5 py-3.5">제조사</th>
+                <th scope="col" class="px-5 py-3.5">GMP</th>
                 <th scope="col" class="px-5 py-3.5 text-right">관리</th>
               </tr>
             </thead>
@@ -377,41 +430,95 @@ tailwind.config = {
       </div>
     </section>
 
-    <!-- ---------- TAB: CALIBRATION ---------- -->
-    <section id="tab-calibration" class="tab-content hidden space-y-6">
+
+    <!-- ---------- TAB: SCHEDULES ---------- -->
+    <section id="tab-schedules" class="tab-content hidden space-y-6">
       <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
         <div class="flex flex-wrap justify-between items-center gap-4 mb-6">
           <div>
-            <h2 class="text-lg font-bold text-white flex items-center gap-2"><i class="fa-solid fa-ruler-combined text-brand-400"></i> 계측기 교정 관리</h2>
-            <p class="text-xs text-slate-400 mt-0.5">최근 교정일과 주기를 넣으면 차기 교정일이 자동으로 계산됩니다. 만료 30일 전부터 알림에 올라옵니다.</p>
+            <h2 class="text-lg font-bold text-white flex items-center gap-2"><i class="fa-solid fa-arrow-rotate-right text-cyan-400"></i> 정기 교체 관리</h2>
+            <p class="text-xs text-slate-400 mt-0.5">필터·소모품의 교체 주기와 D-day를 관리합니다. 교체가 끝나면 <i class="fa-solid fa-rotate text-[10px]"></i> 버튼으로 날짜를 갱신하세요.</p>
           </div>
-          <div class="flex items-center gap-3">
-            <select id="calib-filter" onchange="renderCalibrationTable()" class="bg-slate-950 text-slate-300 border border-slate-800 rounded-xl px-3 py-2 text-sm">
-              <option value="ALL">전체</option>
-              <option value="expired">교정 만료</option>
-              <option value="soon">만료 임박 (30일)</option>
-              <option value="valid">유효</option>
-            </select>
-            <button type="button" onclick="openCalibForm()" class="bg-brand-600 hover:bg-brand-500 text-white px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2 shadow transition-colors">
-              <i class="fa-solid fa-plus"></i> 계측기 등록
-            </button>
-          </div>
+          <button type="button" onclick="openSchForm()" class="bg-cyan-600 hover:bg-cyan-500 text-white px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2 shadow transition-colors">
+            <i class="fa-solid fa-plus"></i> 교체 일정 등록
+          </button>
         </div>
         <div class="overflow-x-auto">
           <table class="w-full text-left text-sm text-slate-300">
             <thead class="bg-slate-950 text-xs uppercase text-slate-400 border-b border-slate-800">
               <tr>
-                <th scope="col" class="px-5 py-3.5">관리번호 / 계측기</th>
-                <th scope="col" class="px-5 py-3.5">연결 설비</th>
-                <th scope="col" class="px-5 py-3.5">측정 범위</th>
+                <th scope="col" class="px-5 py-3.5">교체 항목</th>
+                <th scope="col" class="px-5 py-3.5">대상 설비</th>
                 <th scope="col" class="px-5 py-3.5">주기</th>
-                <th scope="col" class="px-5 py-3.5">최근 / 차기 교정일</th>
+                <th scope="col" class="px-5 py-3.5">최근 교체일</th>
+                <th scope="col" class="px-5 py-3.5">차기 예정일</th>
                 <th scope="col" class="px-5 py-3.5">상태</th>
                 <th scope="col" class="px-5 py-3.5 text-right">관리</th>
               </tr>
             </thead>
-            <tbody id="calibration-table-body" class="divide-y divide-slate-800/60"></tbody>
+            <tbody id="schedules-table-body" class="divide-y divide-slate-800/60"></tbody>
           </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- TAB: IMPROVEMENTS ---------- -->
+    <section id="tab-improve" class="tab-content hidden space-y-6">
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
+        <div class="flex flex-wrap justify-between items-center gap-4 mb-6">
+          <div>
+            <h2 class="text-lg font-bold text-white flex items-center gap-2"><i class="fa-solid fa-lightbulb text-amber-400"></i> 현안 &amp; 개선 관리</h2>
+            <p class="text-xs text-slate-400 mt-0.5">설비 문제와 개선 아이디어를 기록하고 성과를 추적합니다. 에너지 절감·ROI까지 산출하면 월 평가에 바로 쓸 수 있습니다.</p>
+          </div>
+          <button type="button" onclick="openImpForm()" class="bg-amber-600 hover:bg-amber-500 text-white px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2 shadow transition-colors">
+            <i class="fa-solid fa-plus"></i> 현안/개선 등록
+          </button>
+        </div>
+        <div id="improve-list"></div>
+      </div>
+    </section>
+
+    <!-- ---------- TAB: FEEDBACK ---------- -->
+    <section id="tab-feedback" class="tab-content hidden space-y-6">
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
+        <div class="flex flex-wrap justify-between items-center gap-4 mb-6">
+          <div>
+            <h2 class="text-lg font-bold text-white flex items-center gap-2"><i class="fa-solid fa-pen-to-square text-amber-400"></i> 월별 피드백</h2>
+            <p class="text-xs text-slate-400 mt-0.5">매월 한 일(잘한 점)과 개선할 점을 기록하고, 평가 시 활용합니다.</p>
+          </div>
+          <div class="flex items-center gap-3">
+            <input type="month" id="feedback-month" onchange="renderFeedback()" class="bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+            <button type="button" onclick="openFBForm()" class="bg-amber-600 hover:bg-amber-500 text-white px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2 shadow transition-colors">
+              <i class="fa-solid fa-plus"></i> 피드백 작성
+            </button>
+          </div>
+        </div>
+        <div id="feedback-list"></div>
+      </div>
+    </section>
+
+    <!-- ---------- TAB: CALENDAR ---------- -->
+    <section id="tab-calendar" class="tab-content hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- 좌측: 캘린더 그리드 -->
+        <div class="lg:col-span-2 bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
+          <div class="flex flex-wrap justify-between items-center gap-4 mb-6">
+            <h2 class="text-lg font-bold text-white flex items-center gap-2"><i class="fa-solid fa-calendar-days text-cyan-400"></i> 업무 캘린더</h2>
+            <input type="month" id="cal-month-picker" onchange="renderCalendar()" class="bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+          </div>
+          <div id="calendar-container"></div>
+        </div>
+
+        <!-- 우측: 선택 날짜 상세 -->
+        <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
+          <div class="flex flex-wrap justify-between items-center gap-4 mb-4">
+            <h3 class="font-bold text-slate-100 flex items-center gap-2"><i class="fa-solid fa-list-check text-emerald-400"></i> 날짜별 업무</h3>
+            <input type="date" id="cal-detail-date" onchange="renderCalendar()" value="" class="bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-2 py-1.5 text-xs focus:border-brand-500 outline-none">
+          </div>
+          <div id="cal-detail-list" class="space-y-3 max-h-[600px] overflow-y-auto pr-1"></div>
+          <button type="button" onclick="openCalEventForm(null)" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white px-4 py-2 rounded-xl text-sm font-medium flex items-center justify-center gap-2 shadow transition-colors mt-4">
+            <i class="fa-solid fa-plus"></i> 업무 기록 추가
+          </button>
         </div>
       </div>
     </section>
@@ -458,46 +565,6 @@ tailwind.config = {
       </div>
     </section>
 
-    <!-- ---------- TAB 7: ANALYTICS ---------- -->
-    <section id="tab-analytics" class="tab-content hidden space-y-6">
-      <p class="text-xs text-slate-500 flex items-center gap-2"><i class="fa-solid fa-circle-info"></i> 아래 지표는 등록된 작업지시·설비 데이터로 계산됩니다.</p>
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4">
-          <p class="text-xs font-medium text-slate-400">평균 고장 간격 (MTBF)</p>
-          <h3 id="kpi-mtbf" class="text-2xl font-black text-cyan-400 mt-1">- 시간</h3>
-          <p id="kpi-mtbf-sub" class="text-[11px] text-slate-500 mt-1">최근 90일 기준</p>
-        </div>
-        <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4">
-          <p class="text-xs font-medium text-slate-400">평균 수리 시간 (MTTR)</p>
-          <h3 id="kpi-mttr" class="text-2xl font-black text-amber-400 mt-1">- 시간</h3>
-          <p id="kpi-mttr-sub" class="text-[11px] text-slate-500 mt-1">완료된 고장수리 0건</p>
-        </div>
-        <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4">
-          <p class="text-xs font-medium text-slate-400">누적 비가동 시간</p>
-          <h3 id="kpi-downtime" class="text-2xl font-black text-rose-400 mt-1">- 시간</h3>
-          <p class="text-[11px] text-slate-500 mt-1">접수부터 완료까지 합계</p>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
-          <h3 class="font-bold text-slate-100 mb-4 flex items-center gap-2"><i class="fa-solid fa-sack-dollar text-emerald-400"></i> 월별 보전비용 (천원)</h3>
-          <div class="h-64"><canvas id="chartMonthlyCost"></canvas></div>
-        </div>
-        <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
-          <h3 class="font-bold text-slate-100 mb-4 flex items-center gap-2"><i class="fa-solid fa-chart-pie text-cyan-400"></i> 작업 유형 비중</h3>
-          <div class="h-64 flex justify-center"><canvas id="chartWorkTypePie"></canvas></div>
-        </div>
-        <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
-          <h3 class="font-bold text-slate-100 mb-4 flex items-center gap-2"><i class="fa-solid fa-layer-group text-brand-400"></i> 라인별 설비 상태</h3>
-          <div class="h-64"><canvas id="chartLineStatus"></canvas></div>
-        </div>
-        <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
-          <h3 class="font-bold text-slate-100 mb-4 flex items-center gap-2"><i class="fa-solid fa-ranking-star text-rose-400"></i> 설비별 고장 건수 (상위 5)</h3>
-          <div class="h-64"><canvas id="chartTopFailure"></canvas></div>
-        </div>
-      </div>
-    </section>
   </main>
 </div>
 
@@ -539,64 +606,174 @@ tailwind.config = {
 </div>
 
 <div id="equipment-modal" class="modal fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden" role="dialog" aria-modal="true">
-  <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+  <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full p-6 shadow-2xl relative">
     <button type="button" onclick="closeModal('equipment-modal')" aria-label="닫기" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
     <h3 id="equipment-modal-title" class="text-lg font-bold text-white mb-4"><i class="fa-solid fa-gears text-brand-400"></i> 설비 등록</h3>
-    <form onsubmit="handleEquipmentSubmit(event)" class="space-y-4">
+    <form onsubmit="handleEquipmentSubmit(event)" class="space-y-5 max-h-[70vh] overflow-y-auto pr-1">
       <input type="hidden" id="eq-form-id">
-      <div class="grid grid-cols-2 gap-3">
-        <div>
-          <label for="eq-form-code" class="block text-xs text-slate-400 mb-1">설비 코드</label>
-          <input type="text" id="eq-form-code" required maxlength="30" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+
+      <!-- ▸ 기본 정보 -->
+      <fieldset class="space-y-3">
+        <legend class="text-xs font-bold text-slate-300 flex items-center gap-1.5 mb-1"><i class="fa-solid fa-cube text-brand-400"></i> 기본 정보</legend>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label for="eq-form-code" class="block text-xs text-slate-400 mb-1">설비번호 <span class="text-rose-400">*</span></label>
+            <input type="text" id="eq-form-code" required maxlength="30" placeholder="예: 00860" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+          </div>
+          <div>
+            <label for="eq-form-name" class="block text-xs text-slate-400 mb-1">설비명 <span class="text-rose-400">*</span></label>
+            <input type="text" id="eq-form-name" required maxlength="60" placeholder="예: 정제수제조시스템-1" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+          </div>
+        </div>
+        <div class="grid grid-cols-3 gap-3">
+          <div>
+            <label for="eq-form-eqtype" class="block text-xs text-slate-400 mb-1">설비유형</label>
+            <select id="eq-form-eqtype" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+              <option value="설비">설비</option><option value="계측기">계측기</option><option value="유틸리티">유틸리티</option><option value="기타">기타</option>
+            </select>
+          </div>
+          <div>
+            <label for="eq-form-category" class="block text-xs text-slate-400 mb-1">설비종류</label>
+            <input type="text" id="eq-form-category" maxlength="40" placeholder="예: 시스템-정제수제조" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+          </div>
+          <div>
+            <label for="eq-form-formulation" class="block text-xs text-slate-400 mb-1">제형</label>
+            <input type="text" id="eq-form-formulation" maxlength="20" placeholder="예: 공통" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+          </div>
+        </div>
+      </fieldset>
+
+      <!-- ▸ 위치 정보 -->
+      <fieldset class="space-y-3 border-t border-slate-800 pt-4">
+        <legend class="text-xs font-bold text-slate-300 flex items-center gap-1.5 mb-1"><i class="fa-solid fa-map-location-dot text-brand-400"></i> 위치 정보</legend>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label for="eq-form-factory" class="block text-xs text-slate-400 mb-1">공장</label>
+            <input type="text" id="eq-form-factory" maxlength="30" placeholder="예: 향남공장" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+          </div>
+          <div>
+            <label for="eq-form-detailloc" class="block text-xs text-slate-400 mb-1">설비위치 (상세)</label>
+            <input type="text" id="eq-form-detailloc" maxlength="60" placeholder="예: 향남공장-A동-2F-정수실" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label for="eq-form-location" class="block text-xs text-slate-400 mb-1">배치 라인 (시스템 맵)</label>
+            <select id="eq-form-location" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none"></select>
+          </div>
+          <div>
+            <label for="eq-form-roomno" class="block text-xs text-slate-400 mb-1">실번호</label>
+            <input type="text" id="eq-form-roomno" maxlength="20" placeholder="예: 2195" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+          </div>
+        </div>
+      </fieldset>
+
+      <!-- ▸ 제조 / 모델 -->
+      <fieldset class="space-y-3 border-t border-slate-800 pt-4">
+        <legend class="text-xs font-bold text-slate-300 flex items-center gap-1.5 mb-1"><i class="fa-solid fa-industry text-brand-400"></i> 제조 / 모델</legend>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label for="eq-form-manufacturer" class="block text-xs text-slate-400 mb-1">제조사</label>
+            <input type="text" id="eq-form-manufacturer" maxlength="40" placeholder="예: 우건이엔지" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+          </div>
+          <div>
+            <label for="eq-form-model" class="block text-xs text-slate-400 mb-1">모델</label>
+            <input type="text" id="eq-form-model" maxlength="40" placeholder="예: DNM-5700" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+          </div>
+        </div>
+        <div class="grid grid-cols-3 gap-3">
+          <div>
+            <label for="eq-form-serial" class="block text-xs text-slate-400 mb-1">Serial #</label>
+            <input type="text" id="eq-form-serial" maxlength="40" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+          </div>
+          <div>
+            <label for="eq-form-madein" class="block text-xs text-slate-400 mb-1">제조국</label>
+            <input type="text" id="eq-form-madein" maxlength="20" placeholder="예: 한국" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+          </div>
+          <div>
+            <label for="eq-form-capacity" class="block text-xs text-slate-400 mb-1">기계능력</label>
+            <input type="text" id="eq-form-capacity" maxlength="30" placeholder="예: 2Ton/hr" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label for="eq-form-supplier" class="block text-xs text-slate-400 mb-1">공급업체</label>
+            <input type="text" id="eq-form-supplier" maxlength="40" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+          </div>
+          <div>
+            <label for="eq-form-asvendor" class="block text-xs text-slate-400 mb-1">AS업체</label>
+            <input type="text" id="eq-form-asvendor" maxlength="40" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+          </div>
+        </div>
+      </fieldset>
+
+      <!-- ▸ 운영 정보 -->
+      <fieldset class="space-y-3 border-t border-slate-800 pt-4">
+        <legend class="text-xs font-bold text-slate-300 flex items-center gap-1.5 mb-1"><i class="fa-solid fa-gear text-brand-400"></i> 운영 정보</legend>
+        <div class="grid grid-cols-3 gap-3">
+          <div>
+            <label for="eq-form-status" class="block text-xs text-slate-400 mb-1">설비상태</label>
+            <select id="eq-form-status" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+              <option value="running">운영설비 [Running]</option>
+              <option value="warning">점검 필요</option>
+              <option value="broken">고장 정지</option>
+            </select>
+          </div>
+          <div>
+            <label for="eq-form-grade" class="block text-xs text-slate-400 mb-1">설비등급</label>
+            <select id="eq-form-grade" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+              <option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="">미지정</option>
+            </select>
+          </div>
+          <div>
+            <label for="eq-form-department" class="block text-xs text-slate-400 mb-1">사용부서</label>
+            <input type="text" id="eq-form-department" maxlength="20" placeholder="예: 설비파트" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+          </div>
+        </div>
+        <div class="grid grid-cols-3 gap-3">
+          <div>
+            <label for="eq-form-installdate" class="block text-xs text-slate-400 mb-1">설치일자</label>
+            <input type="date" id="eq-form-installdate" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+          </div>
+          <div>
+            <label for="eq-form-utility" class="block text-xs text-slate-400 mb-1">사용 Utility</label>
+            <input type="text" id="eq-form-utility" maxlength="30" placeholder="예: 380V" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+          </div>
+          <div>
+            <label for="eq-form-cost" class="block text-xs text-slate-400 mb-1">구입금액</label>
+            <input type="text" id="eq-form-cost" maxlength="30" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+          </div>
         </div>
         <div>
-          <label for="eq-form-name" class="block text-xs text-slate-400 mb-1">설비명</label>
-          <input type="text" id="eq-form-name" required maxlength="40" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+          <label for="eq-form-disposaldate" class="block text-xs text-slate-400 mb-1">폐기일자</label>
+          <input type="date" id="eq-form-disposaldate" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
         </div>
-      </div>
-      <div class="grid grid-cols-2 gap-3">
-        <div>
-          <label for="eq-form-location" class="block text-xs text-slate-400 mb-1">배치 위치 (라인)</label>
-          <select id="eq-form-location" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none"></select>
-        </div>
-        <div>
-          <label for="eq-form-model" class="block text-xs text-slate-400 mb-1">제조사 / 모델</label>
-          <input type="text" id="eq-form-model" maxlength="40" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
-        </div>
-      </div>
-      <div class="grid grid-cols-2 gap-3">
-        <div>
-          <label for="eq-form-status" class="block text-xs text-slate-400 mb-1">가동 상태</label>
-          <select id="eq-form-status" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
-            <option value="running">정상 가동</option>
-            <option value="warning">점검 필요</option>
-            <option value="broken">고장 정지</option>
-          </select>
-        </div>
-        <div>
-          <label for="eq-form-oee" class="block text-xs text-slate-400 mb-1">OEE (%)</label>
-          <input type="number" id="eq-form-oee" min="0" max="100" step="1" value="100" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
-        </div>
-      </div>
-      <div class="grid grid-cols-2 gap-3">
-        <div>
-          <label for="eq-form-vib" class="block text-xs text-slate-400 mb-1">진동 (mm/s)</label>
-          <input type="number" id="eq-form-vib" min="0" step="0.1" value="1.0" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
-        </div>
-        <div>
-          <label for="eq-form-temp" class="block text-xs text-slate-400 mb-1">온도 (°C)</label>
-          <input type="number" id="eq-form-temp" step="1" value="35" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
-        </div>
-      </div>
-      <div class="border-t border-slate-800 pt-4 space-y-3">
-        <p class="text-xs font-bold text-slate-300 flex items-center gap-1.5"><i class="fa-solid fa-shield-halved text-brand-400"></i> GMP 관리 정보</p>
-        <div>
-          <label for="eq-form-gmp" class="block text-xs text-slate-400 mb-1">제품 품질 영향도</label>
-          <select id="eq-form-gmp" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
-            <option value="직접영향">직접영향 (Direct impact)</option>
-            <option value="간접영향">간접영향 (Indirect impact)</option>
-            <option value="해당없음" selected>해당없음 (No impact)</option>
-          </select>
+      </fieldset>
+
+      <!-- ▸ GMP / 법정 관리 -->
+      <fieldset class="space-y-3 border-t border-slate-800 pt-4">
+        <legend class="text-xs font-bold text-slate-300 flex items-center gap-1.5 mb-1"><i class="fa-solid fa-shield-halved text-brand-400"></i> GMP / 법정 관리</legend>
+        <div class="grid grid-cols-3 gap-3">
+          <div>
+            <label for="eq-form-gmpequip" class="block text-xs text-slate-400 mb-1">GMP설비여부</label>
+            <select id="eq-form-gmpequip" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+              <option value="GMP">GMP</option><option value="Non-GMP">Non-GMP</option>
+            </select>
+          </div>
+          <div>
+            <label for="eq-form-gmp" class="block text-xs text-slate-400 mb-1">품질 영향도</label>
+            <select id="eq-form-gmp" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+              <option value="직접영향">직접영향 (Direct)</option>
+              <option value="간접영향">간접영향 (Indirect)</option>
+              <option value="해당없음" selected>해당없음 (No impact)</option>
+            </select>
+          </div>
+          <div>
+            <label for="eq-form-legal" class="block text-xs text-slate-400 mb-1">법정설비여부</label>
+            <select id="eq-form-legal" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+              <option value="N">N</option><option value="Y">Y</option>
+            </select>
+          </div>
         </div>
         <div class="grid grid-cols-2 gap-3">
           <div>
@@ -608,8 +785,21 @@ tailwind.config = {
             <input type="date" id="eq-form-requal" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
           </div>
         </div>
-      </div>
-      <div class="flex justify-end gap-2 pt-2">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label for="eq-form-legacycode" class="block text-xs text-slate-400 mb-1">기존관리번호</label>
+            <input type="text" id="eq-form-legacycode" maxlength="60" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+          </div>
+          <div>
+            <label for="eq-form-revision" class="block text-xs text-slate-400 mb-1">Revision 번호</label>
+            <input type="text" id="eq-form-revision" maxlength="20" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+          </div>
+        </div>
+      </fieldset>
+
+
+
+      <div class="flex justify-end gap-2 pt-2 sticky bottom-0 bg-slate-900 pb-1">
         <button type="button" onclick="closeModal('equipment-modal')" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm">취소</button>
         <button type="submit" class="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-xl text-sm shadow">저장</button>
       </div>
@@ -744,67 +934,6 @@ tailwind.config = {
   </div>
 </div>
 
-<!-- 계측기 교정 등록/수정 -->
-<div id="calibration-modal" class="modal fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden" role="dialog" aria-modal="true">
-  <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
-    <button type="button" onclick="closeModal('calibration-modal')" aria-label="닫기" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
-    <h3 id="calibration-modal-title" class="text-lg font-bold text-white mb-4"><i class="fa-solid fa-ruler-combined text-brand-400"></i> 계측기 등록</h3>
-    <form onsubmit="handleCalibSubmit(event)" class="space-y-4">
-      <input type="hidden" id="cal-form-id">
-      <div class="grid grid-cols-2 gap-3">
-        <div>
-          <label for="cal-form-code" class="block text-xs text-slate-400 mb-1">관리번호</label>
-          <input type="text" id="cal-form-code" required maxlength="30" placeholder="예: PI-1024" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
-        </div>
-        <div>
-          <label for="cal-form-name" class="block text-xs text-slate-400 mb-1">계측기명</label>
-          <input type="text" id="cal-form-name" required maxlength="40" placeholder="예: 압력계" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
-        </div>
-      </div>
-      <div class="grid grid-cols-2 gap-3">
-        <div>
-          <label for="cal-form-eq" class="block text-xs text-slate-400 mb-1">연결 설비</label>
-          <select id="cal-form-eq" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none"></select>
-        </div>
-        <div>
-          <label for="cal-form-range" class="block text-xs text-slate-400 mb-1">측정 범위</label>
-          <input type="text" id="cal-form-range" maxlength="30" placeholder="예: 0~10 bar" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
-        </div>
-      </div>
-      <div class="grid grid-cols-2 gap-3">
-        <div>
-          <label for="cal-form-last" class="block text-xs text-slate-400 mb-1">최근 교정일</label>
-          <input type="date" id="cal-form-last" required class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
-        </div>
-        <div>
-          <label for="cal-form-cycle" class="block text-xs text-slate-400 mb-1">교정 주기 (개월)</label>
-          <input type="number" id="cal-form-cycle" required min="1" max="60" value="12" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
-        </div>
-      </div>
-      <div class="grid grid-cols-2 gap-3">
-        <div>
-          <label for="cal-form-vendor" class="block text-xs text-slate-400 mb-1">교정 기관</label>
-          <input type="text" id="cal-form-vendor" maxlength="30" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
-        </div>
-        <div>
-          <label for="cal-form-cert" class="block text-xs text-slate-400 mb-1">성적서 번호</label>
-          <input type="text" id="cal-form-cert" maxlength="30" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
-        </div>
-      </div>
-      <div>
-        <label for="cal-form-result" class="block text-xs text-slate-400 mb-1">교정 판정</label>
-        <select id="cal-form-result" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
-          <option value="적합">적합</option><option value="부적합">부적합</option>
-        </select>
-      </div>
-      <p id="cal-next-preview" class="text-[11px] text-brand-300 bg-brand-950/40 border border-brand-800/50 rounded-lg px-3 py-2"></p>
-      <div class="flex justify-end gap-2 pt-2">
-        <button type="button" onclick="closeModal('calibration-modal')" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm">취소</button>
-        <button type="submit" class="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-xl text-sm shadow">저장</button>
-      </div>
-    </form>
-  </div>
-</div>
 
 <!-- 점검 결과 기록 -->
 <div id="pmrecord-modal" class="modal fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden" role="dialog" aria-modal="true">
@@ -850,6 +979,181 @@ tailwind.config = {
       <div class="flex justify-end gap-2 pt-1">
         <button type="button" onclick="completeWithoutParts()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm">사용 부품 없음</button>
         <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm shadow">차감하고 완료</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- 정기 교체 등록/수정 -->
+<div id="schedule-modal" class="modal fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden" role="dialog" aria-modal="true">
+  <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl relative">
+    <button type="button" onclick="closeModal('schedule-modal')" aria-label="닫기" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+    <h3 id="schedule-modal-title" class="text-lg font-bold text-white mb-4"><i class="fa-solid fa-arrow-rotate-right text-cyan-400"></i> 교체 일정 등록</h3>
+    <form onsubmit="handleSchSubmit(event)" class="space-y-4">
+      <input type="hidden" id="sch-form-id">
+      <div>
+        <label for="sch-form-name" class="block text-xs text-slate-400 mb-1">교체 항목명 <span class="text-rose-400">*</span></label>
+        <input type="text" id="sch-form-name" required maxlength="60" placeholder="예: RO 멤브레인 교체" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label for="sch-form-eq" class="block text-xs text-slate-400 mb-1">대상 설비</label>
+          <select id="sch-form-eq" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none"></select>
+        </div>
+        <div>
+          <label for="sch-form-cycle" class="block text-xs text-slate-400 mb-1">교체 주기 (일)</label>
+          <input type="number" id="sch-form-cycle" required min="1" max="3650" value="90" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+        </div>
+      </div>
+      <div>
+        <label for="sch-form-last" class="block text-xs text-slate-400 mb-1">최근 교체일</label>
+        <input type="date" id="sch-form-last" required class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+      </div>
+      <div>
+        <label for="sch-form-note" class="block text-xs text-slate-400 mb-1">참고사항 (규격, 주의점 등)</label>
+        <textarea id="sch-form-note" rows="2" maxlength="200" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none"></textarea>
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button type="button" onclick="closeModal('schedule-modal')" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm">취소</button>
+        <button type="submit" class="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl text-sm shadow">저장</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- 현안 & 개선 등록/수정 -->
+<div id="improve-modal" class="modal fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden" role="dialog" aria-modal="true">
+  <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+    <button type="button" onclick="closeModal('improve-modal')" aria-label="닫기" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+    <h3 id="improve-modal-title" class="text-lg font-bold text-white mb-4"><i class="fa-solid fa-lightbulb text-amber-400"></i> 등록</h3>
+    <form onsubmit="handleImpSubmit(event)" class="space-y-4">
+      <input type="hidden" id="imp-form-id">
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label for="imp-form-type" class="block text-xs text-slate-400 mb-1">구분</label>
+          <select id="imp-form-type" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+            <option value="현안">현안 (문제/장애)</option>
+            <option value="개선">개선 (제안/아이디어)</option>
+          </select>
+        </div>
+        <div>
+          <label for="imp-form-priority" class="block text-xs text-slate-400 mb-1">우선순위</label>
+          <select id="imp-form-priority" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+            <option value="HIGH">긴급</option><option value="MEDIUM" selected>보통</option><option value="LOW">낮음</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <label for="imp-form-title" class="block text-xs text-slate-400 mb-1">제목 <span class="text-rose-400">*</span></label>
+        <input type="text" id="imp-form-title" required maxlength="80" placeholder="예: 정제수 RO 2단 에너지회수장치 도입" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label for="imp-form-eq" class="block text-xs text-slate-400 mb-1">대상 설비</label>
+          <select id="imp-form-eq" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none"></select>
+        </div>
+        <div>
+          <label for="imp-form-assignee" class="block text-xs text-slate-400 mb-1">담당자</label>
+          <input type="text" id="imp-form-assignee" maxlength="20" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+        </div>
+      </div>
+      <div>
+        <label for="imp-form-desc" class="block text-xs text-slate-400 mb-1">상세 내용</label>
+        <textarea id="imp-form-desc" rows="3" maxlength="500" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none"></textarea>
+      </div>
+      <fieldset class="border-t border-slate-800 pt-4 space-y-3">
+        <legend class="text-xs font-bold text-slate-300 flex items-center gap-1.5"><i class="fa-solid fa-chart-line text-emerald-400"></i> 경제성 분석 (개선 시)</legend>
+        <div>
+          <label for="imp-form-benefit" class="block text-xs text-slate-400 mb-1">기대 효과</label>
+          <input type="text" id="imp-form-benefit" maxlength="100" placeholder="예: RO 펌프 전력 30% 절감, 연간 약 500만원" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label for="imp-form-energy" class="block text-xs text-slate-400 mb-1">에너지 절감량</label>
+            <input type="text" id="imp-form-energy" maxlength="30" placeholder="예: 12,000 kWh/년" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+          </div>
+          <div>
+            <label for="imp-form-invest" class="block text-xs text-slate-400 mb-1">투자 비용 (만원)</label>
+            <input type="text" id="imp-form-invest" maxlength="20" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label for="imp-form-saving" class="block text-xs text-slate-400 mb-1">연간 절감 (만원)</label>
+            <input type="text" id="imp-form-saving" maxlength="20" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+          </div>
+          <div>
+            <label for="imp-form-roi" class="block text-xs text-slate-400 mb-1">ROI 회수 (개월)</label>
+            <input type="text" id="imp-form-roi" maxlength="10" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+          </div>
+        </div>
+      </fieldset>
+      <div class="flex justify-end gap-2 pt-2">
+        <button type="button" onclick="closeModal('improve-modal')" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm">취소</button>
+        <button type="submit" class="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-sm shadow">저장</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- 월별 피드백 작성 -->
+<div id="feedback-modal" class="modal fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden" role="dialog" aria-modal="true">
+  <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl relative">
+    <button type="button" onclick="closeModal('feedback-modal')" aria-label="닫기" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+    <h3 id="feedback-modal-title" class="text-lg font-bold text-white mb-4"><i class="fa-solid fa-pen-to-square text-amber-400"></i> 피드백 작성</h3>
+    <form onsubmit="handleFBSubmit(event)" class="space-y-4">
+      <input type="hidden" id="fb-form-id">
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label for="fb-form-month" class="block text-xs text-slate-400 mb-1">해당 월</label>
+          <input type="month" id="fb-form-month" required class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+        </div>
+        <div>
+          <label for="fb-form-type" class="block text-xs text-slate-400 mb-1">구분</label>
+          <select id="fb-form-type" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+            <option value="잘한점">잘한 점 (성과)</option>
+            <option value="개선할점">개선할 점</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <label for="fb-form-title" class="block text-xs text-slate-400 mb-1">제목 <span class="text-rose-400">*</span></label>
+        <input type="text" id="fb-form-title" required maxlength="80" placeholder="예: RO 멤브레인 교체 기한 내 완료" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+      </div>
+      <div>
+        <label for="fb-form-content" class="block text-xs text-slate-400 mb-1">상세 내용</label>
+        <textarea id="fb-form-content" rows="5" maxlength="1000" placeholder="구체적으로 무엇을 했는지, 무엇을 개선해야 하는지 적어주세요." class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none"></textarea>
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button type="button" onclick="closeModal('feedback-modal')" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm">취소</button>
+        <button type="submit" class="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-sm shadow">저장</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- 캘린더 이벤트 작성 -->
+<div id="cal-event-modal" class="modal fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden" role="dialog" aria-modal="true">
+  <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl relative">
+    <button type="button" onclick="closeModal('cal-event-modal')" aria-label="닫기" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+    <h3 id="cal-event-modal-title" class="text-lg font-bold text-white mb-4"><i class="fa-solid fa-calendar-plus text-cyan-400"></i> 새 일정</h3>
+    <form onsubmit="handleCalEventSubmit(event)" class="space-y-4">
+      <input type="hidden" id="cal-ev-form-id">
+      <div>
+        <label for="cal-ev-form-date" class="block text-xs text-slate-400 mb-1">날짜</label>
+        <input type="date" id="cal-ev-form-date" required class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+      </div>
+      <div>
+        <label for="cal-ev-form-title" class="block text-xs text-slate-400 mb-1">업무 제목 <span class="text-rose-400">*</span></label>
+        <input type="text" id="cal-ev-form-title" required maxlength="100" placeholder="예: RO 멤브레인 교체 완료" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+      </div>
+      <div>
+        <label for="cal-ev-form-content" class="block text-xs text-slate-400 mb-1">상세 내용</label>
+        <textarea id="cal-ev-form-content" rows="5" maxlength="1000" placeholder="구체적으로 무엇을 했는지 기록해 주세요." class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none"></textarea>
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button type="button" onclick="closeModal('cal-event-modal')" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm">취소</button>
+        <button type="submit" class="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl text-sm shadow">저장</button>
       </div>
     </form>
   </div>
@@ -905,9 +1209,159 @@ tailwind.config = {
   </div>
 </div>
 
+<!-- 계정 관리 -->
+<div id="account-modal" class="modal fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden" role="dialog" aria-modal="true">
+  <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-sm w-full p-6 shadow-2xl relative">
+    <button type="button" onclick="closeModal('account-modal')" aria-label="닫기" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+    <h3 class="text-lg font-bold text-white mb-4"><i class="fa-solid fa-user-shield text-brand-400"></i> 로그인 계정 관리</h3>
+
+    <div id="accounts-list" class="space-y-2 mb-5 max-h-48 overflow-y-auto"></div>
+
+    <form onsubmit="handleAddAccountSubmit(event)" class="space-y-3 border-t border-slate-800 pt-4">
+      <p class="text-xs text-slate-400 font-medium">새 계정 추가</p>
+      <div id="acc-form-error" class="hidden bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs rounded-lg px-3 py-2"></div>
+      <div class="grid grid-cols-2 gap-2">
+        <input type="text" id="acc-form-id" required placeholder="아이디" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+        <input type="text" id="acc-form-name" placeholder="이름 (선택)" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+      </div>
+      <input type="password" id="acc-form-pw" required minlength="4" placeholder="비밀번호 (4자 이상)" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+      <button type="submit" class="w-full bg-brand-600 hover:bg-brand-500 text-white py-2 rounded-xl text-sm shadow transition-colors">계정 추가</button>
+    </form>
+  </div>
+</div>
+
 <div id="toast-container" class="fixed bottom-5 right-5 z-[70] flex flex-col space-y-2 pointer-events-none"></div>
 
+</div>
+<!-- /app-root -->
+
 <script>
+
+/* ---------- 0. 로그인 / 접근 제어 ---------- */
+async function sha256Hex(text) {
+  const enc = new TextEncoder().encode(text);
+  const buf = await crypto.subtle.digest('SHA-256', enc);
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+const DEFAULT_ACCOUNTS = [
+  { id: 'ksh3849', pwHash: '16f21c34ee91f8b4bc2d2c6543c6071f81313b529f8136d701b701e7938bbbb4', role: 'admin', name: '관리자' }
+];
+
+let accounts = [];
+
+function loadAccounts() {
+  try {
+    const saved = localStorage.getItem('fms_accounts');
+    accounts = saved ? JSON.parse(saved) : DEFAULT_ACCOUNTS.slice();
+  } catch (e) {
+    accounts = DEFAULT_ACCOUNTS.slice();
+  }
+}
+
+function saveAccounts() {
+  try { localStorage.setItem('fms_accounts', JSON.stringify(accounts)); } catch (e) {}
+}
+
+function currentSession() {
+  try {
+    const raw = sessionStorage.getItem('fms_session');
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) { return null; }
+}
+
+async function handleLoginSubmit(e) {
+  e.preventDefault();
+  const idInput = document.getElementById('login-id').value.trim();
+  const pwInput = document.getElementById('login-pw').value;
+  const errBox = document.getElementById('login-error');
+  errBox.classList.add('hidden');
+
+  loadAccounts();
+  const hash = await sha256Hex(pwInput);
+  const acc = accounts.find(a => a.id === idInput && a.pwHash === hash);
+
+  if (!acc) {
+    errBox.textContent = '아이디 또는 비밀번호가 일치하지 않습니다.';
+    errBox.classList.remove('hidden');
+    return;
+  }
+
+  try { sessionStorage.setItem('fms_session', JSON.stringify({ id: acc.id, name: acc.name, role: acc.role })); } catch (e) {}
+  document.getElementById('login-screen').classList.add('hidden');
+  document.getElementById('app-root').classList.remove('hidden');
+  document.getElementById('login-form').reset();
+  bootApp();
+}
+
+function handleLogout() {
+  try { sessionStorage.removeItem('fms_session'); } catch (e) {}
+  location.reload();
+}
+
+function checkLoginGate() {
+  loadAccounts();
+  loadTheme();
+  const session = currentSession();
+  if (session) {
+    document.getElementById('login-screen').classList.add('hidden');
+    document.getElementById('app-root').classList.remove('hidden');
+    bootApp();
+  } else {
+    document.getElementById('login-screen').classList.remove('hidden');
+    document.getElementById('app-root').classList.add('hidden');
+  }
+}
+
+/* ---------- 0-1. 계정 관리 (관리자 전용) ---------- */
+function renderAccountsList() {
+  const box = document.getElementById('accounts-list');
+  if (!box) return;
+  box.innerHTML = accounts.map(a => `
+    <div class="flex items-center justify-between bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs">
+      <div>
+        <span class="text-slate-200 font-bold">${esc(a.name || a.id)}</span>
+        <span class="text-slate-500 ml-2">${esc(a.id)}</span>
+        ${a.role === 'admin' ? '<span class="ml-2 text-brand-300">관리자</span>' : ''}
+      </div>
+      ${accounts.length > 1 ? `<button type="button" onclick="deleteAccount('${esc(a.id)}')" class="text-rose-400 hover:text-rose-300"><i class="fa-solid fa-trash"></i></button>` : ''}
+    </div>`).join('');
+}
+
+async function handleAddAccountSubmit(e) {
+  e.preventDefault();
+  const id = document.getElementById('acc-form-id').value.trim();
+  const name = document.getElementById('acc-form-name').value.trim();
+  const pw = document.getElementById('acc-form-pw').value;
+  const errBox = document.getElementById('acc-form-error');
+  errBox.classList.add('hidden');
+
+  if (accounts.some(a => a.id === id)) {
+    errBox.textContent = '이미 존재하는 아이디입니다.';
+    errBox.classList.remove('hidden');
+    return;
+  }
+  if (pw.length < 4) {
+    errBox.textContent = '비밀번호는 4자 이상 입력해 주세요.';
+    errBox.classList.remove('hidden');
+    return;
+  }
+
+  const pwHash = await sha256Hex(pw);
+  accounts.push({ id, pwHash, role: 'user', name: name || id });
+  saveAccounts();
+  renderAccountsList();
+  document.querySelector('#account-modal form').reset();
+  showToast('계정을 추가했습니다.', 'success');
+}
+
+function deleteAccount(id) {
+  accounts = accounts.filter(a => a.id !== id);
+  saveAccounts();
+  renderAccountsList();
+  showToast('계정을 삭제했습니다.', 'warning');
+}
+
 /* =========================================================
    공무팀 통합 설비관리 시스템 (FMS) v3.2
    - 단일 파일 구조 / Google Apps Script 시트 연동
@@ -915,31 +1369,58 @@ tailwind.config = {
 
 /* ---------- 0. 연동 설정 ---------- */
 // Apps Script 웹앱 URL. 비워두면 시트 연동 없이 화면 안에서만 동작합니다.
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwXRqNOO05_1g3XEf92VrX-SRXyAjS52M-WwR5WTctlLkVB9xXd8ad5aaQ7-Y10JjmADw/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyN0JuI_URu2kaL3wjiJZRpwlPj_FBLbVwIUsywcMdwX2xe2K2SqoinKie6AbdTD05l7Q/exec';
 
 /* ---------- 1. 초기(예시) 데이터 ----------
    시트에서 데이터를 불러오면 아래 값은 대체됩니다. */
 let locations = [
-  { id: 'LOC-1', name: '가공 A라인', color: 'blue' },
-  { id: 'LOC-2', name: '조립 B라인', color: 'indigo' },
-  { id: 'LOC-3', name: '동력 유틸리티동', color: 'slate' }
+  { id: 'LOC-1', name: 'A동 정수실', color: 'blue' },
+  { id: 'LOC-2', name: '생물학적제제동', color: 'indigo' },
+  { id: 'LOC-3', name: 'E동 냉동기실', color: 'emerald' },
+  { id: 'LOC-4', name: 'E동 보일러실', color: 'rose' },
+  { id: 'LOC-5', name: 'A동 보일러실', color: 'amber' }
 ];
 
 let equipments = [
-  { id:'EQ-101', code:'CNC-001',  name:'CNC 선반 #1',       location:'가공 A라인',      model:'화천 CUTEX-180',  status:'running', temp:42, vibration:1.2, oee:92 },
-  { id:'EQ-103', code:'MCT-001',  name:'5축 머시닝센터 #1', location:'가공 A라인',      model:'두산 DNM-5700',   status:'broken',  temp:68, vibration:4.8, oee:45 },
-  { id:'EQ-106', code:'COMP-01',  name:'에어 콤프레샤',     location:'동력 유틸리티동', model:'유진 MAVIC-100',  status:'running', temp:72, vibration:1.1, oee:98 }
+  // === 정수 계열 (A동 정수실) ===
+  {id:'EQ-001',code:'10350',name:'정제수저장및분배시스템-1',location:'A동 정수실',team:'공무팀',part:'설비파트',detailLocation:'향남공장-A동-2F-정수실',formulation:'공통',roomNo:'2195',installDate:'2007-03-31',capacity:'4.5Ton',model:'',manufacturer:'우건이엔지',supplier:'우건이엔지',legalEquip:'N',gmpEquip:'GMP',revisionStatus:'제개정완료',latestVersion:'Y',status:'running'},
+  {id:'EQ-002',code:'00858',name:'정제수저장및분배시스템-2',location:'A동 정수실',team:'공무팀',part:'설비파트',detailLocation:'향남공장-A동-2F-정수실',formulation:'공통',roomNo:'2195',installDate:'2001-11-30',capacity:'4.5Ton',model:'',manufacturer:'우건이엔지',supplier:'우건이엔지',legalEquip:'N',gmpEquip:'GMP',revisionStatus:'제개정완료',latestVersion:'Y',status:'running'},
+  {id:'EQ-003',code:'00859',name:'정제수전처리시스템-1',location:'A동 정수실',team:'공무팀',part:'설비파트',detailLocation:'향남공장-A동-2F-정수실',formulation:'공통',roomNo:'2195',installDate:'2016-08-01',capacity:'13Ton/hr',model:'',manufacturer:'우건이엔지',supplier:'우건이엔지',legalEquip:'N',gmpEquip:'GMP',revisionStatus:'제개정완료',latestVersion:'Y',status:'running'},
+  {id:'EQ-004',code:'00860',name:'정제수제조시스템-1',location:'A동 정수실',team:'공무팀',part:'설비파트',detailLocation:'향남공장-A동-2F-정수실',formulation:'공통',roomNo:'2195',installDate:'2014-08-01',capacity:'2Ton/hr',model:'',manufacturer:'우건이엔지',supplier:'우건이엔지',legalEquip:'N',gmpEquip:'GMP',revisionStatus:'제개정완료',latestVersion:'Y',status:'running'},
+  {id:'EQ-005',code:'40819',name:'정제수제조시스템-4',location:'A동 정수실',team:'공무팀',part:'공무팀',detailLocation:'향남공장-A동-2F-정수실',formulation:'공통',roomNo:'2195',installDate:'2024-08-05',capacity:'6m3/hr',model:'N/A',manufacturer:'해동 테크놀러지',supplier:'해동 테크놀러지',legalEquip:'N',gmpEquip:'GMP',revisionStatus:'제개정완료',latestVersion:'Y',status:'running'},
+  {id:'EQ-006',code:'00863',name:'주사용수및청정증기제조시스템-1',location:'A동 정수실',team:'공무팀',part:'설비파트',detailLocation:'향남공장-A동-2F-정수실',formulation:'공통',roomNo:'2195',installDate:'2016-04-01',capacity:'1.5Ton',model:'FDP-1500M5',manufacturer:'FAC',supplier:'FAC',legalEquip:'N',gmpEquip:'GMP',revisionStatus:'제개정완료',latestVersion:'Y',status:'running'},
+  {id:'EQ-007',code:'00862',name:'주사용수저장및분배시스템-1',location:'A동 정수실',team:'공무팀',part:'설비파트',detailLocation:'향남공장-A동-2F-정수실',formulation:'공통',roomNo:'2195',installDate:'2016-04-01',capacity:'1Ton',model:'',manufacturer:'우건이엔지',supplier:'우건이엔지',legalEquip:'N',gmpEquip:'GMP',revisionStatus:'제개정완료',latestVersion:'Y',status:'running'},
+  {id:'EQ-010',code:'01208',name:'청정증기분배시스템-3',location:'A동 정수실',team:'공무팀',part:'설비파트',detailLocation:'향남공장-A동-2F-정수실',formulation:'공통',roomNo:'2195',installDate:'2014-05-01',capacity:'',model:'',manufacturer:'',supplier:'',legalEquip:'Y',gmpEquip:'GMP',revisionStatus:'제개정완료',latestVersion:'Y',status:'running'},
+  // === 생물학적제제동 ===
+  {id:'EQ-008',code:'34642',name:'주사용수저장및분배시스템-4',location:'생물학적제제동',team:'공무팀',part:'설비파트',detailLocation:'향남공장',formulation:'생물학적제제',roomNo:'',installDate:'2021-01-01',capacity:'N/A',model:'N/A',manufacturer:'대호테크',supplier:'한천수이엔지',legalEquip:'Y',gmpEquip:'GMP',revisionStatus:'제개정완료',latestVersion:'Y',status:'running'},
+  {id:'EQ-009',code:'34643',name:'주사용수저장및분배시스템-5',location:'생물학적제제동',team:'공무팀',part:'설비파트',detailLocation:'향남공장',formulation:'생물학적제제',roomNo:'',installDate:'2021-01-01',capacity:'N/A',model:'N/A',manufacturer:'대호테크',supplier:'한천수이엔지',legalEquip:'Y',gmpEquip:'GMP',revisionStatus:'제개정완료',latestVersion:'Y',status:'running'},
+  // === E동 냉동기실 ===
+  {id:'EQ-011',code:'00807',name:'냉동기-2',location:'E동 냉동기실',team:'공무팀',part:'설비파트',detailLocation:'향남공장-E동-1F-냉동기실',formulation:'공통',roomNo:'1004',installDate:'2012-01-01',capacity:'270RT',model:'N/A',manufacturer:'미스비씨',supplier:'미스비씨',legalEquip:'Y',gmpEquip:'NON-GMP',revisionStatus:'제개정완료',latestVersion:'Y',status:'running'},
+  {id:'EQ-012',code:'40500',name:'냉동기-26',location:'E동 냉동기실',team:'공무팀',part:'설비파트',detailLocation:'향남공장-E동-1F-냉동기실',formulation:'공통',roomNo:'1004',installDate:'2023-03-03',capacity:'300RT',model:'TR-W 300',manufacturer:'센추리',supplier:'센추리',legalEquip:'Y',gmpEquip:'NON-GMP',revisionStatus:'제개정완료',latestVersion:'Y',status:'running'},
+  {id:'EQ-013',code:'40832',name:'냉동기-27',location:'E동 냉동기실',team:'공무팀',part:'설비파트',detailLocation:'향남공장-E동-1F-냉동기실',formulation:'공통',roomNo:'1004',installDate:'2024-08-05',capacity:'300RT',model:'TR-W300HB1',manufacturer:'센추리',supplier:'센추리',legalEquip:'Y',gmpEquip:'NON-GMP',revisionStatus:'제개정완료',latestVersion:'Y',status:'running'},
+  {id:'EQ-014',code:'00808',name:'냉동기-3',location:'E동 냉동기실',team:'공무팀',part:'설비파트',detailLocation:'향남공장-E동-1F-냉동기실',formulation:'공통',roomNo:'1004',installDate:'2016-01-01',capacity:'300RT',model:'N/A',manufacturer:'센추리',supplier:'센추리',legalEquip:'Y',gmpEquip:'NON-GMP',revisionStatus:'제개정완료',latestVersion:'Y',status:'running'},
+  // === E동 보일러실 ===
+  {id:'EQ-015',code:'00837',name:'보일러-1',location:'E동 보일러실',team:'공무팀',part:'설비파트',detailLocation:'향남공장-E동-1F-보일러실',formulation:'공통',roomNo:'1006',installDate:'2014-01-01',capacity:'2TON',model:'N/A',manufacturer:'한국미우라공업',supplier:'한국미우라공업',legalEquip:'Y',gmpEquip:'NON-GMP',revisionStatus:'제개정완료',latestVersion:'Y',status:'running'},
+  {id:'EQ-016',code:'00838',name:'보일러-2',location:'E동 보일러실',team:'공무팀',part:'설비파트',detailLocation:'향남공장-E동-1F-보일러실',formulation:'공통',roomNo:'1006',installDate:'2014-01-01',capacity:'2TON',model:'N/A',manufacturer:'한국미우라공업',supplier:'한국미우라공업',legalEquip:'Y',gmpEquip:'NON-GMP',revisionStatus:'제개정완료',latestVersion:'Y',status:'running'},
+  {id:'EQ-017',code:'00839',name:'보일러-3',location:'E동 보일러실',team:'공무팀',part:'설비파트',detailLocation:'향남공장-E동-1F-보일러실',formulation:'공통',roomNo:'1006',installDate:'2014-01-01',capacity:'2TON',model:'N/A',manufacturer:'한국미우라공업',supplier:'한국미우라공업',legalEquip:'Y',gmpEquip:'NON-GMP',revisionStatus:'제개정완료',latestVersion:'Y',status:'running'},
+  // === A동 보일러실 ===
+  {id:'EQ-018',code:'40173',name:'보일러-10',location:'A동 보일러실',team:'공무팀',part:'공무팀',detailLocation:'향남공장-A동-1F-보일러실',formulation:'N/A',roomNo:'1006',installDate:'2022-09-14',capacity:'0.8Ton',model:'SQ-800ZSG',manufacturer:'한국미우라공업',supplier:'한국미우라공업',legalEquip:'N',gmpEquip:'NON-GMP',revisionStatus:'제개정완료',latestVersion:'Y',status:'running'},
+  {id:'EQ-019',code:'40168',name:'보일러-5',location:'A동 보일러실',team:'공무팀',part:'공무팀',detailLocation:'향남공장-A동-1F-보일러실',formulation:'N/A',roomNo:'1006',installDate:'2022-09-14',capacity:'0.8Ton',model:'SQ-800ZSG',manufacturer:'한국미우라공업',supplier:'한국미우라공업',legalEquip:'Y',gmpEquip:'NON-GMP',revisionStatus:'제개정완료',latestVersion:'Y',status:'running'},
+  {id:'EQ-020',code:'40169',name:'보일러-6',location:'A동 보일러실',team:'공무팀',part:'공무팀',detailLocation:'향남공장-A동-1F-보일러실',formulation:'N/A',roomNo:'1006',installDate:'2022-09-14',capacity:'0.8Ton',model:'SQ-800ZSG',manufacturer:'한국미우라공업',supplier:'한국미우라공업',legalEquip:'N',gmpEquip:'NON-GMP',revisionStatus:'제개정완료',latestVersion:'Y',status:'running'},
+  {id:'EQ-021',code:'40170',name:'보일러-7',location:'A동 보일러실',team:'공무팀',part:'공무팀',detailLocation:'향남공장-A동-1F-보일러실',formulation:'N/A',roomNo:'1006',installDate:'2022-09-14',capacity:'0.8Ton',model:'SQ-800ZSG',manufacturer:'한국미우라공업',supplier:'한국미우라공업',legalEquip:'N',gmpEquip:'NON-GMP',revisionStatus:'제개정완료',latestVersion:'Y',status:'running'},
+  {id:'EQ-022',code:'40171',name:'보일러-8',location:'A동 보일러실',team:'공무팀',part:'공무팀',detailLocation:'향남공장-A동-1F-보일러실',formulation:'N/A',roomNo:'1006',installDate:'2022-09-14',capacity:'0.8Ton',model:'SQ-800ZSG',manufacturer:'한국미우라공업',supplier:'한국미우라공업',legalEquip:'N',gmpEquip:'NON-GMP',revisionStatus:'제개정완료',latestVersion:'Y',status:'running'},
+  {id:'EQ-023',code:'40172',name:'보일러-9',location:'A동 보일러실',team:'공무팀',part:'공무팀',detailLocation:'향남공장-A동-1F-보일러실',formulation:'N/A',roomNo:'1006',installDate:'2022-09-14',capacity:'0.8Ton',model:'SQ-800ZSG',manufacturer:'한국미우라공업',supplier:'한국미우라공업',legalEquip:'N',gmpEquip:'NON-GMP',revisionStatus:'제개정완료',latestVersion:'Y',status:'running'}
 ];
 
 let workOrders = [
-  { id:'WO-2026-0801', eqId:'EQ-103', eqName:'5축 머시닝센터 #1', title:'스핀들 과열 정지',
+  { id:'WO-2026-0801', eqId:'EQ-004', eqName:'정제수제조시스템-1', title:'전도도 간헐적 상승 조치',
     priority:'HIGH', type:'고장수리', status:'inprogress', assignee:'김보전',
-    date:'2026-08-09 09:15', completedAt:'', cost:0, desc:'온도 68도까지 상승 후 자동 정지' }
+    date:'2026-08-09 09:15', completedAt:'', cost:0, desc:'최근 2주간 전도도 0.8~1.2μS/cm 간헐적 상승' }
 ];
 
 let pmTasks = [
-  { id:'PM-01', eqId:'EQ-101', eqName:'CNC 선반 #1',   title:'절삭유 누유 확인',        freq:'매일', done:true,  lastDone:'' },
-  { id:'PM-02', eqId:'EQ-106', eqName:'에어 콤프레샤', title:'응축수 트랩 드레인 배출', freq:'매일', done:false, lastDone:'' }
+  { id:'PM-01', eqId:'EQ-004', eqName:'정제수제조시스템-1',   title:'절삭유 누유 확인',        freq:'매일', done:true,  lastDone:'' },
+  { id:'PM-02', eqId:'EQ-015', eqName:'보일러-1', title:'응축수 트랩 드레인 배출', freq:'매일', done:false, lastDone:'' }
 ];
 
 let spareParts = [
@@ -949,23 +1430,62 @@ let spareParts = [
 
 // 계측기 교정 대장 (GMP: 유효기간이 지난 계측기의 측정값은 인정되지 않습니다)
 let calibrations = [
-  { id:'CAL-01', code:'PI-1024', name:'압축공기 압력계', eqId:'EQ-106', range:'0~10 bar',
+  { id:'CAL-01', code:'PI-1024', name:'압축공기 압력계', eqId:'EQ-003', range:'0~10 bar',
     cycleMonths:12, lastDate:'2026-03-15', vendor:'한국계측교정', certNo:'KC-26-0311', result:'적합' },
-  { id:'CAL-02', code:'TI-2087', name:'스핀들 온도센서', eqId:'EQ-103', range:'0~150 °C',
+  { id:'CAL-02', code:'TI-2087', name:'스핀들 온도센서', eqId:'EQ-004', range:'0~150 °C',
     cycleMonths:6, lastDate:'2026-01-20', vendor:'사내 자체교정', certNo:'IN-26-0042', result:'적합' }
 ];
 
 // 점검 실적 (체크 여부가 아니라 '무엇을 확인했는지'가 남아야 합니다)
 let pmRecords = [];
 
+// 정기 교체 품목 (필터, 소모품 등)
+let schedules = [
+  { id:'SCH-01', name:'RO 멤브레인 교체', eqId:'EQ-004', eqName:'정제수제조시스템-1',
+    cycleDays:365, lastDate:'2026-03-01', note:'DOW FILMTEC BW30-400' },
+  { id:'SCH-02', name:'프리필터(5μm) 교체', eqId:'EQ-004', eqName:'정제수제조시스템-1',
+    cycleDays:90, lastDate:'2026-06-15', note:'매 분기 교체' },
+  { id:'SCH-03', name:'활성탄 필터 교체', eqId:'EQ-004', eqName:'정제수제조시스템-1',
+    cycleDays:180, lastDate:'2026-02-10', note:'반기 1회' },
+  { id:'SCH-04', name:'UV램프 교체', eqId:'EQ-006', eqName:'주사용수및청정증기제조시스템-1',
+    cycleDays:365, lastDate:'2025-12-01', note:'사용시간 8,000hr 이상 시 조기 교체' },
+  { id:'SCH-05', name:'보일러 연소실 점검', eqId:'EQ-015', eqName:'보일러-1',
+    cycleDays:180, lastDate:'2026-05-20', note:'버너 노즐 상태 확인' },
+  { id:'SCH-06', name:'냉매 누설 점검', eqId:'EQ-011', eqName:'냉동기-2',
+    cycleDays:90, lastDate:'2026-07-01', note:'R-134a, 가스 검지기 사용' }
+];
+
+// 현안 & 개선 관리
+let improvements = [
+  { id:'IMP-01', type:'개선', title:'정제수 RO 2단 에너지회수장치 도입',
+    eqId:'EQ-004', eqName:'정제수제조시스템-1',
+    description:'현재 RO 농축수가 버려지고 있어 에너지 손실 발생. 에너지 회수 장치(ERD) 적용 시 RO 펌프 전력 30% 절감 가능.',
+    status:'제안', priority:'MEDIUM',
+    expectedBenefit:'RO 펌프 전력 30% 절감, 연간 약 500만원',
+    energySaving:'약 12,000 kWh/년', investCost:'1500', annualSaving:'500', roiMonths:'36',
+    date:'2026-08-01', completedDate:'', assignee:'' },
+  { id:'IMP-02', type:'현안', title:'정제수 전도도 간헐적 상승',
+    eqId:'EQ-004', eqName:'정제수제조시스템-1',
+    description:'최근 2주간 제조수 전도도가 0.8~1.2 μS/cm로 간헐적 상승. 기준 1.3 μS/cm 이내이나 추이 관찰 필요.',
+    status:'조치중', priority:'HIGH',
+    expectedBenefit:'', energySaving:'', investCost:'', annualSaving:'', roiMonths:'',
+    date:'2026-08-05', completedDate:'', assignee:'' }
+];
+
+// 캘린더 이벤트
+let calendarEvents = [];
+
+// 월별 피드백
+let feedbacks = [];
+
 // 감사추적 — 화면에서 삭제할 수 없습니다
 let auditLog = [];
 
 let currentUser = '';
+let currentTheme = 'dark'; // 'dark' or 'light'
+let tabOrder = ['dashboard', 'layout', 'equipments', 'workorders', 'pm', 'schedules', 'improve', 'feedback', 'calendar', 'spares', 'audit'];
 
 const UNASSIGNED = '미지정';
-const CALIB_WARN_DAYS = 30;
-const charts = {};
 
 /* ---------- 2. 공통 유틸 ---------- */
 
@@ -1001,6 +1521,14 @@ const kstDateTime = () => kstNow().slice(0, 16);
 const kstDate = () => kstNow().slice(0, 10);
 
 // 'YYYY-MM-DD'에 개월을 더합니다. 말일 보정 포함 (1/31 + 1개월 = 2/28)
+function addDays(dateStr, days) {
+  if (!dateStr || !days) return '';
+  const d = new Date(String(dateStr).slice(0, 10));
+  if (isNaN(d)) return '';
+  d.setDate(d.getDate() + num(days, 0));
+  return d.toISOString().slice(0, 10);
+}
+
 function addMonths(dateStr, months) {
   if (!dateStr) return '';
   const [y, m, d] = String(dateStr).slice(0, 10).split('-').map(Number);
@@ -1052,21 +1580,6 @@ const PRIORITY = {
 };
 const priorityOf = p => PRIORITY[p] || PRIORITY.MEDIUM;
 
-const calibNextDate = c => addMonths(c.lastDate, c.cycleMonths);
-function calibState(c) {
-  if (c.result === '부적합') return { key: 'expired', label: '부적합', chip: 'bg-rose-500/10 border-rose-500/30 text-rose-400' };
-  const d = daysUntil(calibNextDate(c));
-  if (d === null) return { key: 'valid', label: '확인 필요', chip: 'bg-slate-800 border-slate-700 text-slate-400' };
-  if (d < 0) return { key: 'expired', label: `만료 ${Math.abs(d)}일 경과`, chip: 'bg-rose-500/10 border-rose-500/30 text-rose-400' };
-  if (d <= CALIB_WARN_DAYS) return { key: 'soon', label: `D-${d}`, chip: 'bg-amber-500/10 border-amber-500/30 text-amber-400' };
-  return { key: 'valid', label: `D-${d}`, chip: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' };
-}
-
-const GMP_BADGE = {
-  '직접영향': 'bg-rose-500/10 border-rose-500/30 text-rose-300',
-  '간접영향': 'bg-amber-500/10 border-amber-500/30 text-amber-300',
-  '해당없음': 'bg-slate-800 border-slate-700 text-slate-400'
-};
 
 const LOC_THEME = {
   blue:    'bg-brand-900/80 text-brand-300 border-brand-700',
@@ -1162,17 +1675,21 @@ async function loadFromSheet(manual = false) {
     const pick = (key, cur) => (Array.isArray(json?.[key]) && json[key].length ? json[key] : null);
     const L = pick('Locations'), E = pick('Equipments'), W = pick('WorkOrders'),
           P = pick('PMTasks'),   S = pick('SpareParts'),
-          C = pick('Calibrations'), R = pick('PMRecords'), A = pick('AuditLog');
+          R = pick('PMRecords'), A = pick('AuditLog'),
+          SC = pick('Schedules'), IM = pick('Improvements'), FB = pick('Feedbacks'), CAL = pick('CalendarEvents');
 
-    if (L || E || W || P || S || C || R || A) {
+    if (L || E || W || P || S || R || A) {
       if (L) locations = L;
-      if (E) equipments = E.map(e => ({ ...e, temp: num(e.temp, 0), vibration: num(e.vibration, 0), oee: num(e.oee, 0) }));
+      if (E) equipments = E;
       if (W) workOrders = W.map(w => ({ ...w, cost: num(w.cost, 0) }));
       if (P) pmTasks = P.map(p => ({ ...p, done: p.done === true || p.done === 'TRUE' || p.done === 'true' }));
       if (S) spareParts = S.map(s => ({ ...s, qty: num(s.qty, 0), minQty: num(s.minQty, 0) }));
-      if (C) calibrations = C.map(c => ({ ...c, cycleMonths: num(c.cycleMonths, 12), lastDate: String(c.lastDate || '').slice(0, 10) }));
       if (R) pmRecords = R;
       if (A) auditLog = A.sort((a, b) => String(b.ts).localeCompare(String(a.ts))).slice(0, 500);
+      if (SC) schedules = SC.map(s => ({ ...s, cycleDays: num(s.cycleDays, 30) }));
+      if (IM) improvements = IM;
+      if (FB) feedbacks = FB;
+      if (CAL) calendarEvents = CAL;
       showToast('시트에서 최신 데이터를 불러왔습니다.', 'success');
     } else if (manual) {
       showToast('시트가 비어 있어 화면 데이터를 유지합니다.', 'info');
@@ -1272,7 +1789,119 @@ function switchTab(tabId) {
 }
 
 // 데이터가 바뀌면 화면 전체를 한 번에 맞춥니다 (탭 간 수치 불일치 방지).
+const TAB_DEFS = {
+  dashboard: { icon: 'fa-gauge', label: '대시보드' },
+  layout: { icon: 'fa-diagram-project', label: '배치도' },
+  equipments: { icon: 'fa-cube', label: '설비 마스터' },
+  workorders: { icon: 'fa-wrench', label: '작업지시' },
+  pm: { icon: 'fa-calendar-check', label: '예방 보전 (PM)' },
+  schedules: { icon: 'fa-arrow-rotate-right', label: '정기 교체 관리' },
+  improve: { icon: 'fa-lightbulb', label: '현안 & 개선' },
+  feedback: { icon: 'fa-pen-to-square', label: '월별 피드백' },
+  calendar: { icon: 'fa-calendar-days', label: '캘린더' },
+  spares: { icon: 'fa-box', label: '예비부품' },
+  audit: { icon: 'fa-clipboard-list', label: '감사 추적' }
+};
+
+function renderNavBar() {
+  const nav = document.getElementById('nav-tabs-container');
+  if (!nav) return;
+
+  nav.innerHTML = tabOrder.map((tabId, idx) => {
+    const def = TAB_DEFS[tabId];
+    if (!def) return '';
+    const extraBadge =
+      tabId === 'workorders' ? '<span id="pending-wo-badge" class="bg-rose-500/20 text-rose-400 text-[10px] px-1.5 py-0.5 rounded-full font-bold border border-rose-500/30 ml-2">0</span>' :
+      tabId === 'spares' ? '<span id="low-stock-badge" class="bg-amber-500/20 text-amber-400 text-[10px] px-1.5 py-0.5 rounded-full font-bold border border-amber-500/30 ml-2 hidden">0</span>' : '';
+
+    return '<button type="button" onclick="switchTab(\'' + tabId + '\')" id="nav-' + tabId + '" ' +
+      'draggable="true" ' +
+      'ondragstart="handleTabDragStart(event, ' + idx + ')" ' +
+      'ondragover="handleTabDragOver(event)" ' +
+      'ondrop="handleTabDrop(event, ' + idx + ')" ' +
+      'ondragend="handleTabDragEnd(event)" ' +
+      'class="nav-btn text-slate-400 hover:bg-slate-800 hover:text-slate-200 flex items-center justify-between space-x-2 md:space-x-3 px-3 py-2 md:px-3.5 md:py-2.5 rounded-xl text-xs md:text-sm font-medium transition-colors w-auto md:w-full text-left shrink-0 whitespace-nowrap" ' +
+      'data-tab-id="' + tabId + '">' +
+      '<div class="flex items-center space-x-2 md:space-x-3">' +
+      '<i class="fa-solid ' + def.icon + ' w-4 md:w-5 text-center"></i><span>' + def.label + '</span>' +
+      '</div>' + extraBadge +
+      '</button>';
+  }).join('');
+}
+
+let draggedTabIndex = null;
+
+function handleTabDragStart(e, idx) {
+  draggedTabIndex = idx;
+  e.dataTransfer.effectAllowed = 'move';
+  e.target.style.opacity = '0.5';
+}
+
+function handleTabDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+}
+
+function handleTabDrop(e, idx) {
+  e.preventDefault();
+  if (draggedTabIndex !== null && draggedTabIndex !== idx) {
+    reorderTab(draggedTabIndex, idx);
+  }
+}
+
+function handleTabDragEnd(e) {
+  e.target.style.opacity = '1';
+  draggedTabIndex = null;
+}
+
+function reorderTab(fromIdx, toIdx) {
+  if (fromIdx === toIdx) return;
+  const [tab] = tabOrder.splice(fromIdx, 1);
+  tabOrder.splice(toIdx, 0, tab);
+  saveTabOrder();
+  renderNavBar();
+}
+
+function saveTabOrder() {
+  try { localStorage.setItem('fms_tabOrder', JSON.stringify(tabOrder)); } catch (e) {}
+}
+
+function loadTabOrder() {
+  try {
+    const saved = localStorage.getItem('fms_tabOrder');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.every(t => TAB_DEFS[t])) {
+        tabOrder = parsed;
+      }
+    }
+  } catch (e) {}
+}
+
+function applyTheme(theme) {
+  document.body.classList.remove('dark', 'light');
+  document.body.classList.add(theme);
+  try { localStorage.setItem('fms_theme', theme); } catch (e) {}
+  const icon = document.querySelector('#theme-toggle-btn i');
+  if (icon) icon.className = theme === 'light' ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+}
+
+function loadTheme() {
+  try {
+    currentTheme = localStorage.getItem('fms_theme') || 'dark';
+  } catch (e) {
+    currentTheme = 'dark';
+  }
+  applyTheme(currentTheme);
+}
+
+function toggleTheme() {
+  currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+  applyTheme(currentTheme);
+}
+
 function renderAll() {
+  renderNavBar();
   populateLocationSelects();
   populateEqSelects();
   renderHeaderStats();
@@ -1282,9 +1911,11 @@ function renderAll() {
   if (currentTab === 'workorders') renderWorkOrders();
   if (currentTab === 'pm')         renderPMList();
   if (currentTab === 'spares')     renderSparePartsTable();
-  if (currentTab === 'calibration') renderCalibrationTable();
+  if (currentTab === 'schedules') renderSchedulesTable();
+  if (currentTab === 'improve') renderImprovements();
+  if (currentTab === 'calendar')  renderCalendar();
+  if (currentTab === 'feedback')  renderFeedback();
   if (currentTab === 'audit')      renderAuditTable();
-  if (currentTab === 'analytics')  renderAnalyticsCharts();
   renderBadges();
   renderUserChip();
 }
@@ -1297,9 +1928,7 @@ function renderBadges() {
   badge.textContent = low;
   badge.classList.toggle('hidden', low === 0);
 
-  const calibDue = calibrations.filter(c => calibState(c).key !== 'valid').length;
-  const cb = document.getElementById('calib-badge');
-  if (cb) { cb.textContent = calibDue; cb.classList.toggle('hidden', calibDue === 0); }
+
 }
 
 function renderUserChip() {
@@ -1350,7 +1979,7 @@ function populateEqSelects() {
   const opts = equipments.length
     ? equipments.map(e => `<option value="${esc(e.id)}">${esc(e.code)} · ${esc(e.name)}</option>`).join('')
     : `<option value="">등록된 설비가 없습니다</option>`;
-  ['wo-form-eq', 'pm-form-eq', 'cal-form-eq'].forEach(id => {
+  ['wo-form-eq', 'pm-form-eq', 'sch-form-eq', 'imp-form-eq'].forEach(id => {
     const el = document.getElementById(id);
     if (!el) return;
     const keep = el.value;
@@ -1364,24 +1993,26 @@ function renderHeaderStats() {
   const total = equipments.length;
   const running = equipments.filter(e => e.status === 'running').length;
   const broken = equipments.filter(e => e.status === 'broken').length;
-  const avgOee = total ? Math.round(equipments.reduce((a, e) => a + num(e.oee), 0) / total) : 0;
 
   document.getElementById('header-total-eq').textContent = `${total}대`;
   document.getElementById('header-running-eq').textContent = `${running}대`;
   document.getElementById('header-broken-eq').textContent = `${broken}대`;
-  document.getElementById('header-oee').textContent = `${avgOee}%`;
+  // 마감 임박 건수
+  const dueCount = countUpcoming();
+  document.getElementById('header-due').textContent = `${dueCount}건`;
 }
 
 function renderDashboard() {
   const total = equipments.length;
-  const avgOee = total ? Math.round(equipments.reduce((a, e) => a + num(e.oee), 0) / total) : 0;
   const openWO = workOrders.filter(w => w.status !== 'completed');
   const urgent = openWO.filter(w => w.priority === 'HIGH').length;
   const pmDone = pmTasks.filter(p => p.done).length;
   const lowStock = spareParts.filter(s => num(s.qty) <= num(s.minQty));
 
-  document.getElementById('dash-oee').textContent = `${avgOee}%`;
-  document.getElementById('dash-oee-sub').textContent = `설비 ${total}대 기준`;
+  // 오늘의 마감
+  const todayTasks = getTodayTasks();
+  document.getElementById('dash-today-count').textContent = `${todayTasks.length} 건`;
+  document.getElementById('dash-today-sub').textContent = todayTasks.filter(t=>t.done).length ? `${todayTasks.filter(t=>t.done).length}건 완료` : '시작하세요';
   document.getElementById('dash-active-repair').textContent = `${openWO.length} 건`;
   document.getElementById('dash-active-sub').textContent = `긴급 ${urgent}건`;
   document.getElementById('dash-pm-count').textContent = `${pmDone}/${pmTasks.length} 건`;
@@ -1390,6 +2021,8 @@ function renderDashboard() {
   document.getElementById('dash-low-stock-sub').textContent = `전체 ${spareParts.length}품목 중`;
 
   renderAlerts();
+  renderTodayList();
+  renderWeekList();
 
   // 라인별 요약
   const summary = document.getElementById('dash-line-summary');
@@ -1401,7 +2034,7 @@ function renderDashboard() {
     const run = eqs.filter(e => e.status === 'running').length;
     const warn = eqs.filter(e => e.status === 'warning').length;
     const brk = eqs.filter(e => e.status === 'broken').length;
-    const oee = eqs.length ? Math.round(eqs.reduce((a, e) => a + num(e.oee), 0) / eqs.length) : 0;
+    const schDue = schedules.filter(s => eqs.some(e => e.id === s.eqId) && (daysUntil(addDays(s.lastDate, s.cycleDays)) ?? 999) <= 14).length;
     return `
       <button type="button" onclick="switchTab('layout')" class="text-left bg-slate-950 p-4 rounded-xl border border-slate-800 hover:border-slate-700 transition-colors">
         <div class="flex items-center justify-between gap-2">
@@ -1412,7 +2045,7 @@ function renderDashboard() {
           <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-500"></span><span class="text-slate-300">${run}</span></span>
           <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-amber-500"></span><span class="text-slate-300">${warn}</span></span>
           <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-rose-500"></span><span class="text-slate-300">${brk}</span></span>
-          <span class="ml-auto text-slate-500">OEE <b class="text-slate-300">${oee}%</b></span>
+          ${schDue ? '<span class="ml-auto text-amber-400 flex items-center gap-1"><i class="fa-solid fa-clock text-[10px]"></i>교체임박 '+schDue+'</span>' : ''}
         </div>
       </button>`;
   }).join('') : emptyState('fa-folder-plus', '라인을 먼저 만들어 주세요.');
@@ -1433,32 +2066,49 @@ function renderDashboard() {
   }).join('') : emptyState('fa-inbox', '접수된 작업이 없습니다.');
 }
 
+/* 오늘 할 일 / 이번 주 예정 렌더 */
+function renderTodayList() {
+  const box = document.getElementById('dash-today-list');
+  if (!box) return;
+  const tasks = getTodayTasks();
+  box.innerHTML = tasks.length ? tasks.map(t => `
+    <button type="button" onclick="switchTab('${t.tab}')"
+      class="w-full text-left bg-slate-950 border ${t.urgent?'border-rose-500/40':'border-slate-800'} rounded-xl px-3 py-2.5 text-xs flex items-center gap-2.5 hover:bg-slate-900 transition-colors">
+      <i class="fa-solid ${t.icon} ${t.urgent?'text-rose-400':'text-slate-400'} shrink-0"></i>
+      <div class="flex-1 min-w-0">
+        <span class="text-slate-200 font-medium block truncate">${esc(t.label)}</span>
+        <span class="text-slate-500 text-[11px]">${esc(t.sub)}</span>
+      </div>
+      <span class="bg-slate-800 text-slate-400 text-[10px] px-1.5 py-0.5 rounded shrink-0">${esc(t.type)}</span>
+    </button>`).join('') : emptyState('fa-circle-check', '오늘 할 일을 모두 마쳤습니다!');
+}
+
+function renderWeekList() {
+  const box = document.getElementById('dash-week-list');
+  if (!box) return;
+  const tasks = getWeekTasks();
+  box.innerHTML = tasks.length ? tasks.map(t => `
+    <div class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs flex items-center gap-2.5">
+      <i class="fa-solid ${t.icon} text-slate-400 shrink-0"></i>
+      <div class="flex-1 min-w-0">
+        <span class="text-slate-200 font-medium block truncate">${esc(t.label)}</span>
+        <span class="text-slate-500 text-[11px]">${esc(t.sub)}</span>
+      </div>
+      <span class="${t.dday<=2?'text-amber-400':'text-slate-400'} font-mono text-[11px] shrink-0">D-${t.dday} · ${esc(t.date)}</span>
+    </div>`).join('') : emptyState('fa-calendar-check', '이번 주 예정 항목이 없습니다.');
+}
+
 /* 확인이 필요한 항목을 한 곳에 모읍니다. 심각한 것부터 위로 올라옵니다. */
 function buildAlerts() {
   const items = [];
 
-  calibrations.forEach(c => {
-    const st = calibState(c);
-    if (st.key === 'valid') return;
-    const eq = eqById(c.eqId);
-    items.push({
-      level: st.key === 'expired' ? 2 : 1, tab: 'calibration', icon: 'fa-ruler-combined',
-      text: `${c.code} ${c.name} 교정 ${st.label}${eq ? ` · ${eq.name}` : ''}`
-    });
-  });
+
 
   equipments.forEach(e => {
-    const d = daysUntil(e.requalDate);
-    if (d !== null && d <= 30) {
-      items.push({
-        level: d < 0 ? 2 : 1, tab: 'equipments', icon: 'fa-shield-halved',
-        text: `${e.name} 재적격성평가 ${d < 0 ? `${Math.abs(d)}일 경과` : `D-${d}`}`
-      });
-    }
     if (e.status === 'broken') {
       items.push({
-        level: e.gmpImpact === '직접영향' ? 2 : 1, tab: 'layout', icon: 'fa-triangle-exclamation',
-        text: `${e.name} 고장 정지${e.gmpImpact === '직접영향' ? ' (품질 직접영향 설비)' : ''}`
+        level: e.gmpEquip === 'GMP' ? 2 : 1, tab: 'layout', icon: 'fa-triangle-exclamation',
+        text: `${e.name} 고장 정지${e.gmpEquip === 'GMP' ? ' (GMP 설비)' : ''}`
       });
     }
   });
@@ -1493,6 +2143,56 @@ function renderAlerts() {
       <i class="fa-solid fa-chevron-right text-[10px] text-slate-600 shrink-0"></i>
     </button>`).join('')
     + (items.length > 10 ? `<p class="md:col-span-2 text-[11px] text-slate-500 text-center pt-1">외 ${items.length - 10}건</p>` : '');
+}
+
+/* 오늘의 할 일과 이번 주 예정을 한데 모읍니다. */
+function getTodayTasks() {
+  const today = kstDate();
+  const tasks = [];
+  // PM
+  pmTasks.filter(p => !p.done).forEach(p => tasks.push({
+    type:'PM', label:p.title, sub:p.eqName||'공통', done:p.done,
+    tab:'pm', icon:'fa-calendar-check', id:p.id
+  }));
+
+  // 교체 만료/임박
+  schedules.forEach(s => {
+    const next = addDays(s.lastDate, s.cycleDays);
+    const d = daysUntil(next);
+    if (d !== null && d <= 0) tasks.push({
+      type:'교체', label:`${s.name} 교체 기한 경과`, sub:s.eqName||'',
+      done:false, tab:'schedules', icon:'fa-arrow-rotate-right', id:s.id
+    });
+  });
+  // 작업 지시
+  workOrders.filter(w => w.status !== 'completed').forEach(w => tasks.push({
+    type:'작업', label:w.title, sub:eqNameOf(w), done:false,
+    tab:'workorders', icon:'fa-wrench', id:w.id,
+    urgent: w.priority === 'HIGH'
+  }));
+  return tasks.sort((a,b) => (b.urgent?1:0)-(a.urgent?1:0));
+}
+
+function getWeekTasks() {
+  const today = new Date(kstDate());
+  const weekEnd = addDays(kstDate(), 7);
+  const tasks = [];
+  schedules.forEach(s => {
+    const next = addDays(s.lastDate, s.cycleDays);
+    const d = daysUntil(next);
+    if (d !== null && d >= 0 && d <= 7) tasks.push({
+      label: s.name, sub: s.eqName, date: next, dday: d, icon: 'fa-arrow-rotate-right'
+    });
+  });
+
+  return tasks.sort((a,b) => a.dday - b.dday);
+}
+
+function countUpcoming() {
+  let n = 0;
+  schedules.forEach(s => { const d = daysUntil(addDays(s.lastDate, s.cycleDays)); if(d!==null && d<=7) n++; });
+  workOrders.forEach(w => { if(w.status!=='completed' && w.priority==='HIGH') n++; });
+  return n;
 }
 
 /* ---------- 8. 배치도 ---------- */
@@ -1575,10 +2275,10 @@ function equipmentCard(eq) {
         <span class="w-2 h-2 rounded-full ${st.dot} shrink-0"></span>
         <h4 class="font-bold text-sm text-slate-100 pr-16 truncate">${esc(eq.name)}</h4>
       </div>
-      <p class="text-[10px] text-slate-500 mb-2 truncate">${esc(eq.code)} · ${esc(eq.model || '모델 미등록')}</p>
+      <p class="text-[10px] text-slate-500 mb-2 truncate">${esc(eq.code)}${eq.eqCategory ? ' · '+esc(eq.eqCategory) : ''}${eq.gmpEquip === 'GMP' ? ' · <span class="text-brand-300">GMP</span>' : ''}</p>
       <div class="flex justify-between items-center text-[11px] pt-2 border-t border-slate-800">
-        <span class="text-slate-500">진동 <span class="text-slate-300 font-mono">${num(eq.vibration)}</span></span>
-        <span class="text-slate-500">온도 <span class="text-slate-300 font-mono">${num(eq.temp)}°C</span></span>
+        <span class="text-slate-500">${esc(eq.eqCategory || eq.eqType || '')}</span>
+        <span class="text-slate-400">${eq.grade ? '등급'+esc(eq.grade) : ''}</span>
       </div>
     </div>`;
 }
@@ -1649,7 +2349,7 @@ function renderEquipmentTable() {
   const stat = document.getElementById('eq-filter-status')?.value || 'ALL';
 
   const rows = equipments.filter(eq =>
-    (!q || `${eq.name} ${eq.code} ${eq.model || ''}`.toLowerCase().includes(q)) &&
+    (!q || `${eq.name} ${eq.code} ${eq.model || ''} ${eq.manufacturer || ''} ${eq.eqCategory || ''} ${eq.detailLocation || ''} ${eq.legacyCode || ''}`.toLowerCase().includes(q)) &&
     (loc === 'ALL' || normalizeLoc(eq.location) === loc) &&
     (stat === 'ALL' || eq.status === stat)
   );
@@ -1665,10 +2365,10 @@ function renderEquipmentTable() {
           </div>
           <div class="text-xs text-slate-500">${esc(eq.code)}</div>
         </td>
-        <td class="px-5 py-4"><span class="bg-slate-800 text-slate-300 text-xs px-2 py-1 rounded">${esc(normalizeLoc(eq.location))}</span></td>
+        <td class="px-5 py-4"><div class="text-xs text-slate-300">${esc(eq.detailLocation || normalizeLoc(eq.location))}</div><div class="text-[11px] text-slate-500">${esc(normalizeLoc(eq.location))}</div></td>
         <td class="px-5 py-4"><span class="text-xs font-bold ${st.chip} border px-2 py-1 rounded-full whitespace-nowrap">${st.label}</span></td>
-        <td class="px-5 py-4 text-xs font-mono text-slate-300 whitespace-nowrap">${num(eq.vibration)}mm/s · ${num(eq.temp)}°C</td>
-        <td class="px-5 py-4 text-xs font-mono ${num(eq.oee) >= 85 ? 'text-emerald-400' : num(eq.oee) >= 60 ? 'text-amber-400' : 'text-rose-400'}">${num(eq.oee)}%</td>
+        <td class="px-5 py-4 text-xs font-mono text-slate-300 whitespace-nowrap">${0}mm/s · ${0}°C</td>
+        <td class="px-5 py-4 text-xs">${eq.grade ? '<span class="font-bold '+(eq.grade==='A'?'text-rose-400':eq.grade==='B'?'text-amber-400':'text-slate-400')+'">'+esc(eq.grade)+'</span>' : '<span class="text-slate-600">-</span>'} ${eq.gmpEquip==='GMP'?'<span class="text-brand-300 ml-1">GMP</span>':''}</td>
         <td class="px-5 py-4 text-right space-x-1 whitespace-nowrap">
           <button type="button" onclick="event.stopPropagation();openEqForm('${esc(eq.id)}')" aria-label="수정" class="text-xs bg-slate-800 text-slate-200 px-2.5 py-1.5 rounded hover:bg-slate-700 transition-colors"><i class="fa-solid fa-pen"></i></button>
           <button type="button" onclick="event.stopPropagation();deleteEquipment('${esc(eq.id)}')" aria-label="삭제" class="text-xs bg-rose-950/50 text-rose-400 px-2.5 py-1.5 rounded hover:bg-rose-900 transition-colors"><i class="fa-solid fa-trash"></i></button>
@@ -1686,25 +2386,68 @@ function openEquipmentDetail(eqId) {
   const relatedWO = workOrders.filter(w => w.eqId === eqId).slice(0, 5);
   const relatedPM = pmTasks.filter(p => p.eqId === eqId);
 
+  const GRADE_COLOR = { A: 'text-rose-400 border-rose-500/30 bg-rose-500/10', B: 'text-amber-400 border-amber-500/30 bg-amber-500/10', C: 'text-slate-400 border-slate-600 bg-slate-800' };
+  const detailField = (label, val) => val && val !== 'N/A' ? `<div class="flex justify-between gap-2"><span class="text-slate-500 shrink-0">${label}</span><span class="text-slate-200 text-right">${esc(val)}</span></div>` : '';
+
   document.getElementById('eq-modal-content').innerHTML = `
     <div class="border-b border-slate-800 pb-4 pr-8">
       <div class="flex items-center gap-2 flex-wrap">
         <h2 class="text-xl font-bold text-white">${esc(eq.name)}</h2>
         <span class="text-xs font-bold ${st.chip} border px-2 py-1 rounded-full">${st.label}</span>
+        ${eq.grade ? `<span class="text-[11px] font-bold border px-2 py-0.5 rounded ${GRADE_COLOR[eq.grade] || GRADE_COLOR.C}">등급 ${esc(eq.grade)}</span>` : ''}
       </div>
-      <p class="text-xs text-slate-400 mt-1.5">${esc(eq.code)} · ${esc(normalizeLoc(eq.location))} · ${esc(eq.model || '모델 미등록')}</p>
+      <p class="text-xs text-slate-400 mt-1.5">${esc(eq.code)} · ${esc(eq.detailLocation || normalizeLoc(eq.location))} · ${esc(eq.manufacturer || '')} ${esc(eq.model || '')}</p>
       <div class="flex items-center gap-2 mt-2 flex-wrap text-[11px]">
-        <span class="border px-2 py-0.5 rounded ${GMP_BADGE[eq.gmpImpact] || GMP_BADGE['해당없음']}">품질영향 ${esc(eq.gmpImpact || '해당없음')}</span>
-        ${eq.qualDate ? `<span class="text-slate-500">적격성평가 ${esc(eq.qualDate)}</span>` : ''}
-        ${eq.requalDate ? `<span class="${(daysUntil(eq.requalDate) ?? 999) < 30 ? 'text-amber-400' : 'text-slate-500'}">재평가 예정 ${esc(eq.requalDate)}</span>` : ''}
+        ${eq.gmpEquip === 'GMP' ? '<span class="border px-2 py-0.5 rounded bg-brand-900/80 border-brand-700 text-brand-300">GMP</span>' : ''}
+
+        ${eq.legalEquip === 'Y' ? '<span class="border px-2 py-0.5 rounded bg-amber-500/10 border-amber-500/30 text-amber-300">법정설비</span>' : ''}
+        
+        
       </div>
     </div>
 
-    <div class="grid grid-cols-3 gap-3 my-4 bg-slate-950 p-3 rounded-xl text-center">
-      <div><span class="text-[11px] text-slate-500 block">진동</span><span class="text-sm font-bold text-slate-200">${num(eq.vibration)} mm/s</span></div>
-      <div><span class="text-[11px] text-slate-500 block">온도</span><span class="text-sm font-bold text-slate-200">${num(eq.temp)}°C</span></div>
-      <div><span class="text-[11px] text-slate-500 block">OEE</span><span class="text-sm font-bold text-emerald-400">${num(eq.oee)}%</span></div>
+    <div class="my-4">
+      <h4 class="text-xs font-bold text-slate-300 mb-2 flex items-center gap-1.5"><i class="fa-solid fa-clock-rotate-left text-cyan-400"></i> 정기 교체 일정</h4>
+      ${schedules.filter(s => s.eqId === eqId).length ? '<div class="space-y-1.5">' + schedules.filter(s => s.eqId === eqId).map(s => {
+        const next = addDays(s.lastDate, s.cycleDays);
+        const d = daysUntil(next);
+        const tone = d === null ? 'text-slate-400' : d < 0 ? 'text-rose-400' : d <= 14 ? 'text-amber-400' : 'text-emerald-400';
+        return '<div class="bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs flex justify-between gap-2">' +
+          '<span class="text-slate-300 truncate">' + esc(s.name) + '</span>' +
+          '<span class="' + tone + ' shrink-0 font-mono">' + (d === null ? '-' : d < 0 ? '만료 ' + Math.abs(d) + '일' : 'D-' + d) + '</span></div>';
+      }).join('') + '</div>' : '<p class="text-xs text-slate-600">등록된 교체 일정이 없습니다.</p>'}
     </div>
+
+    <details class="mb-4 group" open>
+      <summary class="text-xs font-bold text-slate-300 cursor-pointer flex items-center gap-1.5 select-none"><i class="fa-solid fa-table-list text-brand-400"></i> 설비 상세 스펙</summary>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1 mt-3 text-xs bg-slate-950 p-4 rounded-xl border border-slate-800">
+        ${detailField('설비번호', eq.code)}
+        ${detailField('설비유형', eq.eqType)}
+        ${detailField('설비종류', eq.eqCategory)}
+        ${detailField('제형', eq.formulation)}
+        ${detailField('공장', eq.factory)}
+        ${detailField('설비위치', eq.detailLocation)}
+        ${detailField('실번호', eq.roomNo)}
+        ${detailField('배치 라인', normalizeLoc(eq.location))}
+        ${detailField('제조사', eq.manufacturer)}
+        ${detailField('모델', eq.model)}
+        ${detailField('Serial #', eq.serialNo)}
+        ${detailField('제조국', eq.madeIn)}
+        ${detailField('기계능력', eq.capacity)}
+        ${detailField('공급업체', eq.supplier)}
+        ${detailField('AS업체', eq.asVendor)}
+        ${detailField('설비등급', eq.grade)}
+        ${detailField('사용부서', eq.department)}
+        ${detailField('설치일자', eq.installDate)}
+        ${detailField('사용 Utility', eq.utility)}
+        ${detailField('구입금액', eq.purchaseCost)}
+        ${detailField('폐기일자', eq.disposalDate)}
+        ${detailField('GMP설비', eq.gmpEquip)}
+        ${detailField('법정설비', eq.legalEquip)}
+        ${detailField('기존관리번호', eq.legacyCode)}
+        ${detailField('Revision', eq.revisionNo)}
+      </div>
+    </details>
 
     <div class="mb-4">
       <p class="text-xs text-slate-400 mb-2">상태 변경</p>
@@ -1735,15 +2478,7 @@ function openEquipmentDetail(eqId) {
           </div>`).join('')}</div>` : `<p class="text-xs text-slate-600">등록된 점검 항목이 없습니다.</p>`}
       </div>
 
-      <div>
-        <h4 class="text-xs font-bold text-slate-300 mb-2 flex items-center gap-1.5"><i class="fa-solid fa-ruler-combined text-brand-400"></i> 연결된 계측기</h4>
-        ${calibrations.filter(c => c.eqId === eqId).length ? `<div class="space-y-1.5">${calibrations.filter(c => c.eqId === eqId).map(c => {
-          const st = calibState(c);
-          return `<div class="bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs flex justify-between gap-2">
-            <span class="text-slate-300 truncate">${esc(c.code)} · ${esc(c.name)}</span>
-            <span class="${st.chip} border px-1.5 rounded shrink-0">${esc(st.label)}</span>
-          </div>`; }).join('')}</div>` : `<p class="text-xs text-slate-600">등록된 계측기가 없습니다.</p>`}
-      </div>
+
       <div>
         <h4 class="text-xs font-bold text-slate-300 mb-2 flex items-center gap-1.5"><i class="fa-solid fa-clipboard-check text-emerald-400"></i> 최근 점검 실적</h4>
         ${pmRecords.filter(r => r.eqId === eqId).slice(0, 5).length ? `<div class="space-y-1.5">${pmRecords.filter(r => r.eqId === eqId).slice(0, 5).map(r => `
@@ -2088,141 +2823,13 @@ function adjustPartQty(id, delta) {
 }
 
 /* ---------- 12-2. 계측기 교정 관리 ---------- */
-function renderCalibrationTable() {
-  const filter = document.getElementById('calib-filter')?.value || 'ALL';
-  const rows = calibrations.filter(c => filter === 'ALL' || calibState(c).key === filter);
-  const tbody = document.getElementById('calibration-table-body');
-  if (!tbody) return;
 
-  tbody.innerHTML = rows.length ? rows
-    .sort((a, b) => String(calibNextDate(a)).localeCompare(String(calibNextDate(b))))
-    .map(c => {
-      const st = calibState(c);
-      const eq = eqById(c.eqId);
-      return `
-        <tr class="hover:bg-slate-900/50 transition-colors">
-          <td class="px-5 py-4">
-            <div class="font-bold text-slate-100">${esc(c.name)}</div>
-            <div class="text-xs text-slate-500">${esc(c.code)}${c.certNo ? ` · 성적서 ${esc(c.certNo)}` : ''}</div>
-          </td>
-          <td class="px-5 py-4 text-xs text-slate-300">${esc(eq ? eq.name : '연결 없음')}</td>
-          <td class="px-5 py-4 text-xs font-mono text-slate-400">${esc(c.range || '-')}</td>
-          <td class="px-5 py-4 text-xs text-slate-400">${num(c.cycleMonths)}개월</td>
-          <td class="px-5 py-4 text-xs font-mono text-slate-300">${esc(c.lastDate || '-')}<br><span class="text-slate-500">→ ${esc(calibNextDate(c) || '-')}</span></td>
-          <td class="px-5 py-4"><span class="${st.chip} border text-xs font-bold px-2 py-1 rounded-full whitespace-nowrap">${esc(st.label)}</span></td>
-          <td class="px-5 py-4 text-right space-x-1 whitespace-nowrap">
-            <button type="button" onclick="renewCalibration('${esc(c.id)}')" title="오늘 날짜로 교정 완료 처리" class="text-xs bg-emerald-950/50 text-emerald-400 px-2.5 py-1.5 rounded hover:bg-emerald-900/60 transition-colors"><i class="fa-solid fa-rotate"></i></button>
-            <button type="button" onclick="openCalibForm('${esc(c.id)}')" aria-label="수정" class="text-xs bg-slate-800 text-slate-200 px-2.5 py-1.5 rounded hover:bg-slate-700 transition-colors"><i class="fa-solid fa-pen"></i></button>
-            <button type="button" onclick="deleteCalibration('${esc(c.id)}')" aria-label="삭제" class="text-xs bg-rose-950/50 text-rose-400 px-2.5 py-1.5 rounded hover:bg-rose-900 transition-colors"><i class="fa-solid fa-trash"></i></button>
-          </td>
-        </tr>`;
-    }).join('') : `<tr><td colspan="7">${emptyState('fa-ruler-combined', calibrations.length ? '조건에 맞는 계측기가 없습니다.' : '등록된 계측기가 없습니다.')}</td></tr>`;
-}
-
-function openCalibForm(id = null) {
-  const form = document.querySelector('#calibration-modal form');
-  form.reset();
-  populateEqSelects();
-  document.getElementById('cal-form-id').value = id || '';
-  document.getElementById('calibration-modal-title').innerHTML =
-    `<i class="fa-solid fa-ruler-combined text-brand-400"></i> ${id ? '계측기 수정' : '계측기 등록'}`;
-
-  if (id) {
-    const c = calibrations.find(x => x.id === id);
-    if (!c) return;
-    document.getElementById('cal-form-code').value = c.code || '';
-    document.getElementById('cal-form-name').value = c.name || '';
-    document.getElementById('cal-form-eq').value = c.eqId || '';
-    document.getElementById('cal-form-range').value = c.range || '';
-    document.getElementById('cal-form-last').value = c.lastDate || '';
-    document.getElementById('cal-form-cycle').value = num(c.cycleMonths, 12);
-    document.getElementById('cal-form-vendor').value = c.vendor || '';
-    document.getElementById('cal-form-cert').value = c.certNo || '';
-    document.getElementById('cal-form-result').value = c.result || '적합';
-  } else {
-    document.getElementById('cal-form-last').value = kstDate();
-  }
-  updateCalibPreview();
-  openModal('calibration-modal');
-}
 
 // 입력 중에도 차기 교정일이 바로 보이게 합니다.
-function updateCalibPreview() {
-  const el = document.getElementById('cal-next-preview');
-  if (!el) return;
-  const next = addMonths(document.getElementById('cal-form-last').value, num(document.getElementById('cal-form-cycle').value, 0));
-  const d = daysUntil(next);
-  el.textContent = next ? `차기 교정 예정일 ${next}${d !== null ? ` (D-${d})` : ''}` : '최근 교정일과 주기를 입력하면 차기 교정일이 계산됩니다.';
-}
 
-function handleCalibSubmit(e) {
-  e.preventDefault();
-  const id = document.getElementById('cal-form-id').value;
-  const code = document.getElementById('cal-form-code').value.trim();
-  if (calibrations.some(c => c.code.toLowerCase() === code.toLowerCase() && c.id !== id)) {
-    showToast(`관리번호 '${code}'는 이미 사용 중입니다.`, 'warning');
-    return;
-  }
-
-  const payload = {
-    code,
-    name: document.getElementById('cal-form-name').value.trim(),
-    eqId: document.getElementById('cal-form-eq').value,
-    range: document.getElementById('cal-form-range').value.trim(),
-    lastDate: document.getElementById('cal-form-last').value,
-    cycleMonths: num(document.getElementById('cal-form-cycle').value, 12),
-    vendor: document.getElementById('cal-form-vendor').value.trim(),
-    certNo: document.getElementById('cal-form-cert').value.trim(),
-    result: document.getElementById('cal-form-result').value
-  };
-
-  let c;
-  if (id) {
-    c = calibrations.find(x => x.id === id);
-    if (!c) return;
-    Object.assign(c, payload);
-    audit('계측기', '수정', `${c.code} ${c.name} 정보 수정 (차기 ${calibNextDate(c)})`, c.id);
-    showToast('계측기 정보를 수정했습니다.', 'success');
-  } else {
-    c = { id: uid('CAL'), ...payload };
-    calibrations.push(c);
-    audit('계측기', '등록', `${c.code} ${c.name} 등록 (주기 ${c.cycleMonths}개월, 차기 ${calibNextDate(c)})`, c.id);
-    showToast('계측기를 등록했습니다.', 'success');
-  }
-  syncToSheet('Calibrations', c, 'upsert');
-  closeModal('calibration-modal');
-  renderAll();
-}
 
 // 교정을 마쳤을 때 최근 교정일만 오늘로 갱신합니다.
-async function renewCalibration(id) {
-  const c = calibrations.find(x => x.id === id);
-  if (!c) return;
-  const ok = await askConfirm({
-    title: `${c.code} 교정 완료 처리`,
-    message: `최근 교정일을 ${kstDate()}로 바꾸고 차기 교정일을 ${addMonths(kstDate(), c.cycleMonths)}로 다시 계산합니다.`,
-    okLabel: '완료 처리', danger: false
-  });
-  if (!ok) return;
-  c.lastDate = kstDate();
-  c.result = '적합';
-  syncToSheet('Calibrations', c, 'upsert');
-  audit('계측기', '교정완료', `${c.code} ${c.name} 교정 완료 (차기 ${calibNextDate(c)})`, c.id);
-  renderAll();
-  showToast(`차기 교정일이 ${calibNextDate(c)}로 갱신되었습니다.`, 'success');
-}
 
-async function deleteCalibration(id) {
-  const c = calibrations.find(x => x.id === id);
-  if (!c) return;
-  const ok = await askConfirm({ title: '계측기를 삭제할까요?', message: `${c.code} ${c.name}의 교정 정보가 사라집니다.` });
-  if (!ok) return;
-  calibrations = calibrations.filter(x => x.id !== id);
-  syncToSheet('Calibrations', { id }, 'delete');
-  audit('계측기', '삭제', `${c.code} ${c.name} 삭제`, id);
-  renderAll();
-  showToast('계측기를 삭제했습니다.', 'warning');
-}
 
 /* ---------- 12-3. 감사 추적 조회 ---------- */
 function renderAuditTable() {
@@ -2248,6 +2855,488 @@ function renderAuditTable() {
   document.getElementById('audit-count').textContent =
     `${rows.length}건${rows.length > 200 ? ' 중 최근 200건 표시' : ''} · 화면에는 최근 500건까지 보관되며 전체 기록은 시트에 남습니다.`;
 }
+
+/* ---------- 12-4. 정기 교체 관리 ---------- */
+function schNextDate(s) { return addDays(s.lastDate, s.cycleDays); }
+
+function renderSchedulesTable() {
+  const tbody = document.getElementById('schedules-table-body');
+  if (!tbody) return;
+
+  const rows = [...schedules].sort((a,b) => {
+    const da = daysUntil(schNextDate(a)) ?? 9999;
+    const db = daysUntil(schNextDate(b)) ?? 9999;
+    return da - db;
+  });
+
+  tbody.innerHTML = rows.length ? rows.map(s => {
+    const next = schNextDate(s);
+    const d = daysUntil(next);
+    const tone = d === null ? 'text-slate-400' : d < 0 ? 'text-rose-400 font-bold' : d <= 14 ? 'text-amber-400' : 'text-emerald-400';
+    const badge = d === null ? '-' : d < 0 ? `만료 ${Math.abs(d)}일 경과` : `D-${d}`;
+    return `
+      <tr class="hover:bg-slate-900/50 transition-colors">
+        <td class="px-5 py-4"><div class="font-bold text-slate-100">${esc(s.name)}</div>${s.note ? `<div class="text-[11px] text-slate-500 mt-0.5">${esc(s.note)}</div>` : ''}</td>
+        <td class="px-5 py-4 text-xs text-slate-300">${esc(s.eqName || '-')}</td>
+        <td class="px-5 py-4 text-xs text-slate-400">${num(s.cycleDays)}일</td>
+        <td class="px-5 py-4 text-xs font-mono text-slate-300">${esc(s.lastDate || '-')}</td>
+        <td class="px-5 py-4 text-xs font-mono text-slate-300">${esc(next || '-')}</td>
+        <td class="px-5 py-4"><span class="${tone} text-xs font-bold">${badge}</span></td>
+        <td class="px-5 py-4 text-right space-x-1 whitespace-nowrap">
+          <button type="button" onclick="renewSchedule('${esc(s.id)}')" title="교체 완료 처리 (오늘 날짜로 갱신)" class="text-xs bg-emerald-950/50 text-emerald-400 px-2.5 py-1.5 rounded hover:bg-emerald-900/60 transition-colors"><i class="fa-solid fa-rotate"></i></button>
+          <button type="button" onclick="openSchForm('${esc(s.id)}')" class="text-xs bg-slate-800 text-slate-200 px-2.5 py-1.5 rounded hover:bg-slate-700 transition-colors"><i class="fa-solid fa-pen"></i></button>
+          <button type="button" onclick="deleteSchedule('${esc(s.id)}')" class="text-xs bg-rose-950/50 text-rose-400 px-2.5 py-1.5 rounded hover:bg-rose-900 transition-colors"><i class="fa-solid fa-trash"></i></button>
+        </td>
+      </tr>`;
+  }).join('') : `<tr><td colspan="7">${emptyState('fa-arrow-rotate-right','등록된 교체 일정이 없습니다.')}</td></tr>`;
+}
+
+function openSchForm(id = null) {
+  const form = document.querySelector('#schedule-modal form');
+  form.reset(); populateEqSelects();
+  document.getElementById('sch-form-id').value = id || '';
+  document.getElementById('schedule-modal-title').innerHTML = `<i class="fa-solid fa-arrow-rotate-right text-cyan-400"></i> ${id ? '교체 일정 수정' : '교체 일정 등록'}`;
+  if (id) {
+    const s = schedules.find(x=>x.id===id); if(!s) return;
+    document.getElementById('sch-form-name').value = s.name||'';
+    document.getElementById('sch-form-eq').value = s.eqId||'';
+    document.getElementById('sch-form-cycle').value = num(s.cycleDays,30);
+    document.getElementById('sch-form-last').value = s.lastDate||'';
+    document.getElementById('sch-form-note').value = s.note||'';
+  }
+  openModal('schedule-modal');
+}
+
+function handleSchSubmit(e) {
+  e.preventDefault();
+  const id = document.getElementById('sch-form-id').value;
+  const eqId = document.getElementById('sch-form-eq').value;
+  const eq = eqById(eqId);
+  const payload = {
+    name: document.getElementById('sch-form-name').value.trim(),
+    eqId, eqName: eq ? eq.name : '',
+    cycleDays: num(document.getElementById('sch-form-cycle').value, 30),
+    lastDate: document.getElementById('sch-form-last').value,
+    note: document.getElementById('sch-form-note').value.trim()
+  };
+  let s;
+  if (id) { s = schedules.find(x=>x.id===id); if(!s) return; Object.assign(s, payload);
+    audit('정기교체','수정',`${s.name} 수정 (주기 ${s.cycleDays}일, 차기 ${schNextDate(s)})`, s.id);
+    showToast('교체 일정을 수정했습니다.','success');
+  } else { s = { id: uid('SCH'), ...payload }; schedules.push(s);
+    audit('정기교체','등록',`${s.name} 등록 (${s.eqName}, 주기 ${s.cycleDays}일)`, s.id);
+    showToast('교체 일정을 등록했습니다.','success');
+  }
+  syncToSheet('Schedules', s, 'upsert'); closeModal('schedule-modal'); renderAll();
+}
+
+async function renewSchedule(id) {
+  const s = schedules.find(x=>x.id===id); if(!s) return;
+  const ok = await askConfirm({ title:`${s.name} 교체 완료 처리`, message:`최근 교체일을 ${kstDate()}로 바꾸고 차기 예정일을 ${addDays(kstDate(), s.cycleDays)}로 갱신합니다.`, okLabel:'완료 처리', danger:false });
+  if (!ok) return;
+  s.lastDate = kstDate();
+  syncToSheet('Schedules', s, 'upsert');
+  audit('정기교체','교체완료',`${s.name} 교체 완료 (차기 ${schNextDate(s)})`, s.id);
+  renderAll(); showToast(`다음 교체 예정: ${schNextDate(s)}`,'success');
+}
+
+async function deleteSchedule(id) {
+  const s = schedules.find(x=>x.id===id); if(!s) return;
+  const ok = await askConfirm({ title:'교체 일정을 삭제할까요?', message:`'${s.name}' 이력이 사라집니다.` });
+  if (!ok) return;
+  schedules = schedules.filter(x=>x.id!==id);
+  syncToSheet('Schedules',{id},'delete');
+  audit('정기교체','삭제',`${s.name} 삭제`, id);
+  renderAll(); showToast('교체 일정을 삭제했습니다.','warning');
+}
+
+/* ---------- 12-5. 현안 & 개선 관리 ---------- */
+function renderImprovements() {
+  const container = document.getElementById('improve-list');
+  if (!container) return;
+
+  const issues = improvements.filter(i => i.type === '현안');
+  const ideas = improvements.filter(i => i.type === '개선');
+
+  const statusColor = { '발생':'text-rose-400','조치중':'text-amber-400','완료':'text-emerald-400',
+    '제안':'text-brand-300','검토중':'text-amber-400','승인':'text-cyan-400' };
+  const prioColor = { HIGH:'text-rose-400', MEDIUM:'text-amber-400', LOW:'text-slate-400' };
+
+  const card = (item) => `
+    <div class="bg-slate-950 border ${item.type==='현안'&&item.status!=='완료' ? 'border-rose-500/30' : 'border-slate-800'} rounded-xl p-4 space-y-2 group hover:border-slate-600 transition-colors">
+      <div class="flex justify-between items-start gap-2">
+        <div class="flex gap-1.5 flex-wrap items-center">
+          <span class="${item.type==='현안'?'bg-rose-500/10 text-rose-300 border-rose-500/30':'bg-brand-900/80 text-brand-300 border-brand-700'} border text-[10px] font-bold px-1.5 py-0.5 rounded">${esc(item.type)}</span>
+          <span class="${statusColor[item.status]||'text-slate-400'} text-[11px] font-bold">${esc(item.status)}</span>
+          ${item.priority?`<span class="${prioColor[item.priority]||''} text-[10px]">${priorityOf(item.priority).label}</span>`:''}
+        </div>
+        <div class="flex gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity shrink-0">
+          <button type="button" onclick="openImpForm('${esc(item.id)}')" class="bg-slate-800 text-slate-300 hover:text-white px-2 py-1 rounded text-[10px]"><i class="fa-solid fa-pen"></i></button>
+          <button type="button" onclick="deleteImprovement('${esc(item.id)}')" class="bg-slate-800 text-slate-300 hover:text-rose-400 px-2 py-1 rounded text-[10px]"><i class="fa-solid fa-trash"></i></button>
+        </div>
+      </div>
+      <h4 class="text-sm font-bold text-slate-100">${esc(item.title)}</h4>
+      <p class="text-xs text-slate-400 leading-relaxed">${esc(item.description || '')}</p>
+      <div class="text-[11px] text-slate-500 flex flex-wrap gap-x-3 gap-y-1">
+        <span><i class="fa-solid fa-gears text-[10px] mr-1"></i>${esc(item.eqName||'-')}</span>
+        ${item.assignee?`<span><i class="fa-solid fa-user text-[10px] mr-1"></i>${esc(item.assignee)}</span>`:''}
+        <span>${esc(item.date||'')}</span>
+      </div>
+      ${item.type==='개선' && (item.energySaving||item.investCost||item.annualSaving) ? `
+        <div class="bg-slate-900 border border-slate-800 rounded-lg p-3 mt-2 grid grid-cols-2 sm:grid-cols-4 gap-3 text-center text-[11px]">
+          ${item.energySaving?`<div><span class="text-slate-500 block">에너지 절감</span><span class="text-emerald-400 font-bold">${esc(item.energySaving)}</span></div>`:''}
+          ${item.investCost?`<div><span class="text-slate-500 block">투자비용</span><span class="text-slate-200 font-bold">${esc(item.investCost)}만원</span></div>`:''}
+          ${item.annualSaving?`<div><span class="text-slate-500 block">연간 절감</span><span class="text-emerald-400 font-bold">${esc(item.annualSaving)}만원</span></div>`:''}
+          ${item.roiMonths?`<div><span class="text-slate-500 block">ROI 회수</span><span class="text-cyan-400 font-bold">${esc(item.roiMonths)}개월</span></div>`:''}
+        </div>
+        ${item.expectedBenefit?`<p class="text-[11px] text-emerald-400/80 mt-1"><i class="fa-solid fa-lightbulb mr-1"></i>${esc(item.expectedBenefit)}</p>`:''}
+      ` : ''}
+      ${item.status!=='완료' ? `<div class="pt-2 flex justify-end gap-1">
+        ${item.status==='발생'?`<button type="button" onclick="updateImpStatus('${esc(item.id)}','조치중')" class="text-xs bg-amber-600/20 border border-amber-500/30 text-amber-300 px-2.5 py-1.5 rounded">조치 시작</button>`:''}
+        ${item.status==='제안'?`<button type="button" onclick="updateImpStatus('${esc(item.id)}','검토중')" class="text-xs bg-amber-600/20 border border-amber-500/30 text-amber-300 px-2.5 py-1.5 rounded">검토 시작</button>`:''}
+        ${item.status==='검토중'?`<button type="button" onclick="updateImpStatus('${esc(item.id)}','승인')" class="text-xs bg-cyan-600/20 border border-cyan-500/30 text-cyan-300 px-2.5 py-1.5 rounded">승인</button>`:''}
+        ${['조치중','승인'].includes(item.status)?`<button type="button" onclick="updateImpStatus('${esc(item.id)}','완료')" class="text-xs bg-emerald-600/20 border border-emerald-500/30 text-emerald-300 px-2.5 py-1.5 rounded">완료</button>`:''}
+      </div>` : ''}
+    </div>`;
+
+  const monthly = renderMonthlySummary();
+
+  container.innerHTML = `
+    ${monthly}
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div>
+        <h3 class="font-bold text-slate-200 flex items-center gap-2 mb-3"><span class="w-2.5 h-2.5 rounded-full bg-rose-400"></span> 현안 (${issues.length})</h3>
+        <div class="space-y-3">${issues.length ? issues.map(card).join('') : emptyState('fa-circle-check','진행 중인 현안이 없습니다.')}</div>
+      </div>
+      <div>
+        <h3 class="font-bold text-slate-200 flex items-center gap-2 mb-3"><span class="w-2.5 h-2.5 rounded-full bg-brand-400"></span> 개선 제안 (${ideas.length})</h3>
+        <div class="space-y-3">${ideas.length ? ideas.map(card).join('') : emptyState('fa-lightbulb','개선 아이디어를 등록해 보세요.')}</div>
+      </div>
+    </div>`;
+}
+
+function renderMonthlySummary() {
+  const month = kstDate().slice(0,7);
+  const completed = improvements.filter(i => i.completedDate && String(i.completedDate).startsWith(month));
+  const savingSum = completed.reduce((a,i) => a + num(i.annualSaving), 0);
+  const woCompleted = workOrders.filter(w => w.status==='completed' && String(w.completedAt||'').startsWith(month)).length;
+  const schCompleted = auditLog.filter(a => a.target==='정기교체' && a.action==='교체완료' && String(a.ts||'').startsWith(month)).length;
+
+  return `
+    <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 mb-6">
+      <h3 class="font-bold text-slate-100 flex items-center gap-2 mb-4"><i class="fa-solid fa-trophy text-amber-400"></i> ${month.slice(5)}월 성과 요약</h3>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+        <div class="bg-slate-950 rounded-xl p-3 border border-slate-800">
+          <span class="text-[11px] text-slate-500 block">작업 완료</span>
+          <span class="text-xl font-black text-emerald-400">${woCompleted}</span><span class="text-xs text-slate-500"> 건</span>
+        </div>
+        <div class="bg-slate-950 rounded-xl p-3 border border-slate-800">
+          <span class="text-[11px] text-slate-500 block">정기 교체</span>
+          <span class="text-xl font-black text-cyan-400">${schCompleted}</span><span class="text-xs text-slate-500"> 건</span>
+        </div>
+        <div class="bg-slate-950 rounded-xl p-3 border border-slate-800">
+          <span class="text-[11px] text-slate-500 block">개선 완료</span>
+          <span class="text-xl font-black text-brand-400">${completed.length}</span><span class="text-xs text-slate-500"> 건</span>
+        </div>
+        <div class="bg-slate-950 rounded-xl p-3 border border-slate-800">
+          <span class="text-[11px] text-slate-500 block">연간 절감 효과</span>
+          <span class="text-xl font-black text-amber-400">${savingSum ? savingSum.toLocaleString() : '-'}</span><span class="text-xs text-slate-500"> 만원</span>
+        </div>
+      </div>
+    </div>`;
+}
+
+function openImpForm(id = null) {
+  const form = document.querySelector('#improve-modal form'); form.reset(); populateEqSelects();
+  document.getElementById('imp-form-id').value = id||'';
+  document.getElementById('improve-modal-title').innerHTML = `<i class="fa-solid fa-lightbulb text-amber-400"></i> ${id?'수정':'등록'}`;
+  if (id) {
+    const i = improvements.find(x=>x.id===id); if(!i) return;
+    document.getElementById('imp-form-type').value = i.type||'현안';
+    document.getElementById('imp-form-title').value = i.title||'';
+    document.getElementById('imp-form-eq').value = i.eqId||'';
+    document.getElementById('imp-form-priority').value = i.priority||'MEDIUM';
+    document.getElementById('imp-form-desc').value = i.description||'';
+    document.getElementById('imp-form-benefit').value = i.expectedBenefit||'';
+    document.getElementById('imp-form-energy').value = i.energySaving||'';
+    document.getElementById('imp-form-invest').value = i.investCost||'';
+    document.getElementById('imp-form-saving').value = i.annualSaving||'';
+    document.getElementById('imp-form-roi').value = i.roiMonths||'';
+    document.getElementById('imp-form-assignee').value = i.assignee||'';
+  }
+  openModal('improve-modal');
+}
+
+function handleImpSubmit(e) {
+  e.preventDefault();
+  const id = document.getElementById('imp-form-id').value;
+  const eqId = document.getElementById('imp-form-eq').value;
+  const eq = eqById(eqId);
+  const type = document.getElementById('imp-form-type').value;
+  const payload = {
+    type, title: document.getElementById('imp-form-title').value.trim(),
+    eqId, eqName: eq?eq.name:'',
+    priority: document.getElementById('imp-form-priority').value,
+    description: document.getElementById('imp-form-desc').value.trim(),
+    expectedBenefit: document.getElementById('imp-form-benefit').value.trim(),
+    energySaving: document.getElementById('imp-form-energy').value.trim(),
+    investCost: document.getElementById('imp-form-invest').value.trim(),
+    annualSaving: document.getElementById('imp-form-saving').value.trim(),
+    roiMonths: document.getElementById('imp-form-roi').value.trim(),
+    assignee: document.getElementById('imp-form-assignee').value.trim()
+  };
+  let item;
+  if (id) { item = improvements.find(x=>x.id===id); if(!item) return; Object.assign(item, payload);
+    audit('현안개선','수정',`[${type}] ${item.title}`, item.id);
+    showToast('내용을 수정했습니다.','success');
+  } else {
+    item = { id:uid('IMP'), ...payload, status:type==='현안'?'발생':'제안', date:kstDate(), completedDate:'' };
+    improvements.unshift(item);
+    audit('현안개선','등록',`[${type}] ${item.title}`, item.id);
+    showToast(`${type}을 등록했습니다.`,'success');
+  }
+  syncToSheet('Improvements', item, 'upsert'); closeModal('improve-modal'); renderAll();
+}
+
+function updateImpStatus(id, status) {
+  const item = improvements.find(x=>x.id===id); if(!item) return;
+  const before = item.status;
+  item.status = status;
+  item.completedDate = status==='완료' ? kstDate() : '';
+  syncToSheet('Improvements', item, 'upsert');
+  audit('현안개선','상태변경',`[${item.type}] ${item.title} ${before}→${status}`, item.id);
+  renderAll(); showToast(`상태를 '${status}'로 변경했습니다.`,'success');
+}
+
+async function deleteImprovement(id) {
+  const item = improvements.find(x=>x.id===id); if(!item) return;
+  const ok = await askConfirm({ title:'삭제할까요?', message:`'${item.title}' 기록이 사라집니다.` });
+  if (!ok) return;
+  improvements = improvements.filter(x=>x.id!==id);
+  syncToSheet('Improvements',{id},'delete');
+  audit('현안개선','삭제',`[${item.type}] ${item.title}`, id);
+  renderAll(); showToast('삭제했습니다.','warning');
+}
+
+/* ---------- 12-6. 월별 피드백 ---------- */
+function renderFeedback() {
+  const container = document.getElementById('feedback-list');
+  if (!container) return;
+
+  // 월 선택기 값
+  const selMonth = document.getElementById('feedback-month')?.value || kstDate().slice(0, 7);
+  const monthItems = feedbacks.filter(f => f.month === selMonth).sort((a,b) => String(b.date).localeCompare(String(a.date)));
+  const goods = monthItems.filter(f => f.type === '잘한점');
+  const improves = monthItems.filter(f => f.type === '개선할점');
+
+  const card = (f) => `
+    <div class="bg-slate-950 border border-slate-800 rounded-xl p-4 group hover:border-slate-600 transition-colors">
+      <div class="flex justify-between items-start gap-2">
+        <div class="flex-1 min-w-0">
+          <h4 class="text-sm font-bold text-slate-100">${esc(f.title)}</h4>
+          <p class="text-xs text-slate-400 mt-1.5 leading-relaxed whitespace-pre-line">${esc(f.content || '')}</p>
+          <p class="text-[11px] text-slate-600 mt-2">${esc(f.date || '')}</p>
+        </div>
+        <div class="flex gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity shrink-0">
+          <button type="button" onclick="openFBForm('${esc(f.id)}')" class="bg-slate-800 text-slate-300 hover:text-white px-2 py-1 rounded text-[10px]"><i class="fa-solid fa-pen"></i></button>
+          <button type="button" onclick="deleteFeedback('${esc(f.id)}')" class="bg-slate-800 text-slate-300 hover:text-rose-400 px-2 py-1 rounded text-[10px]"><i class="fa-solid fa-trash"></i></button>
+        </div>
+      </div>
+    </div>`;
+
+  container.innerHTML = `
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div>
+        <h3 class="font-bold text-slate-200 flex items-center gap-2 mb-3"><span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span> 잘한 점 · 성과 (${goods.length})</h3>
+        <div class="space-y-3">${goods.length ? goods.map(card).join('') : emptyState('fa-trophy', '이번 달 성과를 기록해 보세요.')}</div>
+      </div>
+      <div>
+        <h3 class="font-bold text-slate-200 flex items-center gap-2 mb-3"><span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span> 개선할 점 (${improves.length})</h3>
+        <div class="space-y-3">${improves.length ? improves.map(card).join('') : emptyState('fa-arrow-up-right-dots', '개선할 점을 기록해 보세요.')}</div>
+      </div>
+    </div>`;
+}
+
+function openFBForm(id = null) {
+  const form = document.querySelector('#feedback-modal form'); form.reset();
+  document.getElementById('fb-form-id').value = id || '';
+  document.getElementById('feedback-modal-title').innerHTML = `<i class="fa-solid fa-pen-to-square text-amber-400"></i> ${id ? '수정' : '피드백 작성'}`;
+  if (id) {
+    const f = feedbacks.find(x => x.id === id); if (!f) return;
+    document.getElementById('fb-form-month').value = f.month || '';
+    document.getElementById('fb-form-type').value = f.type || '잘한점';
+    document.getElementById('fb-form-title').value = f.title || '';
+    document.getElementById('fb-form-content').value = f.content || '';
+  } else {
+    document.getElementById('fb-form-month').value = kstDate().slice(0, 7);
+  }
+  openModal('feedback-modal');
+}
+
+function handleFBSubmit(e) {
+  e.preventDefault();
+  const id = document.getElementById('fb-form-id').value;
+  const payload = {
+    month: document.getElementById('fb-form-month').value,
+    type: document.getElementById('fb-form-type').value,
+    title: document.getElementById('fb-form-title').value.trim(),
+    content: document.getElementById('fb-form-content').value.trim()
+  };
+  let f;
+  if (id) { f = feedbacks.find(x => x.id === id); if (!f) return; Object.assign(f, payload);
+    audit('피드백', '수정', `[${f.type}] ${f.title}`, f.id);
+    showToast('수정했습니다.', 'success');
+  } else {
+    f = { id: uid('FB'), ...payload, date: kstDate() };
+    feedbacks.unshift(f);
+    audit('피드백', '등록', `[${f.type}] ${f.title}`, f.id);
+    showToast('피드백을 등록했습니다.', 'success');
+  }
+  syncToSheet('Feedbacks', f, 'upsert'); closeModal('feedback-modal');
+  document.getElementById('feedback-month').value = payload.month;
+  renderAll();
+}
+
+async function deleteFeedback(id) {
+  const f = feedbacks.find(x => x.id === id); if (!f) return;
+  const ok = await askConfirm({ title: '삭제할까요?', message: `'${f.title}' 기록이 사라집니다.` });
+  if (!ok) return;
+  feedbacks = feedbacks.filter(x => x.id !== id);
+  syncToSheet('Feedbacks', { id }, 'delete');
+  audit('피드백', '삭제', `[${f.type}] ${f.title}`, id);
+  renderAll(); showToast('삭제했습니다.', 'warning');
+}
+
+/* ---------- 12-7. 캘린더 관리 ---------- */
+function renderCalendar() {
+  const container = document.getElementById('calendar-container');
+  if (!container) return;
+
+  const selMonth = document.getElementById('cal-month-picker')?.value || kstDate().slice(0, 7);
+  const [year, month] = selMonth.split('-').map(Number);
+  const firstDay = new Date(Date.UTC(year, month - 1, 1));
+  const lastDay = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  const startWeek = firstDay.getUTCDay();
+
+  const eventsMap = {};
+  calendarEvents.filter(e => e.date && String(e.date).startsWith(selMonth)).forEach(e => {
+    const d = String(e.date).slice(8, 10);
+    if (!eventsMap[d]) eventsMap[d] = [];
+    eventsMap[d].push(e);
+  });
+
+  let html = `<div class="grid grid-cols-7 gap-1 mb-4">
+    <div class="text-center text-xs font-bold text-slate-400 py-2">일</div>
+    <div class="text-center text-xs font-bold text-slate-400 py-2">월</div>
+    <div class="text-center text-xs font-bold text-slate-400 py-2">화</div>
+    <div class="text-center text-xs font-bold text-slate-400 py-2">수</div>
+    <div class="text-center text-xs font-bold text-slate-400 py-2">목</div>
+    <div class="text-center text-xs font-bold text-slate-400 py-2">금</div>
+    <div class="text-center text-xs font-bold text-slate-400 py-2">토</div>`;
+
+  // 빈 칸
+  for (let i = 0; i < startWeek; i++) {
+    html += '<div class="bg-slate-950/30 rounded-lg min-h-24"></div>';
+  }
+
+  // 날짜
+  for (let d = 1; d <= lastDay; d++) {
+    const dateStr = `${year}-${String(month).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const events = eventsMap[String(d).padStart(2,'0')] || [];
+    const isToday = dateStr === kstDate();
+    const isSunday = (startWeek + d - 1) % 7 === 0;
+    const isSaturday = (startWeek + d - 1) % 7 === 6;
+
+    html += `<div class="bg-slate-950 border ${isToday?'border-brand-500 bg-brand-950/20':'border-slate-800'} rounded-lg p-2 min-h-24 flex flex-col group cursor-pointer hover:border-slate-600 transition-colors" onclick="openCalEventForm(null, '${dateStr}')">
+      <div class="flex justify-between items-start">
+        <span class="text-xs font-bold ${isSunday?'text-rose-400':isSaturday?'text-blue-400':'text-slate-300'}">${d}</span>
+        ${isToday ? '<span class="bg-brand-500 text-white text-[10px] px-1 py-0.5 rounded">오늘</span>' : ''}
+      </div>
+      <div class="flex-1 text-[11px] space-y-0.5 overflow-hidden">
+        ${events.slice(0,2).map(e => `<div class="bg-slate-800 text-slate-200 px-1.5 py-0.5 rounded truncate">${esc(e.title || '')}</div>`).join('')}
+        ${events.length > 2 ? `<div class="text-slate-500 text-[10px]">+${events.length-2}개</div>` : ''}
+      </div>
+      ${events.length > 0 ? `<div class="opacity-0 group-hover:opacity-100 transition-opacity mt-1 flex gap-1">
+        <button type="button" onclick="openCalEventForm('${esc(events[0].id)}','${dateStr}'); event.stopPropagation();" class="text-[10px] bg-slate-700 hover:bg-slate-600 text-slate-200 px-1.5 py-0.5 rounded flex-1"><i class="fa-solid fa-pen text-[9px]"></i></button>
+        <button type="button" onclick="deleteCalEvent('${esc(events[0].id)}'); event.stopPropagation();" class="text-[10px] bg-slate-700 hover:bg-rose-700 text-slate-200 px-1.5 py-0.5 rounded flex-1"><i class="fa-solid fa-trash text-[9px]"></i></button>
+      </div>` : ''}
+    </div>`;
+  }
+
+  html += '</div>';
+  container.innerHTML = html;
+
+  // 선택 날짜 상세 보기
+  const selDate = document.getElementById('cal-detail-date')?.value || kstDate();
+  const dayEvents = calendarEvents.filter(e => e.date === selDate);
+  const detail = document.getElementById('cal-detail-list');
+  if (detail) {
+    detail.innerHTML = dayEvents.length ? dayEvents.map(e => `
+      <div class="bg-slate-950 border border-slate-800 rounded-lg p-3 flex justify-between items-start group hover:border-slate-600 transition-colors">
+        <div class="flex-1">
+          <h4 class="text-sm font-bold text-slate-100">${esc(e.title || '')}</h4>
+          ${e.content ? `<p class="text-xs text-slate-400 mt-1 whitespace-pre-line">${esc(e.content)}</p>` : ''}
+          <p class="text-[11px] text-slate-600 mt-2">${esc(e.date || '')}</p>
+        </div>
+        <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+          <button type="button" onclick="openCalEventForm('${esc(e.id)}')" class="bg-slate-800 text-slate-300 hover:text-white px-2 py-1 rounded text-[10px]"><i class="fa-solid fa-pen"></i></button>
+          <button type="button" onclick="deleteCalEvent('${esc(e.id)}')" class="bg-slate-800 text-slate-300 hover:text-rose-400 px-2 py-1 rounded text-[10px]"><i class="fa-solid fa-trash"></i></button>
+        </div>
+      </div>`).join('') : emptyState('fa-calendar','이 날짜에 기록이 없습니다.');
+  }
+}
+
+function openCalEventForm(id = null, date = null) {
+  const form = document.querySelector('#cal-event-modal form');
+  form.reset();
+  document.getElementById('cal-ev-form-id').value = id || '';
+  document.getElementById('cal-event-modal-title').innerHTML = `<i class="fa-solid fa-calendar-plus text-cyan-400"></i> ${id ? '수정' : '새 일정'}`;
+  
+  if (!date) date = kstDate();
+  document.getElementById('cal-ev-form-date').value = date;
+
+  if (id) {
+    const e = calendarEvents.find(x => x.id === id); if (!e) return;
+    document.getElementById('cal-ev-form-title').value = e.title || '';
+    document.getElementById('cal-ev-form-content').value = e.content || '';
+  }
+  openModal('cal-event-modal');
+}
+
+function handleCalEventSubmit(e) {
+  e.preventDefault();
+  const id = document.getElementById('cal-ev-form-id').value;
+  const payload = {
+    date: document.getElementById('cal-ev-form-date').value,
+    title: document.getElementById('cal-ev-form-title').value.trim(),
+    content: document.getElementById('cal-ev-form-content').value.trim()
+  };
+
+  let ev;
+  if (id) { ev = calendarEvents.find(x => x.id === id); if (!ev) return; Object.assign(ev, payload);
+    audit('캘린더','수정',`${payload.date} · ${payload.title}`, ev.id);
+    showToast('수정했습니다.','success');
+  } else {
+    ev = { id: uid('CAL'), ...payload };
+    calendarEvents.push(ev);
+    audit('캘린더','등록',`${payload.date} · ${payload.title}`, ev.id);
+    showToast('기록했습니다.','success');
+  }
+  syncToSheet('CalendarEvents', ev, 'upsert'); closeModal('cal-event-modal');
+  document.getElementById('cal-detail-date').value = payload.date;
+  renderAll();
+}
+
+async function deleteCalEvent(id) {
+  const ev = calendarEvents.find(x => x.id === id); if (!ev) return;
+  const ok = await askConfirm({ title: '삭제할까요?', message: `'${ev.title}' 기록이 사라집니다.` });
+  if (!ok) return;
+  calendarEvents = calendarEvents.filter(x => x.id !== id);
+  syncToSheet('CalendarEvents', { id }, 'delete');
+  audit('캘린더','삭제',`${ev.date} · ${ev.title}`, id);
+  renderAll(); showToast('삭제했습니다.','warning');
+}
+
 
 /* ---------- 13. 폼 열기 ---------- */
 function openLocationForm(id = null) {
@@ -2281,12 +3370,33 @@ function openEqForm(id = null, defaultLoc = null) {
     document.getElementById('eq-form-location').value = normalizeLoc(eq.location);
     document.getElementById('eq-form-model').value = eq.model || '';
     document.getElementById('eq-form-status').value = eq.status || 'running';
-    document.getElementById('eq-form-oee').value = num(eq.oee, 100);
-    document.getElementById('eq-form-vib').value = num(eq.vibration, 1);
-    document.getElementById('eq-form-temp').value = num(eq.temp, 35);
+
     document.getElementById('eq-form-gmp').value = eq.gmpImpact || '해당없음';
     document.getElementById('eq-form-qual').value = eq.qualDate || '';
     document.getElementById('eq-form-requal').value = eq.requalDate || '';
+    // 확장 필드
+    document.getElementById('eq-form-eqtype').value = eq.eqType || '설비';
+    document.getElementById('eq-form-category').value = eq.eqCategory || '';
+    document.getElementById('eq-form-formulation').value = eq.formulation || '';
+    document.getElementById('eq-form-factory').value = eq.factory || '';
+    document.getElementById('eq-form-detailloc').value = eq.detailLocation || '';
+    document.getElementById('eq-form-roomno').value = eq.roomNo || '';
+    document.getElementById('eq-form-manufacturer').value = eq.manufacturer || '';
+    document.getElementById('eq-form-serial').value = eq.serialNo || '';
+    document.getElementById('eq-form-madein').value = eq.madeIn || '';
+    document.getElementById('eq-form-capacity').value = eq.capacity || '';
+    document.getElementById('eq-form-supplier').value = eq.supplier || '';
+    document.getElementById('eq-form-asvendor').value = eq.asVendor || '';
+    document.getElementById('eq-form-grade').value = eq.grade || '';
+    document.getElementById('eq-form-department').value = eq.department || '';
+    document.getElementById('eq-form-installdate').value = eq.installDate || '';
+    document.getElementById('eq-form-utility').value = eq.utility || '';
+    document.getElementById('eq-form-cost').value = eq.purchaseCost || '';
+    document.getElementById('eq-form-disposaldate').value = eq.disposalDate || '';
+    document.getElementById('eq-form-gmpequip').value = eq.gmpEquip || 'Non-GMP';
+    document.getElementById('eq-form-legal').value = eq.legalEquip || 'N';
+    document.getElementById('eq-form-legacycode').value = eq.legacyCode || '';
+    document.getElementById('eq-form-revision').value = eq.revisionNo || '';
   } else if (defaultLoc) {
     document.getElementById('eq-form-location').value = defaultLoc;
   }
@@ -2407,12 +3517,33 @@ function handleEquipmentSubmit(e) {
     location: document.getElementById('eq-form-location').value || UNASSIGNED,
     model: document.getElementById('eq-form-model').value.trim() || '',
     status: document.getElementById('eq-form-status').value,
-    oee: Math.min(100, Math.max(0, num(document.getElementById('eq-form-oee').value, 100))),
-    vibration: num(document.getElementById('eq-form-vib').value, 0),
-    temp: num(document.getElementById('eq-form-temp').value, 0),
+
     gmpImpact: document.getElementById('eq-form-gmp').value,
     qualDate: document.getElementById('eq-form-qual').value,
-    requalDate: document.getElementById('eq-form-requal').value
+    requalDate: document.getElementById('eq-form-requal').value,
+    // 확장 필드
+    eqType: document.getElementById('eq-form-eqtype').value,
+    eqCategory: document.getElementById('eq-form-category').value.trim(),
+    formulation: document.getElementById('eq-form-formulation').value.trim(),
+    factory: document.getElementById('eq-form-factory').value.trim(),
+    detailLocation: document.getElementById('eq-form-detailloc').value.trim(),
+    roomNo: document.getElementById('eq-form-roomno').value.trim(),
+    manufacturer: document.getElementById('eq-form-manufacturer').value.trim(),
+    serialNo: document.getElementById('eq-form-serial').value.trim(),
+    madeIn: document.getElementById('eq-form-madein').value.trim(),
+    capacity: document.getElementById('eq-form-capacity').value.trim(),
+    supplier: document.getElementById('eq-form-supplier').value.trim(),
+    asVendor: document.getElementById('eq-form-asvendor').value.trim(),
+    grade: document.getElementById('eq-form-grade').value,
+    department: document.getElementById('eq-form-department').value.trim(),
+    installDate: document.getElementById('eq-form-installdate').value,
+    utility: document.getElementById('eq-form-utility').value.trim(),
+    purchaseCost: document.getElementById('eq-form-cost').value.trim(),
+    disposalDate: document.getElementById('eq-form-disposaldate').value,
+    gmpEquip: document.getElementById('eq-form-gmpequip').value,
+    legalEquip: document.getElementById('eq-form-legal').value,
+    legacyCode: document.getElementById('eq-form-legacycode').value.trim(),
+    revisionNo: document.getElementById('eq-form-revision').value.trim()
   };
 
   let eq;
@@ -2629,124 +3760,10 @@ async function deleteSparePart(id) {
 }
 
 /* ---------- 16. 통계 (등록 데이터 기반) ---------- */
-function makeChart(key, canvasId, config) {
-  const el = document.getElementById(canvasId);
-  if (!el) return;
-  charts[key]?.destroy();
-  charts[key] = new Chart(el, config);
-}
 
-function renderAnalyticsCharts() {
-  if (typeof Chart === 'undefined') return;
-  Chart.defaults.color = '#94a3b8';
-  Chart.defaults.font.family = "'Pretendard','Malgun Gothic',sans-serif";
-  Chart.defaults.font.size = 11;
-
-  renderReliabilityKPI();
-
-  const grid = { color: 'rgba(148,163,184,0.12)' };
-  const axes = { x: { grid, ticks: { color: '#94a3b8' } }, y: { grid, ticks: { color: '#94a3b8' }, beginAtZero: true } };
-
-  // 최근 6개월 보전비용
-  const months = [];
-  const base = new Date();
-  for (let i = 5; i >= 0; i--) {
-    const d = new Date(base.getFullYear(), base.getMonth() - i, 1);
-    months.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
-  }
-  const costByMonth = months.map(m =>
-    workOrders.filter(w => String(w.date || '').startsWith(m)).reduce((a, w) => a + num(w.cost), 0));
-
-  makeChart('monthly', 'chartMonthlyCost', {
-    type: 'bar',
-    data: { labels: months.map(m => `${Number(m.slice(5))}월`),
-            datasets: [{ label: '보전비용(천원)', data: costByMonth, backgroundColor: 'rgba(56,189,248,0.55)', borderRadius: 6 }] },
-    options: { maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: axes }
-  });
-
-  // 작업 유형 비중
-  const types = ['고장수리', '예방보전', '개조/개선'];
-  const typeCounts = types.map(t => workOrders.filter(w => w.type === t).length);
-  makeChart('pie', 'chartWorkTypePie', {
-    type: 'doughnut',
-    data: { labels: types, datasets: [{ data: typeCounts, backgroundColor: ['#f43f5e', '#10b981', '#6366f1'], borderColor: '#0f172a', borderWidth: 2 }] },
-    options: { maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
-  });
-
-  // 라인별 설비 상태
-  const lineNames = [...locations.map(l => l.name),
-                     ...(equipments.some(e => !isKnownLocation(e.location)) ? [UNASSIGNED] : [])];
-  makeChart('lineStatus', 'chartLineStatus', {
-    type: 'bar',
-    data: {
-      labels: lineNames,
-      datasets: Object.entries(STATUS).map(([key, s]) => ({
-        label: s.label,
-        data: lineNames.map(n => equipments.filter(e => normalizeLoc(e.location) === n && e.status === key).length),
-        backgroundColor: s.hex, borderRadius: 4
-      }))
-    },
-    options: {
-      maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } },
-      scales: { x: { stacked: true, grid, ticks: { color: '#94a3b8' } },
-                y: { stacked: true, grid, beginAtZero: true, ticks: { precision: 0, color: '#94a3b8' } } }
-    }
-  });
-
-  // 설비별 고장 건수 상위 5
-  const failure = {};
-  workOrders.filter(w => w.type === '고장수리').forEach(w => {
-    const name = eqNameOf(w);
-    failure[name] = (failure[name] || 0) + 1;
-  });
-  const top = Object.entries(failure).sort((a, b) => b[1] - a[1]).slice(0, 5);
-  makeChart('topFailure', 'chartTopFailure', {
-    type: 'bar',
-    data: { labels: top.map(t => t[0]), datasets: [{ label: '고장 건수', data: top.map(t => t[1]), backgroundColor: '#f43f5e', borderRadius: 4 }] },
-    options: {
-      indexAxis: 'y', maintainAspectRatio: false, plugins: { legend: { display: false } },
-      scales: { x: { grid, beginAtZero: true, ticks: { precision: 0, color: '#94a3b8' } }, y: { grid: { display: false }, ticks: { color: '#94a3b8' } } }
-    }
-  });
-}
 
 /* 최근 90일 실적으로 신뢰성 지표를 계산합니다.
    MTBF는 '설비 수 × 관측시간 ÷ 고장건수'로 산출한 설비 평균값입니다. */
-function renderReliabilityKPI() {
-  const WINDOW_DAYS = 90;
-  const from = new Date(new Date(kstDate()) - WINDOW_DAYS * 86400000).toISOString().slice(0, 10);
-  const failures = workOrders.filter(w => w.type === '고장수리' && String(w.date || '') >= from);
-  const done = failures.filter(w => w.status === 'completed' && num(w.downtimeHours) > 0);
-
-  const totalDown = workOrders
-    .filter(w => w.status === 'completed')
-    .reduce((a, w) => a + num(w.downtimeHours), 0);
-
-  const mtbfEl = document.getElementById('kpi-mtbf');
-  const mttrEl = document.getElementById('kpi-mttr');
-  const downEl = document.getElementById('kpi-downtime');
-  if (!mtbfEl || !mttrEl || !downEl) return;
-
-  if (failures.length && equipments.length) {
-    const mtbf = (equipments.length * WINDOW_DAYS * 24) / failures.length;
-    mtbfEl.textContent = `${Math.round(mtbf).toLocaleString()} 시간`;
-    document.getElementById('kpi-mtbf-sub').textContent = `최근 ${WINDOW_DAYS}일 · 고장 ${failures.length}건 · 설비 ${equipments.length}대`;
-  } else {
-    mtbfEl.textContent = '- 시간';
-    document.getElementById('kpi-mtbf-sub').textContent = `최근 ${WINDOW_DAYS}일 내 고장 이력이 없습니다`;
-  }
-
-  if (done.length) {
-    const mttr = done.reduce((a, w) => a + num(w.downtimeHours), 0) / done.length;
-    mttrEl.textContent = `${mttr.toFixed(1)} 시간`;
-    document.getElementById('kpi-mttr-sub').textContent = `완료된 고장수리 ${done.length}건 평균`;
-  } else {
-    mttrEl.textContent = '- 시간';
-    document.getElementById('kpi-mttr-sub').textContent = '완료된 고장수리 0건';
-  }
-
-  downEl.textContent = `${totalDown.toFixed(1)} 시간`;
-}
 
 /* ---------- 17. 사이드바 너비 조절 ---------- */
 function initResizer() {
@@ -2778,25 +3795,35 @@ function initResizer() {
 }
 
 /* ---------- 18. 시작 ---------- */
-window.addEventListener('DOMContentLoaded', () => {
+let appBooted = false;
+
+function bootApp() {
+  if (appBooted) return; // 로그인 화면 재진입 시 중복 부팅 방지
+  appBooted = true;
+
   updateClock();
   setInterval(updateClock, 1000);
   initResizer();
   switchTab('dashboard');
 
-  // ESC로 닫기 / 바깥 클릭으로 닫기
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeTopModal(); });
   document.querySelectorAll('.modal').forEach(m => {
     m.addEventListener('mousedown', e => { if (e.target === m && m.id !== 'confirm-modal') m.classList.add('hidden'); });
   });
 
-  ['cal-form-last', 'cal-form-cycle'].forEach(id => {
-    document.getElementById(id)?.addEventListener('input', updateCalibPreview);
-  });
-
+  loadTheme();
+  loadTabOrder();
   resetExpiredPM();
   renderAll();
   loadFromSheet(); // 시트 연동 시 최신 데이터로 대체
+
+  const session = currentSession();
+  const chip = document.getElementById('session-chip');
+  if (chip && session) chip.textContent = `${session.name} (${session.id})`;
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  checkLoginGate();
 });
 
 </script>
