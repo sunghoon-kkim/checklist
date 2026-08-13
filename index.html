@@ -502,21 +502,32 @@ tailwind.config = {
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- 좌측: 캘린더 그리드 -->
         <div class="lg:col-span-2 bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
-          <div class="flex flex-wrap justify-between items-center gap-4 mb-6">
+          <div class="flex flex-wrap justify-between items-center gap-3 mb-6">
             <h2 class="text-lg font-bold text-white flex items-center gap-2"><i class="fa-solid fa-calendar-days text-cyan-400"></i> 업무 캘린더</h2>
-            <input type="month" id="cal-month-picker" onchange="renderCalendar()" class="bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+            <div class="flex items-center gap-2 flex-wrap">
+              <button type="button" onclick="shiftCalMonth(-1)" class="bg-slate-800 hover:bg-slate-700 text-slate-300 w-8 h-8 rounded-lg flex items-center justify-center transition-colors"><i class="fa-solid fa-chevron-left text-xs"></i></button>
+              <select id="cal-year-select" onchange="handleCalYMChange()" class="bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-2 py-2 text-sm focus:border-brand-500 outline-none"></select>
+              <select id="cal-month-select" onchange="handleCalYMChange()" class="bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-2 py-2 text-sm focus:border-brand-500 outline-none"></select>
+              <button type="button" onclick="shiftCalMonth(1)" class="bg-slate-800 hover:bg-slate-700 text-slate-300 w-8 h-8 rounded-lg flex items-center justify-center transition-colors"><i class="fa-solid fa-chevron-right text-xs"></i></button>
+              <input type="month" id="cal-month-picker" onchange="handleCalMonthInput()" title="년월 직접 입력" class="bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+            </div>
           </div>
           <div id="calendar-container"></div>
         </div>
 
         <!-- 우측: 선택 날짜 상세 -->
         <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
-          <div class="flex flex-wrap justify-between items-center gap-4 mb-4">
+          <div class="flex flex-wrap justify-between items-center gap-3 mb-4">
             <h3 class="font-bold text-slate-100 flex items-center gap-2"><i class="fa-solid fa-list-check text-emerald-400"></i> 날짜별 업무</h3>
-            <input type="date" id="cal-detail-date" onchange="renderCalendar()" value="" class="bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-2 py-1.5 text-xs focus:border-brand-500 outline-none">
+            <div class="relative">
+              <button type="button" onclick="toggleDetailDatePicker()" id="cal-detail-date-btn" class="bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-1.5 text-xs flex items-center gap-2 hover:border-slate-600 transition-colors">
+                <i class="fa-solid fa-calendar text-slate-500"></i><span id="cal-detail-date-label">-</span>
+              </button>
+              <div id="cal-detail-date-popup" class="hidden absolute right-0 top-full mt-2 z-20 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-3 w-72"></div>
+            </div>
           </div>
           <div id="cal-detail-list" class="space-y-3 max-h-[600px] overflow-y-auto pr-1"></div>
-          <button type="button" onclick="openCalEventForm(null)" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white px-4 py-2 rounded-xl text-sm font-medium flex items-center justify-center gap-2 shadow transition-colors mt-4">
+          <button type="button" onclick="openCalEventForm(null, calSelectedDate)" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white px-4 py-2 rounded-xl text-sm font-medium flex items-center justify-center gap-2 shadow transition-colors mt-4">
             <i class="fa-solid fa-plus"></i> 업무 기록 추가
           </button>
         </div>
@@ -1132,6 +1143,18 @@ tailwind.config = {
   </div>
 </div>
 
+<!-- 날짜별 업무 항목 선택 -->
+<div id="cal-day-events-modal" class="modal fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden" role="dialog" aria-modal="true">
+  <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
+    <button type="button" onclick="closeModal('cal-day-events-modal')" aria-label="닫기" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+    <h3 id="cal-day-events-modal-title" class="text-lg font-bold text-white mb-4"><i class="fa-solid fa-calendar-day text-cyan-400"></i> 날짜별 업무</h3>
+    <div id="cal-day-events-list" class="space-y-2 max-h-96 overflow-y-auto pr-1 mb-4"></div>
+    <button type="button" id="cal-day-events-addbtn" onclick="" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white px-4 py-2 rounded-xl text-sm font-medium flex items-center justify-center gap-2 shadow transition-colors">
+      <i class="fa-solid fa-plus"></i> 이 날짜에 새 업무 추가
+    </button>
+  </div>
+</div>
+
 <!-- 캘린더 이벤트 작성 -->
 <div id="cal-event-modal" class="modal fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden" role="dialog" aria-modal="true">
   <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl relative">
@@ -1474,6 +1497,9 @@ let improvements = [
 
 // 캘린더 이벤트
 let calendarEvents = [];
+let calSelectedMonth = '';  // YYYY-MM (메인 캘린더 표시 월) - bootApp에서 초기화
+let calSelectedDate = '';   // YYYY-MM-DD (우측 날짜별 업무 대상일)
+let calPopupMonth = '';     // YYYY-MM (우측 날짜 선택 팝업 내 탐색 월)
 
 // 월별 피드백
 let feedbacks = [];
@@ -3208,18 +3234,158 @@ async function deleteFeedback(id) {
 }
 
 /* ---------- 12-7. 캘린더 관리 ---------- */
+function ymAdd(monthStr, delta) {
+  const [y, m] = monthStr.split('-').map(Number);
+  const d = new Date(Date.UTC(y, m - 1 + delta, 1));
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`;
+}
+
+function populateYearMonthSelects(yearSelId, monthSelId, monthStr) {
+  const [year, month] = monthStr.split('-').map(Number);
+  const ySel = document.getElementById(yearSelId);
+  const mSel = document.getElementById(monthSelId);
+  if (!ySel || !mSel) return;
+
+  const curYear = Number(kstDate().slice(0, 4));
+  const startY = curYear - 5, endY = curYear + 5;
+  ySel.innerHTML = '';
+  for (let y = startY; y <= endY; y++) {
+    const opt = document.createElement('option');
+    opt.value = y; opt.textContent = `${y}년`;
+    if (y === year) opt.selected = true;
+    ySel.appendChild(opt);
+  }
+  mSel.innerHTML = '';
+  for (let m = 1; m <= 12; m++) {
+    const opt = document.createElement('option');
+    opt.value = m; opt.textContent = `${m}월`;
+    if (m === month) opt.selected = true;
+    mSel.appendChild(opt);
+  }
+}
+
+function shiftCalMonth(delta) {
+  calSelectedMonth = ymAdd(calSelectedMonth, delta);
+  renderCalendar();
+}
+
+function handleCalYMChange() {
+  const y = document.getElementById('cal-year-select').value;
+  const m = String(document.getElementById('cal-month-select').value).padStart(2, '0');
+  calSelectedMonth = `${y}-${m}`;
+  renderCalendar();
+}
+
+function handleCalMonthInput() {
+  const v = document.getElementById('cal-month-picker').value;
+  if (v) { calSelectedMonth = v; renderCalendar(); }
+}
+
+function toggleDetailDatePicker() {
+  const popup = document.getElementById('cal-detail-date-popup');
+  if (!popup) return;
+  const willOpen = popup.classList.contains('hidden');
+  popup.classList.toggle('hidden');
+  if (willOpen) {
+    calPopupMonth = calSelectedDate.slice(0, 7);
+    renderDetailDatePopup();
+  }
+}
+
+function shiftPopupMonth(delta) {
+  calPopupMonth = ymAdd(calPopupMonth, delta);
+  renderDetailDatePopup();
+}
+
+function renderDetailDatePopup() {
+  const popup = document.getElementById('cal-detail-date-popup');
+  if (!popup) return;
+
+  const [year, month] = calPopupMonth.split('-').map(Number);
+  const firstDay = new Date(Date.UTC(year, month - 1, 1));
+  const lastDay = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  const startWeek = firstDay.getUTCDay();
+
+  let grid = ['일','월','화','수','목','금','토'].map(d =>
+    `<div class="text-center text-[10px] font-bold text-slate-500">${d}</div>`).join('');
+  for (let i = 0; i < startWeek; i++) grid += '<div></div>';
+  for (let d = 1; d <= lastDay; d++) {
+    const dateStr = `${year}-${String(month).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isSel = dateStr === calSelectedDate;
+    const isToday = dateStr === kstDate();
+    grid += `<button type="button" onclick="selectDetailDate('${dateStr}')"
+      class="text-xs rounded-lg py-1.5 transition-colors ${isSel ? 'bg-brand-600 text-white font-bold' : isToday ? 'bg-slate-800 text-brand-300 font-bold' : 'text-slate-300 hover:bg-slate-800'}">${d}</button>`;
+  }
+
+  popup.innerHTML = `
+    <div class="flex items-center justify-between mb-2">
+      <button type="button" onclick="shiftPopupMonth(-1)" class="text-slate-400 hover:text-white w-6 h-6"><i class="fa-solid fa-chevron-left text-xs"></i></button>
+      <div class="flex items-center gap-1">
+        <select onchange="calPopupMonth = this.value + '-' + String(document.getElementById('cal-popup-month-sel').value).padStart(2,'0'); renderDetailDatePopup();" id="cal-popup-year-sel" class="bg-slate-950 text-slate-200 border border-slate-800 rounded px-1 py-0.5 text-xs"></select>
+        <select onchange="calPopupMonth = String(document.getElementById('cal-popup-year-sel').value) + '-' + String(this.value).padStart(2,'0'); renderDetailDatePopup();" id="cal-popup-month-sel" class="bg-slate-950 text-slate-200 border border-slate-800 rounded px-1 py-0.5 text-xs"></select>
+      </div>
+      <button type="button" onclick="shiftPopupMonth(1)" class="text-slate-400 hover:text-white w-6 h-6"><i class="fa-solid fa-chevron-right text-xs"></i></button>
+    </div>
+    <div class="grid grid-cols-7 gap-1">${grid}</div>
+    <div class="border-t border-slate-800 mt-3 pt-3">
+      <input type="date" value="${esc(calSelectedDate)}" onchange="selectDetailDate(this.value)" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-lg px-2 py-1.5 text-xs focus:border-brand-500 outline-none" title="직접 입력">
+    </div>`;
+
+  populateYearMonthSelects('cal-popup-year-sel', 'cal-popup-month-sel', calPopupMonth);
+}
+
+function selectDetailDate(dateStr) {
+  if (!dateStr) return;
+  calSelectedDate = dateStr;
+  document.getElementById('cal-detail-date-popup')?.classList.add('hidden');
+  renderCalendar();
+}
+
+function openDayEventsModal(dateStr) {
+  calSelectedDate = dateStr;
+  const events = calendarEvents.filter(e => e.date === dateStr);
+  const [y, m, d] = dateStr.split('-');
+  document.getElementById('cal-day-events-modal-title').innerHTML =
+    `<i class="fa-solid fa-calendar-day text-cyan-400"></i> ${y}년 ${Number(m)}월 ${Number(d)}일 업무`;
+
+  const list = document.getElementById('cal-day-events-list');
+  list.innerHTML = events.length ? events.map(e => `
+    <div class="bg-slate-950 border border-slate-800 rounded-xl p-3 flex justify-between items-start gap-2">
+      <div class="flex-1 min-w-0">
+        <h4 class="text-sm font-bold text-slate-100 truncate">${esc(e.title || '')}</h4>
+        ${e.content ? `<p class="text-xs text-slate-400 mt-1 line-clamp-2 whitespace-pre-line">${esc(e.content)}</p>` : ''}
+      </div>
+      <div class="flex gap-1 shrink-0">
+        <button type="button" onclick="closeModal('cal-day-events-modal'); openCalEventForm('${esc(e.id)}', '${esc(dateStr)}')" class="bg-slate-800 text-slate-300 hover:text-white px-2.5 py-1.5 rounded text-xs"><i class="fa-solid fa-pen"></i></button>
+        <button type="button" onclick="deleteCalEvent('${esc(e.id)}')" class="bg-slate-800 text-slate-300 hover:text-rose-400 px-2.5 py-1.5 rounded text-xs"><i class="fa-solid fa-trash"></i></button>
+      </div>
+    </div>`).join('') : emptyState('fa-calendar', '이 날짜에 기록이 없습니다.');
+
+  const addBtn = document.getElementById('cal-day-events-addbtn');
+  addBtn.onclick = () => { closeModal('cal-day-events-modal'); openCalEventForm(null, dateStr); };
+
+  openModal('cal-day-events-modal');
+}
+
 function renderCalendar() {
   const container = document.getElementById('calendar-container');
   if (!container) return;
 
-  const selMonth = document.getElementById('cal-month-picker')?.value || kstDate().slice(0, 7);
-  const [year, month] = selMonth.split('-').map(Number);
+  if (!calSelectedMonth) calSelectedMonth = kstDate().slice(0, 7);
+  if (!calSelectedDate) calSelectedDate = kstDate();
+  if (!calPopupMonth) calPopupMonth = calSelectedMonth;
+
+  const monthPicker = document.getElementById('cal-month-picker');
+  if (monthPicker) monthPicker.value = calSelectedMonth;
+  populateYearMonthSelects('cal-year-select', 'cal-month-select', calSelectedMonth);
+
+  const [year, month] = calSelectedMonth.split('-').map(Number);
   const firstDay = new Date(Date.UTC(year, month - 1, 1));
   const lastDay = new Date(Date.UTC(year, month, 0)).getUTCDate();
   const startWeek = firstDay.getUTCDay();
 
   const eventsMap = {};
-  calendarEvents.filter(e => e.date && String(e.date).startsWith(selMonth)).forEach(e => {
+  calendarEvents.filter(e => e.date && String(e.date).startsWith(calSelectedMonth)).forEach(e => {
     const d = String(e.date).slice(8, 10);
     if (!eventsMap[d]) eventsMap[d] = [];
     eventsMap[d].push(e);
@@ -3234,41 +3400,40 @@ function renderCalendar() {
     <div class="text-center text-xs font-bold text-slate-400 py-2">금</div>
     <div class="text-center text-xs font-bold text-slate-400 py-2">토</div>`;
 
-  // 빈 칸
   for (let i = 0; i < startWeek; i++) {
     html += '<div class="bg-slate-950/30 rounded-lg min-h-24"></div>';
   }
 
-  // 날짜
   for (let d = 1; d <= lastDay; d++) {
     const dateStr = `${year}-${String(month).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const events = eventsMap[String(d).padStart(2,'0')] || [];
     const isToday = dateStr === kstDate();
+    const isSelected = dateStr === calSelectedDate;
     const isSunday = (startWeek + d - 1) % 7 === 0;
     const isSaturday = (startWeek + d - 1) % 7 === 6;
 
-    html += `<div class="bg-slate-950 border ${isToday?'border-brand-500 bg-brand-950/20':'border-slate-800'} rounded-lg p-2 min-h-24 flex flex-col group cursor-pointer hover:border-slate-600 transition-colors" onclick="openCalEventForm(null, '${dateStr}')">
+    html += `<div class="bg-slate-950 border ${isSelected ? 'border-cyan-500' : isToday ? 'border-brand-500 bg-brand-950/20' : 'border-slate-800'} rounded-lg p-2 min-h-24 flex flex-col cursor-pointer hover:border-slate-600 transition-colors" onclick="openDayEventsModal('${dateStr}')">
       <div class="flex justify-between items-start">
         <span class="text-xs font-bold ${isSunday?'text-rose-400':isSaturday?'text-blue-400':'text-slate-300'}">${d}</span>
         ${isToday ? '<span class="bg-brand-500 text-white text-[10px] px-1 py-0.5 rounded">오늘</span>' : ''}
       </div>
-      <div class="flex-1 text-[11px] space-y-0.5 overflow-hidden">
-        ${events.slice(0,2).map(e => `<div class="bg-slate-800 text-slate-200 px-1.5 py-0.5 rounded truncate">${esc(e.title || '')}</div>`).join('')}
-        ${events.length > 2 ? `<div class="text-slate-500 text-[10px]">+${events.length-2}개</div>` : ''}
+      <div class="flex-1 text-[11px] space-y-0.5 overflow-hidden mt-1">
+        ${events.slice(0,3).map(e => `<div class="bg-slate-800 text-slate-200 px-1.5 py-0.5 rounded truncate">${esc(e.title || '')}</div>`).join('')}
+        ${events.length > 3 ? `<div class="text-slate-500 text-[10px]">+${events.length-3}개 더보기</div>` : ''}
       </div>
-      ${events.length > 0 ? `<div class="opacity-0 group-hover:opacity-100 transition-opacity mt-1 flex gap-1">
-        <button type="button" onclick="openCalEventForm('${esc(events[0].id)}','${dateStr}'); event.stopPropagation();" class="text-[10px] bg-slate-700 hover:bg-slate-600 text-slate-200 px-1.5 py-0.5 rounded flex-1"><i class="fa-solid fa-pen text-[9px]"></i></button>
-        <button type="button" onclick="deleteCalEvent('${esc(events[0].id)}'); event.stopPropagation();" class="text-[10px] bg-slate-700 hover:bg-rose-700 text-slate-200 px-1.5 py-0.5 rounded flex-1"><i class="fa-solid fa-trash text-[9px]"></i></button>
-      </div>` : ''}
     </div>`;
   }
 
   html += '</div>';
   container.innerHTML = html;
 
-  // 선택 날짜 상세 보기
-  const selDate = document.getElementById('cal-detail-date')?.value || kstDate();
-  const dayEvents = calendarEvents.filter(e => e.date === selDate);
+  // 우측 날짜별 업무
+  const label = document.getElementById('cal-detail-date-label');
+  const btn = document.getElementById('cal-detail-date-btn');
+  if (label) label.textContent = calSelectedDate;
+  if (btn) btn.dataset.date = calSelectedDate;
+
+  const dayEvents = calendarEvents.filter(e => e.date === calSelectedDate);
   const detail = document.getElementById('cal-detail-list');
   if (detail) {
     detail.innerHTML = dayEvents.length ? dayEvents.map(e => `
@@ -3291,8 +3456,8 @@ function openCalEventForm(id = null, date = null) {
   form.reset();
   document.getElementById('cal-ev-form-id').value = id || '';
   document.getElementById('cal-event-modal-title').innerHTML = `<i class="fa-solid fa-calendar-plus text-cyan-400"></i> ${id ? '수정' : '새 일정'}`;
-  
-  if (!date) date = kstDate();
+
+  if (!date) date = calSelectedDate || kstDate();
   document.getElementById('cal-ev-form-date').value = date;
 
   if (id) {
@@ -3323,7 +3488,8 @@ function handleCalEventSubmit(e) {
     showToast('기록했습니다.','success');
   }
   syncToSheet('CalendarEvents', ev, 'upsert'); closeModal('cal-event-modal');
-  document.getElementById('cal-detail-date').value = payload.date;
+  calSelectedDate = payload.date;
+  calSelectedMonth = payload.date.slice(0, 7);
   renderAll();
 }
 
@@ -3335,6 +3501,9 @@ async function deleteCalEvent(id) {
   syncToSheet('CalendarEvents', { id }, 'delete');
   audit('캘린더','삭제',`${ev.date} · ${ev.title}`, id);
   renderAll(); showToast('삭제했습니다.','warning');
+  // 항목 선택 모달이 열려 있다면 목록을 새로고침합니다.
+  const dayModal = document.getElementById('cal-day-events-modal');
+  if (dayModal && !dayModal.classList.contains('hidden')) openDayEventsModal(ev.date);
 }
 
 
@@ -3807,6 +3976,13 @@ function bootApp() {
   switchTab('dashboard');
 
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeTopModal(); });
+  document.addEventListener('click', e => {
+    const popup = document.getElementById('cal-detail-date-popup');
+    const btn = document.getElementById('cal-detail-date-btn');
+    if (popup && !popup.classList.contains('hidden') && !popup.contains(e.target) && e.target !== btn && !btn?.contains(e.target)) {
+      popup.classList.add('hidden');
+    }
+  });
   document.querySelectorAll('.modal').forEach(m => {
     m.addEventListener('mousedown', e => { if (e.target === m && m.id !== 'confirm-modal') m.classList.add('hidden'); });
   });
