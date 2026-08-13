@@ -1162,10 +1162,17 @@ tailwind.config = {
     <h3 id="cal-event-modal-title" class="text-lg font-bold text-white mb-4"><i class="fa-solid fa-calendar-plus text-cyan-400"></i> 새 일정</h3>
     <form onsubmit="handleCalEventSubmit(event)" class="space-y-4">
       <input type="hidden" id="cal-ev-form-id">
-      <div>
-        <label for="cal-ev-form-date" class="block text-xs text-slate-400 mb-1">날짜</label>
-        <input type="date" id="cal-ev-form-date" required class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label for="cal-ev-form-start" class="block text-xs text-slate-400 mb-1">시작일 <span class="text-rose-400">*</span></label>
+          <input type="date" id="cal-ev-form-start" required onchange="syncCalEndMin()" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+        </div>
+        <div>
+          <label for="cal-ev-form-end" class="block text-xs text-slate-400 mb-1">종료일 <span class="text-slate-600">(선택, 미입력 시 하루)</span></label>
+          <input type="date" id="cal-ev-form-end" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
+        </div>
       </div>
+      <div id="cal-ev-form-error" class="hidden bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs rounded-lg px-3 py-2"></div>
       <div>
         <label for="cal-ev-form-title" class="block text-xs text-slate-400 mb-1">업무 제목 <span class="text-rose-400">*</span></label>
         <input type="text" id="cal-ev-form-title" required maxlength="100" placeholder="예: RO 멤브레인 교체 완료" class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none">
@@ -1715,7 +1722,11 @@ async function loadFromSheet(manual = false) {
       if (SC) schedules = SC.map(s => ({ ...s, cycleDays: num(s.cycleDays, 30) }));
       if (IM) improvements = IM;
       if (FB) feedbacks = FB;
-      if (CAL) calendarEvents = CAL;
+      if (CAL) calendarEvents = CAL.map(e => ({
+        ...e,
+        startDate: e.startDate || e.date || '',
+        endDate: e.endDate || e.startDate || e.date || ''
+      }));
       showToast('시트에서 최신 데이터를 불러왔습니다.', 'success');
     } else if (manual) {
       showToast('시트가 비어 있어 화면 데이터를 유지합니다.', 'info');
@@ -3341,9 +3352,21 @@ function selectDetailDate(dateStr) {
   renderCalendar();
 }
 
+function eventSpansDate(e, dateStr) {
+  const s = e.startDate || e.date || '';
+  const en = e.endDate || s;
+  return s && dateStr >= s && dateStr <= en;
+}
+
+function formatDateRangeLabel(e) {
+  const s = e.startDate || e.date || '';
+  const en = e.endDate || s;
+  return s === en ? s : `${s} ~ ${en}`;
+}
+
 function openDayEventsModal(dateStr) {
   calSelectedDate = dateStr;
-  const events = calendarEvents.filter(e => e.date === dateStr);
+  const events = calendarEvents.filter(e => eventSpansDate(e, dateStr));
   const [y, m, d] = dateStr.split('-');
   document.getElementById('cal-day-events-modal-title').innerHTML =
     `<i class="fa-solid fa-calendar-day text-cyan-400"></i> ${y}년 ${Number(m)}월 ${Number(d)}일 업무`;
@@ -3353,6 +3376,7 @@ function openDayEventsModal(dateStr) {
     <div class="bg-slate-950 border border-slate-800 rounded-xl p-3 flex justify-between items-start gap-2">
       <div class="flex-1 min-w-0">
         <h4 class="text-sm font-bold text-slate-100 truncate">${esc(e.title || '')}</h4>
+        ${(e.startDate || e.date) !== (e.endDate || e.startDate || e.date) ? `<p class="text-[11px] text-cyan-400 mt-0.5"><i class="fa-solid fa-arrows-left-right text-[10px]"></i> ${esc(formatDateRangeLabel(e))}</p>` : ''}
         ${e.content ? `<p class="text-xs text-slate-400 mt-1 line-clamp-2 whitespace-pre-line">${esc(e.content)}</p>` : ''}
       </div>
       <div class="flex gap-1 shrink-0">
@@ -3365,6 +3389,54 @@ function openDayEventsModal(dateStr) {
   addBtn.onclick = () => { closeModal('cal-day-events-modal'); openCalEventForm(null, dateStr); };
 
   openModal('cal-day-events-modal');
+}
+
+let draggedCalEventId = null;
+
+function handleCalEventDragStart(e, id) {
+  draggedCalEventId = id;
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', id);
+  e.stopPropagation();
+}
+
+function handleCalDayDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  e.currentTarget.classList.add('drag-over');
+}
+
+function handleCalDayDragLeave(e) {
+  e.currentTarget.classList.remove('drag-over');
+}
+
+async function handleCalDayDrop(e, dateStr) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over');
+  const id = draggedCalEventId || e.dataTransfer.getData('text/plain');
+  draggedCalEventId = null;
+  if (!id) return;
+
+  const ev = calendarEvents.find(x => x.id === id);
+  if (!ev) return;
+
+  const oldStart = ev.startDate || ev.date;
+  const oldEnd = ev.endDate || oldStart;
+  if (oldStart === dateStr) return; // 같은 날짜면 변경 없음
+
+  // 기간 길이를 유지한 채 새 시작일 기준으로 이동합니다.
+  const spanDays = Math.round((new Date(oldEnd) - new Date(oldStart)) / 86400000);
+  const newEnd = addDays(dateStr, spanDays);
+
+  ev.startDate = dateStr;
+  ev.endDate = newEnd;
+  ev.date = dateStr; // 하위호환 필드
+
+  syncToSheet('CalendarEvents', ev, 'upsert');
+  audit('캘린더', '이동', `${esc(ev.title)} : ${oldStart}${oldEnd !== oldStart ? '~'+oldEnd : ''} → ${dateStr}${newEnd !== dateStr ? '~'+newEnd : ''}`, ev.id);
+  showToast('일정을 이동했습니다.', 'success');
+  calSelectedDate = dateStr;
+  renderAll();
 }
 
 function renderCalendar() {
@@ -3384,13 +3456,6 @@ function renderCalendar() {
   const lastDay = new Date(Date.UTC(year, month, 0)).getUTCDate();
   const startWeek = firstDay.getUTCDay();
 
-  const eventsMap = {};
-  calendarEvents.filter(e => e.date && String(e.date).startsWith(calSelectedMonth)).forEach(e => {
-    const d = String(e.date).slice(8, 10);
-    if (!eventsMap[d]) eventsMap[d] = [];
-    eventsMap[d].push(e);
-  });
-
   let html = `<div class="grid grid-cols-7 gap-1 mb-4">
     <div class="text-center text-xs font-bold text-slate-400 py-2">일</div>
     <div class="text-center text-xs font-bold text-slate-400 py-2">월</div>
@@ -3406,19 +3471,30 @@ function renderCalendar() {
 
   for (let d = 1; d <= lastDay; d++) {
     const dateStr = `${year}-${String(month).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const events = eventsMap[String(d).padStart(2,'0')] || [];
+    const events = calendarEvents.filter(e => eventSpansDate(e, dateStr));
     const isToday = dateStr === kstDate();
     const isSelected = dateStr === calSelectedDate;
     const isSunday = (startWeek + d - 1) % 7 === 0;
     const isSaturday = (startWeek + d - 1) % 7 === 6;
 
-    html += `<div class="bg-slate-950 border ${isSelected ? 'border-cyan-500' : isToday ? 'border-brand-500 bg-brand-950/20' : 'border-slate-800'} rounded-lg p-2 min-h-24 flex flex-col cursor-pointer hover:border-slate-600 transition-colors" onclick="openDayEventsModal('${dateStr}')">
+    html += `<div class="bg-slate-950 border ${isSelected ? 'border-cyan-500' : isToday ? 'border-brand-500 bg-brand-950/20' : 'border-slate-800'} rounded-lg p-2 min-h-24 flex flex-col cursor-pointer hover:border-slate-600 transition-colors"
+      onclick="openDayEventsModal('${dateStr}')"
+      ondragover="handleCalDayDragOver(event)"
+      ondragleave="handleCalDayDragLeave(event)"
+      ondrop="handleCalDayDrop(event, '${dateStr}')">
       <div class="flex justify-between items-start">
         <span class="text-xs font-bold ${isSunday?'text-rose-400':isSaturday?'text-blue-400':'text-slate-300'}">${d}</span>
         ${isToday ? '<span class="bg-brand-500 text-white text-[10px] px-1 py-0.5 rounded">오늘</span>' : ''}
       </div>
       <div class="flex-1 text-[11px] space-y-0.5 overflow-hidden mt-1">
-        ${events.slice(0,3).map(e => `<div class="bg-slate-800 text-slate-200 px-1.5 py-0.5 rounded truncate">${esc(e.title || '')}</div>`).join('')}
+        ${events.slice(0,3).map(e => {
+          const s = e.startDate || e.date, en = e.endDate || s;
+          const isMulti = s !== en;
+          const isStartDay = dateStr === s;
+          return `<div draggable="true" ondragstart="handleCalEventDragStart(event, '${esc(e.id)}')"
+            class="${isMulti ? 'bg-cyan-800/60 border-l-2 border-cyan-400' : 'bg-slate-800'} text-slate-200 px-1.5 py-0.5 rounded truncate cursor-grab active:cursor-grabbing"
+            title="드래그해서 날짜 이동">${isMulti && !isStartDay ? '↳ ' : ''}${esc(e.title || '')}</div>`;
+        }).join('')}
         ${events.length > 3 ? `<div class="text-slate-500 text-[10px]">+${events.length-3}개 더보기</div>` : ''}
       </div>
     </div>`;
@@ -3433,7 +3509,7 @@ function renderCalendar() {
   if (label) label.textContent = calSelectedDate;
   if (btn) btn.dataset.date = calSelectedDate;
 
-  const dayEvents = calendarEvents.filter(e => e.date === calSelectedDate);
+  const dayEvents = calendarEvents.filter(e => eventSpansDate(e, calSelectedDate));
   const detail = document.getElementById('cal-detail-list');
   if (detail) {
     detail.innerHTML = dayEvents.length ? dayEvents.map(e => `
@@ -3441,7 +3517,7 @@ function renderCalendar() {
         <div class="flex-1">
           <h4 class="text-sm font-bold text-slate-100">${esc(e.title || '')}</h4>
           ${e.content ? `<p class="text-xs text-slate-400 mt-1 whitespace-pre-line">${esc(e.content)}</p>` : ''}
-          <p class="text-[11px] text-slate-600 mt-2">${esc(e.date || '')}</p>
+          <p class="text-[11px] ${(e.startDate||e.date) !== (e.endDate||e.startDate||e.date) ? 'text-cyan-400' : 'text-slate-600'} mt-2">${esc(formatDateRangeLabel(e))}</p>
         </div>
         <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
           <button type="button" onclick="openCalEventForm('${esc(e.id)}')" class="bg-slate-800 text-slate-300 hover:text-white px-2 py-1 rounded text-[10px]"><i class="fa-solid fa-pen"></i></button>
@@ -3451,45 +3527,71 @@ function renderCalendar() {
   }
 }
 
+function syncCalEndMin() {
+  const start = document.getElementById('cal-ev-form-start').value;
+  const endInput = document.getElementById('cal-ev-form-end');
+  if (start) endInput.min = start;
+  if (endInput.value && endInput.value < start) endInput.value = start;
+}
+
 function openCalEventForm(id = null, date = null) {
   const form = document.querySelector('#cal-event-modal form');
   form.reset();
+  document.getElementById('cal-ev-form-error').classList.add('hidden');
   document.getElementById('cal-ev-form-id').value = id || '';
   document.getElementById('cal-event-modal-title').innerHTML = `<i class="fa-solid fa-calendar-plus text-cyan-400"></i> ${id ? '수정' : '새 일정'}`;
 
   if (!date) date = calSelectedDate || kstDate();
-  document.getElementById('cal-ev-form-date').value = date;
 
   if (id) {
     const e = calendarEvents.find(x => x.id === id); if (!e) return;
+    document.getElementById('cal-ev-form-start').value = e.startDate || e.date || date;
+    document.getElementById('cal-ev-form-end').value = (e.endDate && e.endDate !== (e.startDate || e.date)) ? e.endDate : '';
     document.getElementById('cal-ev-form-title').value = e.title || '';
     document.getElementById('cal-ev-form-content').value = e.content || '';
+  } else {
+    document.getElementById('cal-ev-form-start').value = date;
   }
+  syncCalEndMin();
   openModal('cal-event-modal');
 }
 
 function handleCalEventSubmit(e) {
   e.preventDefault();
+  const errBox = document.getElementById('cal-ev-form-error');
+  errBox.classList.add('hidden');
+
   const id = document.getElementById('cal-ev-form-id').value;
+  const startDate = document.getElementById('cal-ev-form-start').value;
+  const endDate = document.getElementById('cal-ev-form-end').value || startDate;
+
+  if (endDate < startDate) {
+    errBox.textContent = '종료일은 시작일보다 빠를 수 없습니다.';
+    errBox.classList.remove('hidden');
+    return;
+  }
+
   const payload = {
-    date: document.getElementById('cal-ev-form-date').value,
+    startDate, endDate,
+    date: startDate, // 하위호환 필드
     title: document.getElementById('cal-ev-form-title').value.trim(),
     content: document.getElementById('cal-ev-form-content').value.trim()
   };
 
   let ev;
+  const rangeLabel = startDate === endDate ? startDate : `${startDate}~${endDate}`;
   if (id) { ev = calendarEvents.find(x => x.id === id); if (!ev) return; Object.assign(ev, payload);
-    audit('캘린더','수정',`${payload.date} · ${payload.title}`, ev.id);
+    audit('캘린더','수정',`${rangeLabel} · ${payload.title}`, ev.id);
     showToast('수정했습니다.','success');
   } else {
     ev = { id: uid('CAL'), ...payload };
     calendarEvents.push(ev);
-    audit('캘린더','등록',`${payload.date} · ${payload.title}`, ev.id);
+    audit('캘린더','등록',`${rangeLabel} · ${payload.title}`, ev.id);
     showToast('기록했습니다.','success');
   }
   syncToSheet('CalendarEvents', ev, 'upsert'); closeModal('cal-event-modal');
-  calSelectedDate = payload.date;
-  calSelectedMonth = payload.date.slice(0, 7);
+  calSelectedDate = startDate;
+  calSelectedMonth = startDate.slice(0, 7);
   renderAll();
 }
 
@@ -3497,13 +3599,14 @@ async function deleteCalEvent(id) {
   const ev = calendarEvents.find(x => x.id === id); if (!ev) return;
   const ok = await askConfirm({ title: '삭제할까요?', message: `'${ev.title}' 기록이 사라집니다.` });
   if (!ok) return;
+  const evDate = ev.startDate || ev.date;
   calendarEvents = calendarEvents.filter(x => x.id !== id);
   syncToSheet('CalendarEvents', { id }, 'delete');
-  audit('캘린더','삭제',`${ev.date} · ${ev.title}`, id);
+  audit('캘린더','삭제',`${evDate} · ${ev.title}`, id);
   renderAll(); showToast('삭제했습니다.','warning');
   // 항목 선택 모달이 열려 있다면 목록을 새로고침합니다.
   const dayModal = document.getElementById('cal-day-events-modal');
-  if (dayModal && !dayModal.classList.contains('hidden')) openDayEventsModal(ev.date);
+  if (dayModal && !dayModal.classList.contains('hidden')) openDayEventsModal(evDate);
 }
 
 
