@@ -1122,6 +1122,11 @@ tailwind.config = {
         <label for="cal-ev-form-content" class="block text-xs text-slate-400 mb-1">상세 내용</label>
         <textarea id="cal-ev-form-content" rows="5" maxlength="1000" placeholder="구체적으로 무엇을 했는지 기록해 주세요." class="w-full bg-slate-950 text-slate-200 border border-slate-800 rounded-xl px-3 py-2 text-sm focus:border-brand-500 outline-none"></textarea>
       </div>
+      <div>
+        <label class="block text-xs text-slate-400 mb-1.5">색상</label>
+        <input type="hidden" id="cal-ev-form-color" value="slate">
+        <div id="cal-ev-color-swatches" class="flex flex-wrap gap-2"></div>
+      </div>
       <div class="flex justify-end gap-2 pt-2">
         <button type="button" onclick="closeModal('cal-event-modal')" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm">취소</button>
         <button type="submit" class="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl text-sm shadow">저장</button>
@@ -1666,7 +1671,8 @@ async function loadFromSheet(manual = false) {
       if (CAL) calendarEvents = CAL.map(e => ({
         ...e,
         startDate: e.startDate || e.date || '',
-        endDate: e.endDate || e.startDate || e.date || ''
+        endDate: e.endDate || e.startDate || e.date || '',
+        color: e.color || 'slate'
       }));
       showToast('시트에서 최신 데이터를 불러왔습니다.', 'success');
     } else if (manual) {
@@ -3303,7 +3309,10 @@ function openDayEventsModal(dateStr) {
   list.innerHTML = events.length ? events.map(e => `
     <div class="bg-slate-950 border border-slate-800 rounded-xl p-3 flex justify-between items-start gap-2">
       <div class="flex-1 min-w-0">
-        <h4 class="text-sm font-bold text-slate-100 truncate">${esc(e.title || '')}</h4>
+        <h4 class="text-sm font-bold text-slate-100 truncate flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background-color:${calColorHex(e.color)}"></span>
+          ${esc(e.title || '')}
+        </h4>
         ${(e.startDate || e.date) !== (e.endDate || e.startDate || e.date) ? `<p class="text-[11px] text-cyan-400 mt-0.5"><i class="fa-solid fa-arrows-left-right text-[10px]"></i> ${esc(formatDateRangeLabel(e))}</p>` : ''}
         ${e.content ? `<p class="text-xs text-slate-400 mt-1 line-clamp-2 whitespace-pre-line">${esc(e.content)}</p>` : ''}
       </div>
@@ -3367,6 +3376,98 @@ async function handleCalDayDrop(e, dateStr) {
   renderAll();
 }
 
+const CAL_COLORS = {
+  slate:  { hex: '#64748b', label: '기본' },
+  red:    { hex: '#dc2626', label: '빨강' },
+  orange: { hex: '#ea580c', label: '주황' },
+  yellow: { hex: '#ca8a04', label: '노랑' },
+  green:  { hex: '#16a34a', label: '초록' },
+  blue:   { hex: '#2563eb', label: '파랑' },
+  navy:   { hex: '#1e3a8a', label: '남색' },
+  purple: { hex: '#7c3aed', label: '보라' }
+};
+const calColorHex = key => (CAL_COLORS[key] || CAL_COLORS.slate).hex;
+
+function renderCalColorSwatches(selected) {
+  const box = document.getElementById('cal-ev-color-swatches');
+  if (!box) return;
+  box.innerHTML = Object.entries(CAL_COLORS).map(([key, c]) => `
+    <button type="button" onclick="selectCalColor('${key}')" title="${c.label}"
+      class="w-7 h-7 rounded-full border-2 transition-all ${selected === key ? 'border-white scale-110' : 'border-transparent hover:scale-105'}"
+      style="background-color:${c.hex}"></button>`).join('');
+}
+
+function selectCalColor(key) {
+  document.getElementById('cal-ev-form-color').value = key;
+  renderCalColorSwatches(key);
+}
+
+const CAL_MAX_TRACKS = 3; // 한 주에 겹쳐서 보여줄 최대 이벤트 줄 수
+
+function addDaysUTC(dateStr, n) {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d + n));
+  return `${dt.getUTCFullYear()}-${String(dt.getUTCMonth()+1).padStart(2,'0')}-${String(dt.getUTCDate()).padStart(2,'0')}`;
+}
+
+function buildCalendarWeeks(year, month) {
+  const firstDay = new Date(Date.UTC(year, month - 1, 1));
+  const lastDayNum = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  const startWeek = firstDay.getUTCDay();
+  const cells = [];
+  for (let i = 0; i < startWeek; i++) cells.push(null);
+  for (let d = 1; d <= lastDayNum; d++) {
+    cells.push(`${year}-${String(month).padStart(2,'0')}-${String(d).padStart(2,'0')}`);
+  }
+  while (cells.length % 7 !== 0) cells.push(null);
+  const weeks = [];
+  for (let i = 0; i < cells.length; i += 7) weeks.push(cells.slice(i, i + 7));
+  return weeks;
+}
+
+// 한 주(week: [date|null x7]) 안에서 겹치는 기간 일정을 줄(track)로 배치합니다.
+// 겹치지 않는 일정은 같은 줄을 공유해 공간을 아낍니다(구글 캘린더 방식).
+function assignEventTracksForWeek(week) {
+  const weekDates = week.filter(Boolean);
+  if (!weekDates.length) return { bars: [], hiddenByDate: {} };
+  const weekStart = weekDates[0], weekEnd = weekDates[weekDates.length - 1];
+
+  const overlapping = calendarEvents.filter(e => {
+    const s = e.startDate || e.date, en = e.endDate || s;
+    if (!s) return false;
+    return s <= weekEnd && en >= weekStart;
+  }).map(e => {
+    const s = e.startDate || e.date, en = e.endDate || s;
+    const segStart = s < weekStart ? weekStart : s;
+    const segEnd = en > weekEnd ? weekEnd : en;
+    const colStart = week.indexOf(segStart);
+    const colEnd = week.indexOf(segEnd);
+    return { ev: e, segStart, segEnd, colStart, colEnd, span: colEnd - colStart + 1,
+             continuesLeft: s < weekStart, continuesRight: en > weekEnd };
+  }).sort((a, b) => a.segStart.localeCompare(b.segStart) || (b.span - a.span));
+
+  const tracks = []; // tracks[i] = 마지막으로 점유한 colEnd
+  const bars = [];
+  const hiddenByDate = {};
+
+  overlapping.forEach(item => {
+    let track = tracks.findIndex(lastEnd => lastEnd < item.colStart);
+    if (track === -1) track = tracks.length;
+
+    if (track >= CAL_MAX_TRACKS) {
+      for (let c = item.colStart; c <= item.colEnd; c++) {
+        const d = week[c];
+        if (d) hiddenByDate[d] = (hiddenByDate[d] || 0) + 1;
+      }
+      return;
+    }
+    tracks[track] = item.colEnd;
+    bars.push({ ...item, track });
+  });
+
+  return { bars, hiddenByDate };
+}
+
 function renderCalendar() {
   const container = document.getElementById('calendar-container');
   if (!container) return;
@@ -3380,53 +3481,70 @@ function renderCalendar() {
   populateYearMonthSelects('cal-year-select', 'cal-month-select', calSelectedMonth);
 
   const [year, month] = calSelectedMonth.split('-').map(Number);
-  const firstDay = new Date(Date.UTC(year, month - 1, 1));
-  const lastDay = new Date(Date.UTC(year, month, 0)).getUTCDate();
-  const startWeek = firstDay.getUTCDay();
+  const weeks = buildCalendarWeeks(year, month);
 
-  let html = `<div class="grid grid-cols-7 gap-1 mb-4">
+  let html = `<div class="grid grid-cols-7 gap-px mb-1">
     <div class="text-center text-xs font-bold text-slate-400 py-2">일</div>
     <div class="text-center text-xs font-bold text-slate-400 py-2">월</div>
     <div class="text-center text-xs font-bold text-slate-400 py-2">화</div>
     <div class="text-center text-xs font-bold text-slate-400 py-2">수</div>
     <div class="text-center text-xs font-bold text-slate-400 py-2">목</div>
     <div class="text-center text-xs font-bold text-slate-400 py-2">금</div>
-    <div class="text-center text-xs font-bold text-slate-400 py-2">토</div>`;
+    <div class="text-center text-xs font-bold text-slate-400 py-2">토</div>
+  </div>
+  <div class="space-y-1">`;
 
-  for (let i = 0; i < startWeek; i++) {
-    html += '<div class="bg-slate-950/30 rounded-lg min-h-24"></div>';
-  }
+  weeks.forEach(week => {
+    const { bars, hiddenByDate } = assignEventTracksForWeek(week);
+    const maxTrack = bars.length ? Math.max(...bars.map(b => b.track)) + 1 : 0;
+    const rowCount = Math.max(1, maxTrack); // 날짜 행 아래로 트랙 수만큼 행 추가
+    const barRowH = 20; // px
 
-  for (let d = 1; d <= lastDay; d++) {
-    const dateStr = `${year}-${String(month).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const events = calendarEvents.filter(e => eventSpansDate(e, dateStr));
-    const isToday = dateStr === kstDate();
-    const isSelected = dateStr === calSelectedDate;
-    const isSunday = (startWeek + d - 1) % 7 === 0;
-    const isSaturday = (startWeek + d - 1) % 7 === 6;
+    html += `<div class="grid grid-cols-7 gap-px relative" style="grid-template-rows: 26px repeat(${rowCount}, ${barRowH}px);">`;
 
-    html += `<div class="bg-slate-950 border ${isSelected ? 'border-cyan-500' : isToday ? 'border-brand-500 bg-brand-950/20' : 'border-slate-800'} rounded-lg p-2 min-h-24 flex flex-col cursor-pointer hover:border-slate-600 transition-colors"
-      onclick="openDayEventsModal('${dateStr}')"
-      ondragover="handleCalDayDragOver(event)"
-      ondragleave="handleCalDayDragLeave(event)"
-      ondrop="handleCalDayDrop(event, '${dateStr}')">
-      <div class="flex justify-between items-start">
-        <span class="text-xs font-bold ${isSunday?'text-rose-400':isSaturday?'text-blue-400':'text-slate-300'}">${d}</span>
-        ${isToday ? '<span class="bg-brand-500 text-white text-[10px] px-1 py-0.5 rounded">오늘</span>' : ''}
-      </div>
-      <div class="flex-1 text-[11px] space-y-0.5 overflow-hidden mt-1">
-        ${events.slice(0,3).map(e => {
-          const s = e.startDate || e.date, en = e.endDate || s;
-          const isMulti = s !== en;
-          const isStartDay = dateStr === s;
-          return `<div draggable="true" ondragstart="handleCalEventDragStart(event, '${esc(e.id)}')"
-            class="${isMulti ? 'bg-cyan-800/60 border-l-2 border-cyan-400' : 'bg-slate-800'} text-slate-200 px-1.5 py-0.5 rounded truncate cursor-grab active:cursor-grabbing"
-            title="드래그해서 날짜 이동">${isMulti && !isStartDay ? '↳ ' : ''}${esc(e.title || '')}</div>`;
-        }).join('')}
-        ${events.length > 3 ? `<div class="text-slate-500 text-[10px]">+${events.length-3}개 더보기</div>` : ''}
-      </div>
-    </div>`;
-  }
+    // 날짜 셀 (배경 + 클릭/드롭 대상)
+    week.forEach((dateStr, col) => {
+      if (!dateStr) {
+        html += `<div style="grid-column:${col+1}; grid-row:1 / span ${rowCount+1};" class="bg-slate-950/30 rounded-lg"></div>`;
+        return;
+      }
+      const d = Number(dateStr.slice(8, 10));
+      const isToday = dateStr === kstDate();
+      const isSelected = dateStr === calSelectedDate;
+      const isSunday = col === 0, isSaturday = col === 6;
+      const hidden = hiddenByDate[dateStr] || 0;
+
+      html += `<div style="grid-column:${col+1}; grid-row:1 / span ${rowCount+1};"
+        class="border ${isSelected ? 'border-cyan-500' : isToday ? 'border-brand-500 bg-brand-950/20' : 'border-slate-800'} bg-slate-950 rounded-lg cursor-pointer hover:border-slate-600 transition-colors flex flex-col"
+        onclick="openDayEventsModal('${dateStr}')"
+        ondragover="handleCalDayDragOver(event)"
+        ondragleave="handleCalDayDragLeave(event)"
+        ondrop="handleCalDayDrop(event, '${dateStr}')">
+        <div class="flex justify-between items-start px-1.5 pt-1">
+          <span class="text-xs font-bold ${isSunday?'text-rose-400':isSaturday?'text-blue-400':'text-slate-300'}">${d}</span>
+          ${isToday ? '<span class="bg-brand-500 text-white text-[9px] px-1 rounded leading-tight">오늘</span>' : ''}
+        </div>
+        ${hidden ? `<span class="text-[9px] text-slate-500 px-1.5 mt-auto mb-0.5">+${hidden}개 더보기</span>` : ''}
+      </div>`;
+    });
+
+    // 이벤트 막대 (여러 컬럼에 걸쳐 이어지는 하나의 div)
+    bars.forEach(b => {
+      const s = b.ev.startDate || b.ev.date, en = b.ev.endDate || s;
+      const roundL = !b.continuesLeft ? 'rounded-l-md' : 'pl-2';
+      const roundR = !b.continuesRight ? 'rounded-r-md' : '';
+      const arrowL = b.continuesLeft ? '◀ ' : '';
+      const arrowR = b.continuesRight ? ' ▶' : '';
+      html += `<div draggable="true" ondragstart="handleCalEventDragStart(event, '${esc(b.ev.id)}'); event.stopPropagation();"
+        onclick="event.stopPropagation(); openCalEventForm('${esc(b.ev.id)}', '${esc(s)}')"
+        title="${esc(b.ev.title || '')} · 드래그해서 날짜 이동"
+        style="grid-column: ${b.colStart+1} / span ${b.span}; grid-row: ${b.track + 2}; background-color:${calColorHex(b.ev.color)};"
+        class="${roundL} ${roundR} text-white text-[11px] px-1.5 flex items-center truncate cursor-grab active:cursor-grabbing mx-px hover:brightness-110 transition-[filter]">${arrowL}${esc(b.ev.title || '')}${arrowR}</div>`;
+    });
+
+
+    html += '</div>';
+  });
 
   html += '</div>';
   container.innerHTML = html;
@@ -3443,7 +3561,10 @@ function renderCalendar() {
     detail.innerHTML = dayEvents.length ? dayEvents.map(e => `
       <div class="bg-slate-950 border border-slate-800 rounded-lg p-3 flex justify-between items-start group hover:border-slate-600 transition-colors">
         <div class="flex-1">
-          <h4 class="text-sm font-bold text-slate-100">${esc(e.title || '')}</h4>
+          <h4 class="text-sm font-bold text-slate-100 flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background-color:${calColorHex(e.color)}"></span>
+            ${esc(e.title || '')}
+          </h4>
           ${e.content ? `<p class="text-xs text-slate-400 mt-1 whitespace-pre-line">${esc(e.content)}</p>` : ''}
           <p class="text-[11px] ${(e.startDate||e.date) !== (e.endDate||e.startDate||e.date) ? 'text-cyan-400' : 'text-slate-600'} mt-2">${esc(formatDateRangeLabel(e))}</p>
         </div>
@@ -3477,8 +3598,12 @@ function openCalEventForm(id = null, date = null) {
     document.getElementById('cal-ev-form-end').value = (e.endDate && e.endDate !== (e.startDate || e.date)) ? e.endDate : '';
     document.getElementById('cal-ev-form-title').value = e.title || '';
     document.getElementById('cal-ev-form-content').value = e.content || '';
+    document.getElementById('cal-ev-form-color').value = e.color || 'slate';
+    renderCalColorSwatches(e.color || 'slate');
   } else {
     document.getElementById('cal-ev-form-start').value = date;
+    document.getElementById('cal-ev-form-color').value = 'slate';
+    renderCalColorSwatches('slate');
   }
   syncCalEndMin();
   openModal('cal-event-modal');
@@ -3503,7 +3628,8 @@ function handleCalEventSubmit(e) {
     startDate, endDate,
     date: startDate, // 하위호환 필드
     title: document.getElementById('cal-ev-form-title').value.trim(),
-    content: document.getElementById('cal-ev-form-content').value.trim()
+    content: document.getElementById('cal-ev-form-content').value.trim(),
+    color: document.getElementById('cal-ev-form-color').value || 'slate'
   };
 
   let ev;
