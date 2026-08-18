@@ -320,6 +320,10 @@ tailwind.config = {
             <option value="warning">점검 필요</option>
             <option value="broken">고장 정지</option>
           </select>
+          <label class="flex items-center gap-1.5 text-xs text-slate-400 cursor-pointer select-none px-1">
+            <input type="checkbox" id="eq-show-inactive" onchange="showInactiveEq = this.checked; renderEquipmentTable()" class="rounded border-slate-700 bg-slate-950 text-brand-600 focus:ring-0">
+            비활성 설비 표시
+          </label>
         </div>
         <button type="button" onclick="openEqForm()" class="bg-brand-600 hover:bg-brand-500 text-white px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2 shadow transition-colors">
           <i class="fa-solid fa-plus"></i> 설비 등록
@@ -1376,21 +1380,21 @@ let equipments = [
   {id:'EQ-008',code:'34642',name:'주사용수저장및분배시스템-4',location:'생물학적제제동',team:'공무팀',part:'설비파트',detailLocation:'향남공장',formulation:'생물학적제제',roomNo:'',installDate:'2021-01-01',capacity:'N/A',model:'N/A',manufacturer:'대호테크',supplier:'한천수이엔지',legalEquip:'Y',gmpEquip:'GMP',revisionStatus:'제개정완료',latestVersion:'Y',status:'running'},
   {id:'EQ-009',code:'34643',name:'주사용수저장및분배시스템-5',location:'생물학적제제동',team:'공무팀',part:'설비파트',detailLocation:'향남공장',formulation:'생물학적제제',roomNo:'',installDate:'2021-01-01',capacity:'N/A',model:'N/A',manufacturer:'대호테크',supplier:'한천수이엔지',legalEquip:'Y',gmpEquip:'GMP',revisionStatus:'제개정완료',latestVersion:'Y',status:'running'},
   // === E동 냉동기실 ===
-  {id:'EQ-011',code:'00807',name:'냉동기-2',location:'E동 냉동기실',team:'공무팀',part:'설비파트',detailLocation:'향남공장-E동-1F-냉동기실',formulation:'공통',roomNo:'1004',installDate:'2012-01-01',capacity:'270RT',model:'N/A',manufacturer:'미스비씨',supplier:'미스비씨',legalEquip:'Y',gmpEquip:'NON-GMP',revisionStatus:'제개정완료',latestVersion:'Y',status:'running'},
-  {id:'EQ-012',code:'40500',name:'냉동기-26',location:'E동 냉동기실',team:'공무팀',part:'설비파트',detailLocation:'향남공장-E동-1F-냉동기실',formulation:'공통',roomNo:'1004',installDate:'2023-03-03',capacity:'300RT',model:'TR-W 300',manufacturer:'센추리',supplier:'센추리',legalEquip:'Y',gmpEquip:'NON-GMP',revisionStatus:'제개정완료',latestVersion:'Y',status:'running'},
-  {id:'EQ-013',code:'40832',name:'냉동기-27',location:'E동 냉동기실',team:'공무팀',part:'설비파트',detailLocation:'향남공장-E동-1F-냉동기실',formulation:'공통',roomNo:'1004',installDate:'2024-08-05',capacity:'300RT',model:'TR-W300HB1',manufacturer:'센추리',supplier:'센추리',legalEquip:'Y',gmpEquip:'NON-GMP',revisionStatus:'제개정완료',latestVersion:'Y',status:'running'},
-  {id:'EQ-014',code:'00808',name:'냉동기-3',location:'E동 냉동기실',team:'공무팀',part:'설비파트',detailLocation:'향남공장-E동-1F-냉동기실',formulation:'공통',roomNo:'1004',installDate:'2016-01-01',capacity:'300RT',model:'N/A',manufacturer:'센추리',supplier:'센추리',legalEquip:'Y',gmpEquip:'NON-GMP',revisionStatus:'제개정완료',latestVersion:'Y',status:'running'},
+  {id:'EQ-011',code:'00807',name:'냉동기-2',location:'E동 냉동기실',team:'공무팀',part:'설비파트',detailLocation:'향남공장-E동-1F-냉동기실',formulation:'공통',roomNo:'1004',installDate:'2012-01-01',capacity:'270RT',model:'N/A',manufacturer:'미스비씨',supplier:'미스비씨',legalEquip:'Y',gmpEquip:'NON-GMP',revisionStatus:'제개정완료',latestVersion:'Y',status:'running',active:false},
+  {id:'EQ-012',code:'40500',name:'냉동기-26',location:'E동 냉동기실',team:'공무팀',part:'설비파트',detailLocation:'향남공장-E동-1F-냉동기실',formulation:'공통',roomNo:'1004',installDate:'2023-03-03',capacity:'300RT',model:'TR-W 300',manufacturer:'센추리',supplier:'센추리',legalEquip:'Y',gmpEquip:'NON-GMP',revisionStatus:'제개정완료',latestVersion:'Y',status:'running',active:false},
+  {id:'EQ-013',code:'40832',name:'냉동기-27',location:'E동 냉동기실',team:'공무팀',part:'설비파트',detailLocation:'향남공장-E동-1F-냉동기실',formulation:'공통',roomNo:'1004',installDate:'2024-08-05',capacity:'300RT',model:'TR-W300HB1',manufacturer:'센추리',supplier:'센추리',legalEquip:'Y',gmpEquip:'NON-GMP',revisionStatus:'제개정완료',latestVersion:'Y',status:'running',active:false},
+  {id:'EQ-014',code:'00808',name:'냉동기-3',location:'E동 냉동기실',team:'공무팀',part:'설비파트',detailLocation:'향남공장-E동-1F-냉동기실',formulation:'공통',roomNo:'1004',installDate:'2016-01-01',capacity:'300RT',model:'N/A',manufacturer:'센추리',supplier:'센추리',legalEquip:'Y',gmpEquip:'NON-GMP',revisionStatus:'제개정완료',latestVersion:'Y',status:'running',active:false},
   // === E동 보일러실 ===
-  {id:'EQ-015',code:'00837',name:'보일러-1',location:'E동 보일러실',team:'공무팀',part:'설비파트',detailLocation:'향남공장-E동-1F-보일러실',formulation:'공통',roomNo:'1006',installDate:'2014-01-01',capacity:'2TON',model:'N/A',manufacturer:'한국미우라공업',supplier:'한국미우라공업',legalEquip:'Y',gmpEquip:'NON-GMP',revisionStatus:'제개정완료',latestVersion:'Y',status:'running'},
-  {id:'EQ-016',code:'00838',name:'보일러-2',location:'E동 보일러실',team:'공무팀',part:'설비파트',detailLocation:'향남공장-E동-1F-보일러실',formulation:'공통',roomNo:'1006',installDate:'2014-01-01',capacity:'2TON',model:'N/A',manufacturer:'한국미우라공업',supplier:'한국미우라공업',legalEquip:'Y',gmpEquip:'NON-GMP',revisionStatus:'제개정완료',latestVersion:'Y',status:'running'},
-  {id:'EQ-017',code:'00839',name:'보일러-3',location:'E동 보일러실',team:'공무팀',part:'설비파트',detailLocation:'향남공장-E동-1F-보일러실',formulation:'공통',roomNo:'1006',installDate:'2014-01-01',capacity:'2TON',model:'N/A',manufacturer:'한국미우라공업',supplier:'한국미우라공업',legalEquip:'Y',gmpEquip:'NON-GMP',revisionStatus:'제개정완료',latestVersion:'Y',status:'running'},
+  {id:'EQ-015',code:'00837',name:'보일러-1',location:'E동 보일러실',team:'공무팀',part:'설비파트',detailLocation:'향남공장-E동-1F-보일러실',formulation:'공통',roomNo:'1006',installDate:'2014-01-01',capacity:'2TON',model:'N/A',manufacturer:'한국미우라공업',supplier:'한국미우라공업',legalEquip:'Y',gmpEquip:'NON-GMP',revisionStatus:'제개정완료',latestVersion:'Y',status:'running',active:false},
+  {id:'EQ-016',code:'00838',name:'보일러-2',location:'E동 보일러실',team:'공무팀',part:'설비파트',detailLocation:'향남공장-E동-1F-보일러실',formulation:'공통',roomNo:'1006',installDate:'2014-01-01',capacity:'2TON',model:'N/A',manufacturer:'한국미우라공업',supplier:'한국미우라공업',legalEquip:'Y',gmpEquip:'NON-GMP',revisionStatus:'제개정완료',latestVersion:'Y',status:'running',active:false},
+  {id:'EQ-017',code:'00839',name:'보일러-3',location:'E동 보일러실',team:'공무팀',part:'설비파트',detailLocation:'향남공장-E동-1F-보일러실',formulation:'공통',roomNo:'1006',installDate:'2014-01-01',capacity:'2TON',model:'N/A',manufacturer:'한국미우라공업',supplier:'한국미우라공업',legalEquip:'Y',gmpEquip:'NON-GMP',revisionStatus:'제개정완료',latestVersion:'Y',status:'running',active:false},
   // === A동 보일러실 ===
-  {id:'EQ-018',code:'40173',name:'보일러-10',location:'A동 보일러실',team:'공무팀',part:'공무팀',detailLocation:'향남공장-A동-1F-보일러실',formulation:'N/A',roomNo:'1006',installDate:'2022-09-14',capacity:'0.8Ton',model:'SQ-800ZSG',manufacturer:'한국미우라공업',supplier:'한국미우라공업',legalEquip:'N',gmpEquip:'NON-GMP',revisionStatus:'제개정완료',latestVersion:'Y',status:'running'},
-  {id:'EQ-019',code:'40168',name:'보일러-5',location:'A동 보일러실',team:'공무팀',part:'공무팀',detailLocation:'향남공장-A동-1F-보일러실',formulation:'N/A',roomNo:'1006',installDate:'2022-09-14',capacity:'0.8Ton',model:'SQ-800ZSG',manufacturer:'한국미우라공업',supplier:'한국미우라공업',legalEquip:'Y',gmpEquip:'NON-GMP',revisionStatus:'제개정완료',latestVersion:'Y',status:'running'},
-  {id:'EQ-020',code:'40169',name:'보일러-6',location:'A동 보일러실',team:'공무팀',part:'공무팀',detailLocation:'향남공장-A동-1F-보일러실',formulation:'N/A',roomNo:'1006',installDate:'2022-09-14',capacity:'0.8Ton',model:'SQ-800ZSG',manufacturer:'한국미우라공업',supplier:'한국미우라공업',legalEquip:'N',gmpEquip:'NON-GMP',revisionStatus:'제개정완료',latestVersion:'Y',status:'running'},
-  {id:'EQ-021',code:'40170',name:'보일러-7',location:'A동 보일러실',team:'공무팀',part:'공무팀',detailLocation:'향남공장-A동-1F-보일러실',formulation:'N/A',roomNo:'1006',installDate:'2022-09-14',capacity:'0.8Ton',model:'SQ-800ZSG',manufacturer:'한국미우라공업',supplier:'한국미우라공업',legalEquip:'N',gmpEquip:'NON-GMP',revisionStatus:'제개정완료',latestVersion:'Y',status:'running'},
-  {id:'EQ-022',code:'40171',name:'보일러-8',location:'A동 보일러실',team:'공무팀',part:'공무팀',detailLocation:'향남공장-A동-1F-보일러실',formulation:'N/A',roomNo:'1006',installDate:'2022-09-14',capacity:'0.8Ton',model:'SQ-800ZSG',manufacturer:'한국미우라공업',supplier:'한국미우라공업',legalEquip:'N',gmpEquip:'NON-GMP',revisionStatus:'제개정완료',latestVersion:'Y',status:'running'},
-  {id:'EQ-023',code:'40172',name:'보일러-9',location:'A동 보일러실',team:'공무팀',part:'공무팀',detailLocation:'향남공장-A동-1F-보일러실',formulation:'N/A',roomNo:'1006',installDate:'2022-09-14',capacity:'0.8Ton',model:'SQ-800ZSG',manufacturer:'한국미우라공업',supplier:'한국미우라공업',legalEquip:'N',gmpEquip:'NON-GMP',revisionStatus:'제개정완료',latestVersion:'Y',status:'running'}
+  {id:'EQ-018',code:'40173',name:'보일러-10',location:'A동 보일러실',team:'공무팀',part:'공무팀',detailLocation:'향남공장-A동-1F-보일러실',formulation:'N/A',roomNo:'1006',installDate:'2022-09-14',capacity:'0.8Ton',model:'SQ-800ZSG',manufacturer:'한국미우라공업',supplier:'한국미우라공업',legalEquip:'N',gmpEquip:'NON-GMP',revisionStatus:'제개정완료',latestVersion:'Y',status:'running',active:false},
+  {id:'EQ-019',code:'40168',name:'보일러-5',location:'A동 보일러실',team:'공무팀',part:'공무팀',detailLocation:'향남공장-A동-1F-보일러실',formulation:'N/A',roomNo:'1006',installDate:'2022-09-14',capacity:'0.8Ton',model:'SQ-800ZSG',manufacturer:'한국미우라공업',supplier:'한국미우라공업',legalEquip:'Y',gmpEquip:'NON-GMP',revisionStatus:'제개정완료',latestVersion:'Y',status:'running',active:false},
+  {id:'EQ-020',code:'40169',name:'보일러-6',location:'A동 보일러실',team:'공무팀',part:'공무팀',detailLocation:'향남공장-A동-1F-보일러실',formulation:'N/A',roomNo:'1006',installDate:'2022-09-14',capacity:'0.8Ton',model:'SQ-800ZSG',manufacturer:'한국미우라공업',supplier:'한국미우라공업',legalEquip:'N',gmpEquip:'NON-GMP',revisionStatus:'제개정완료',latestVersion:'Y',status:'running',active:false},
+  {id:'EQ-021',code:'40170',name:'보일러-7',location:'A동 보일러실',team:'공무팀',part:'공무팀',detailLocation:'향남공장-A동-1F-보일러실',formulation:'N/A',roomNo:'1006',installDate:'2022-09-14',capacity:'0.8Ton',model:'SQ-800ZSG',manufacturer:'한국미우라공업',supplier:'한국미우라공업',legalEquip:'N',gmpEquip:'NON-GMP',revisionStatus:'제개정완료',latestVersion:'Y',status:'running',active:false},
+  {id:'EQ-022',code:'40171',name:'보일러-8',location:'A동 보일러실',team:'공무팀',part:'공무팀',detailLocation:'향남공장-A동-1F-보일러실',formulation:'N/A',roomNo:'1006',installDate:'2022-09-14',capacity:'0.8Ton',model:'SQ-800ZSG',manufacturer:'한국미우라공업',supplier:'한국미우라공업',legalEquip:'N',gmpEquip:'NON-GMP',revisionStatus:'제개정완료',latestVersion:'Y',status:'running',active:false},
+  {id:'EQ-023',code:'40172',name:'보일러-9',location:'A동 보일러실',team:'공무팀',part:'공무팀',detailLocation:'향남공장-A동-1F-보일러실',formulation:'N/A',roomNo:'1006',installDate:'2022-09-14',capacity:'0.8Ton',model:'SQ-800ZSG',manufacturer:'한국미우라공업',supplier:'한국미우라공업',legalEquip:'N',gmpEquip:'NON-GMP',revisionStatus:'제개정완료',latestVersion:'Y',status:'running',active:false}
 ];
 
 let workOrders = [
@@ -1467,7 +1471,7 @@ let auditLog = [];
 
 let currentUser = '';
 let currentTheme = 'dark'; // 'dark' or 'light'
-let tabOrder = ['dashboard', 'layout', 'equipments', 'workorders', 'pm', 'schedules', 'improve', 'feedback', 'calendar', 'waterstd', 'spares', 'audit'];
+let tabOrder = ['dashboard', 'layout', 'equipments', 'workorders', 'pm', 'schedules', 'improve', 'feedback', 'calendar', 'waterstd', 'spares']; // 'audit'은 현재 비활성화 상태입니다.
 
 const UNASSIGNED = '미지정';
 
@@ -1576,6 +1580,9 @@ const LOC_THEME = {
 const locTheme = c => LOC_THEME[c] || LOC_THEME.slate;
 
 const eqById = id => equipments.find(e => e.id === id);
+const isActiveEq = eq => !!eq && eq.active !== false;
+const activeEquipments = () => equipments.filter(isActiveEq);
+let showInactiveEq = false; // 설비 마스터 탭에서 '비활성 설비 표시' 체크박스 상태
 const eqNameOf = wo => (eqById(wo.eqId)?.name) || wo.eqName || '삭제된 설비';
 const emptyState = (icon, msg) =>
   `<div class="text-center py-10 text-slate-600 text-xs"><i class="fa-solid ${icon} text-2xl mb-2 block opacity-60"></i>${esc(msg)}</div>`;
@@ -1789,8 +1796,8 @@ const TAB_DEFS = {
   feedback: { icon: 'fa-pen-to-square', label: '월별 피드백' },
   calendar: { icon: 'fa-calendar-days', label: '캘린더' },
   waterstd: { icon: 'fa-droplet', label: '정제수 관리기준' },
-  spares: { icon: 'fa-box', label: '예비부품' },
-  audit: { icon: 'fa-clipboard-list', label: '감사 추적' }
+  spares: { icon: 'fa-box', label: '예비부품' }
+  // audit: { icon: 'fa-clipboard-list', label: '감사 추적' }, // [비활성화] 나중에 활성화 요청 시 이 줄의 주석만 해제하면 됩니다. tabOrder에도 'audit'을 추가해주세요.
 };
 
 function renderNavBar() {
@@ -1983,9 +1990,9 @@ function populateEqSelects() {
 
 /* ---------- 7. 대시보드 ---------- */
 function renderHeaderStats() {
-  const total = equipments.length;
-  const running = equipments.filter(e => e.status === 'running').length;
-  const broken = equipments.filter(e => e.status === 'broken').length;
+  const total = activeEquipments().length;
+  const running = activeEquipments().filter(e => e.status === 'running').length;
+  const broken = activeEquipments().filter(e => e.status === 'broken').length;
 
   document.getElementById('header-total-eq').textContent = `${total}대`;
   document.getElementById('header-running-eq').textContent = `${running}대`;
@@ -1996,7 +2003,7 @@ function renderHeaderStats() {
 }
 
 function renderDashboard() {
-  const total = equipments.length;
+  const total = activeEquipments().length;
   const openWO = workOrders.filter(w => w.status !== 'completed');
   const urgent = openWO.filter(w => w.priority === 'HIGH').length;
   const pmDone = pmTasks.filter(p => p.done).length;
@@ -2017,13 +2024,16 @@ function renderDashboard() {
   renderTodayList();
   renderWeekList();
 
-  // 라인별 요약
+  // 라인별 요약 (비활성 설비 라인은 목록에서 숨깁니다)
   const summary = document.getElementById('dash-line-summary');
   const groups = [...locations.map(l => ({ name: l.name, color: l.color })),
-                  ...(equipments.some(e => !isKnownLocation(e.location)) ? [{ name: UNASSIGNED, color: 'slate' }] : [])];
+                  ...(activeEquipments().some(e => !isKnownLocation(e.location)) ? [{ name: UNASSIGNED, color: 'slate' }] : [])];
 
-  summary.innerHTML = groups.length ? groups.map(g => {
-    const eqs = equipments.filter(e => normalizeLoc(e.location) === g.name);
+  const groupsWithActive = groups.map(g => ({ ...g, eqs: equipments.filter(e => normalizeLoc(e.location) === g.name && isActiveEq(e)) }))
+                                  .filter(g => g.eqs.length > 0);
+
+  summary.innerHTML = groupsWithActive.length ? groupsWithActive.map(g => {
+    const eqs = g.eqs;
     const run = eqs.filter(e => e.status === 'running').length;
     const warn = eqs.filter(e => e.status === 'warning').length;
     const brk = eqs.filter(e => e.status === 'broken').length;
@@ -2097,7 +2107,7 @@ function buildAlerts() {
 
 
 
-  equipments.forEach(e => {
+  activeEquipments().forEach(e => {
     if (e.status === 'broken') {
       items.push({
         level: e.gmpEquip === 'GMP' ? 2 : 1, tab: 'layout', icon: 'fa-triangle-exclamation',
@@ -2143,13 +2153,13 @@ function getTodayTasks() {
   const today = kstDate();
   const tasks = [];
   // PM
-  pmTasks.filter(p => !p.done).forEach(p => tasks.push({
+  pmTasks.filter(p => !p.done && isActiveEq(eqById(p.eqId))).forEach(p => tasks.push({
     type:'PM', label:p.title, sub:p.eqName||'공통', done:p.done,
     tab:'pm', icon:'fa-calendar-check', id:p.id
   }));
 
   // 교체 만료/임박
-  schedules.forEach(s => {
+  schedules.filter(s => isActiveEq(eqById(s.eqId))).forEach(s => {
     const next = addDays(s.lastDate, s.cycleDays);
     const d = daysUntil(next);
     if (d !== null && d <= 0) tasks.push({
@@ -2158,7 +2168,7 @@ function getTodayTasks() {
     });
   });
   // 작업 지시
-  workOrders.filter(w => w.status !== 'completed').forEach(w => tasks.push({
+  workOrders.filter(w => w.status !== 'completed' && isActiveEq(eqById(w.eqId))).forEach(w => tasks.push({
     type:'작업', label:w.title, sub:eqNameOf(w), done:false,
     tab:'workorders', icon:'fa-wrench', id:w.id,
     urgent: w.priority === 'HIGH'
@@ -2170,7 +2180,7 @@ function getWeekTasks() {
   const today = new Date(kstDate());
   const weekEnd = addDays(kstDate(), 7);
   const tasks = [];
-  schedules.forEach(s => {
+  schedules.filter(s => isActiveEq(eqById(s.eqId))).forEach(s => {
     const next = addDays(s.lastDate, s.cycleDays);
     const d = daysUntil(next);
     if (d !== null && d >= 0 && d <= 7) tasks.push({
@@ -2183,7 +2193,7 @@ function getWeekTasks() {
 
 function countUpcoming() {
   let n = 0;
-  schedules.forEach(s => { const d = daysUntil(addDays(s.lastDate, s.cycleDays)); if(d!==null && d<=7) n++; });
+  schedules.filter(s => isActiveEq(eqById(s.eqId))).forEach(s => { const d = daysUntil(addDays(s.lastDate, s.cycleDays)); if(d!==null && d<=7) n++; });
   workOrders.forEach(w => { if(w.status!=='completed' && w.priority==='HIGH') n++; });
   return n;
 }
@@ -2281,7 +2291,7 @@ function deleteEqFromMap(e, id) { e.stopPropagation(); deleteEquipment(id); }
 
 function renderLayoutMap() {
   const container = document.getElementById('layout-container');
-  const orphanExists = equipments.some(e => !isKnownLocation(e.location));
+  const orphanExists = activeEquipments().some(e => !isKnownLocation(e.location));
 
   if (!locations.length && !orphanExists) {
     container.innerHTML = `
@@ -2302,7 +2312,7 @@ function renderLayoutMap() {
     </button>`;
 
   const zone = (key, name, color, actions) => {
-    const eqs = equipments.filter(e => normalizeLoc(e.location) === name);
+    const eqs = equipments.filter(e => normalizeLoc(e.location) === name && isActiveEq(e));
     return `
       <div class="drop-zone relative bg-slate-950 border border-slate-800 rounded-xl p-4 pt-10 transition-colors"
            ondragover="handleDragOver(event)" ondragenter="handleDragOver(event)"
@@ -2342,6 +2352,7 @@ function renderEquipmentTable() {
   const stat = document.getElementById('eq-filter-status')?.value || 'ALL';
 
   const rows = equipments.filter(eq =>
+    (showInactiveEq || isActiveEq(eq)) &&
     (!q || `${eq.name} ${eq.code} ${eq.model || ''} ${eq.manufacturer || ''} ${eq.eqCategory || ''} ${eq.detailLocation || ''}`.toLowerCase().includes(q)) &&
     (loc === 'ALL' || normalizeLoc(eq.location) === loc) &&
     (stat === 'ALL' || eq.status === stat)
@@ -2350,10 +2361,13 @@ function renderEquipmentTable() {
   const tbody = document.getElementById('equipment-table-body');
   tbody.innerHTML = rows.length ? rows.map(eq => {
     const st = statusOf(eq.status);
+    const inactive = !isActiveEq(eq);
     return `
-      <tr class="hover:bg-slate-900/50 transition-colors cursor-pointer" onclick="openEquipmentDetail('${esc(eq.id)}')">
+      <tr class="hover:bg-slate-900/50 transition-colors cursor-pointer ${inactive ? 'opacity-50' : ''}" onclick="openEquipmentDetail('${esc(eq.id)}')">
         <td class="px-5 py-4">
-          <div class="font-bold text-slate-100">${esc(eq.name)}</div>
+          <div class="font-bold text-slate-100 flex items-center gap-2">${esc(eq.name)}
+            ${inactive ? '<span class="text-[10px] font-normal border border-slate-600 text-slate-400 px-1.5 py-0.5 rounded">비활성</span>' : ''}
+          </div>
           <div class="text-xs text-slate-500">${esc(eq.code)}</div>
         </td>
         <td class="px-5 py-4"><div class="text-xs text-slate-300">${esc(eq.detailLocation || normalizeLoc(eq.location))}</div><div class="text-[11px] text-slate-500">${esc(normalizeLoc(eq.location))}</div></td>
@@ -2361,13 +2375,34 @@ function renderEquipmentTable() {
         <td class="px-5 py-4 text-xs text-slate-400">${esc(eq.manufacturer || '-')}</td>
         <td class="px-5 py-4 text-xs">${eq.gmpEquip==='GMP'?'<span class="text-brand-300 font-bold">GMP</span>':'<span class="text-slate-500">NON-GMP</span>'}</td>
         <td class="px-5 py-4 text-right space-x-1 whitespace-nowrap">
+          <button type="button" onclick="event.stopPropagation();toggleEquipmentActive('${esc(eq.id)}')" aria-label="${inactive ? '활성화' : '비활성화'}" title="${inactive ? '활성화' : '비활성화'}" class="text-xs ${inactive ? 'bg-emerald-950/50 text-emerald-400 hover:bg-emerald-900/60' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'} px-2.5 py-1.5 rounded transition-colors"><i class="fa-solid ${inactive ? 'fa-power-off' : 'fa-ban'}"></i></button>
           <button type="button" onclick="event.stopPropagation();openEqForm('${esc(eq.id)}')" aria-label="수정" class="text-xs bg-slate-800 text-slate-200 px-2.5 py-1.5 rounded hover:bg-slate-700 transition-colors"><i class="fa-solid fa-pen"></i></button>
           <button type="button" onclick="event.stopPropagation();deleteEquipment('${esc(eq.id)}')" aria-label="삭제" class="text-xs bg-rose-950/50 text-rose-400 px-2.5 py-1.5 rounded hover:bg-rose-900 transition-colors"><i class="fa-solid fa-trash"></i></button>
         </td>
       </tr>`;
   }).join('') : `<tr><td colspan="6">${emptyState('fa-gears', equipments.length ? '조건에 맞는 설비가 없습니다.' : '등록된 설비가 없습니다.')}</td></tr>`;
 
-  document.getElementById('eq-table-count').textContent = `${rows.length}건 / 전체 ${equipments.length}건`;
+  const inactiveCount = equipments.filter(e => !isActiveEq(e)).length;
+  document.getElementById('eq-table-count').textContent = `${rows.length}건 / 전체 ${equipments.length}건${inactiveCount ? ` (비활성 ${inactiveCount}건 ${showInactiveEq ? '표시 중' : '숨김'})` : ''}`;
+}
+
+async function toggleEquipmentActive(eqId) {
+  const eq = eqById(eqId);
+  if (!eq) return;
+  const nextActive = !isActiveEq(eq);
+  const ok = await askConfirm({
+    title: nextActive ? '설비를 다시 활성화할까요?' : '설비를 비활성화할까요?',
+    message: nextActive
+      ? `'${eq.name}'을(를) 목록·대시보드·배치도에 다시 표시합니다.`
+      : `'${eq.name}'을(를) 목록·배치도·대시보드에서 숨깁니다. 데이터는 삭제되지 않고, 언제든 다시 활성화할 수 있습니다.`,
+    okLabel: nextActive ? '활성화' : '비활성화', danger: !nextActive
+  });
+  if (!ok) return;
+  eq.active = nextActive;
+  syncToSheet('Equipments', eq, 'upsert');
+  audit('설비', nextActive ? '활성화' : '비활성화', `${eq.code} ${eq.name}`, eq.id);
+  renderAll();
+  showToast(nextActive ? '설비를 활성화했습니다.' : '설비를 비활성화했습니다.', nextActive ? 'success' : 'warning');
 }
 
 function openEquipmentDetail(eqId) {
@@ -2766,12 +2801,16 @@ function handlePMRecordSubmit(e) {
 // 각국 약전 원문 항목 비교 (KP/JP/USP/EP)
 const WATER_PHARMACOPOEIA = [
   { name: '대한민국 약전 (KP)', items: '상수, 정제수(in bulk), 정제수(in containers), 멸균정제수, 주사용수, 멸균주사용수',
+    itemsEn: 'Constant water, purified water (in bulk / in containers), sterile purified water, water for injection, sterile water for injection',
     note: '상수 항목이 있으나, 순도시험 일부항목 제외, 먹는물 관리법 따르도록 함.' },
   { name: '일본 약전 (JP)', items: '상수, 정제수, 멸균정제수, 주사용수',
+    itemsEn: 'Constant water, purified water, sterilized purified water, water for injection',
     note: '상수 항목이 있으나, 환경보건 당국 음용수 기준 따르도록 함.' },
-  { name: '미국 약전 (USP)', items: 'Purified water, Water for Injection, Bacteriostatic water for Injection, Sterile Water for Injection, water for inhalation, Sterile water for Irrigation, Sterile Purified water',
+  { name: '미국 약전 (USP)', items: '정제수, 주사용수, 정균 주사용수, 멸균 주사용수, 흡입용수, 멸균 관주용수, 멸균 정제수',
+    itemsEn: 'Purified water, Water for Injection, Bacteriostatic water for Injection, Sterile Water for Injection, water for inhalation, Sterile water for Irrigation, Sterile Purified water',
     note: '상수 항목 없음. 상수는 환경보건 당국 음용수 기준을 따름.' },
-  { name: '유럽 약전 (EP)', items: 'Purified Water, Highly purified water, Water for Injection',
+  { name: '유럽 약전 (EP)', items: '정제수, 고순도 정제수, 주사용수',
+    itemsEn: 'Purified Water, Highly purified water, Water for Injection',
     note: 'Purified water와 Highly purified water를 구분함.' }
 ];
 
@@ -2845,7 +2884,8 @@ function renderWaterStandards() {
   const pharmaAccordion = WATER_PHARMACOPOEIA.map(p => `
     <div class="bg-slate-950 border border-slate-800 rounded-xl p-3">
       <p class="text-xs font-bold text-brand-300 mb-1.5">${esc(p.name)}</p>
-      <p class="text-xs text-slate-300 mb-1.5">${esc(p.items)}</p>
+      <p class="text-xs text-slate-300 mb-1">${esc(p.items)}</p>
+      ${p.itemsEn ? `<p class="text-[11px] text-slate-500 mb-1.5 italic">${esc(p.itemsEn)}</p>` : ''}
       <p class="text-[11px] text-slate-500">${esc(p.note)}</p>
     </div>`).join('');
 
