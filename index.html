@@ -534,6 +534,11 @@ tailwind.config = {
       </div>
     </section>
 
+    <!-- ---------- TAB: WATER STANDARDS ---------- -->
+    <section id="tab-waterstd" class="tab-content hidden space-y-6">
+      <div id="waterstd-container" class="space-y-6"></div>
+    </section>
+
     <!-- ---------- TAB: AUDIT TRAIL ---------- -->
     <section id="tab-audit" class="tab-content hidden space-y-6">
       <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
@@ -1462,7 +1467,7 @@ let auditLog = [];
 
 let currentUser = '';
 let currentTheme = 'dark'; // 'dark' or 'light'
-let tabOrder = ['dashboard', 'layout', 'equipments', 'workorders', 'pm', 'schedules', 'improve', 'feedback', 'calendar', 'spares', 'audit'];
+let tabOrder = ['dashboard', 'layout', 'equipments', 'workorders', 'pm', 'schedules', 'improve', 'feedback', 'calendar', 'waterstd', 'spares', 'audit'];
 
 const UNASSIGNED = '미지정';
 
@@ -1783,6 +1788,7 @@ const TAB_DEFS = {
   improve: { icon: 'fa-lightbulb', label: '현안 & 개선' },
   feedback: { icon: 'fa-pen-to-square', label: '월별 피드백' },
   calendar: { icon: 'fa-calendar-days', label: '캘린더' },
+  waterstd: { icon: 'fa-droplet', label: '정제수 관리기준' },
   spares: { icon: 'fa-box', label: '예비부품' },
   audit: { icon: 'fa-clipboard-list', label: '감사 추적' }
 };
@@ -1856,7 +1862,9 @@ function loadTabOrder() {
     if (saved) {
       const parsed = JSON.parse(saved);
       if (Array.isArray(parsed) && parsed.every(t => TAB_DEFS[t])) {
-        tabOrder = parsed;
+        // 저장된 순서에 없는 새 탭은 뒤쪽에 자동으로 붙여줍니다.
+        const missing = Object.keys(TAB_DEFS).filter(t => !parsed.includes(t));
+        tabOrder = [...parsed, ...missing];
       }
     }
   } catch (e) {}
@@ -1899,6 +1907,7 @@ function renderAll() {
   if (currentTab === 'improve') renderImprovements();
   if (currentTab === 'calendar')  renderCalendar();
   if (currentTab === 'feedback')  renderFeedback();
+  if (currentTab === 'waterstd')  renderWaterStandards();
   if (currentTab === 'audit')      renderAuditTable();
   renderBadges();
   renderUserChip();
@@ -2752,6 +2761,169 @@ function handlePMRecordSubmit(e) {
 }
 
 /* ---------- 12. 예비 부품 ---------- */
+/* ---------- 12-8. 정제수 관리기준 ---------- */
+
+// 각국 약전 원문 항목 비교 (KP/JP/USP/EP)
+const WATER_PHARMACOPOEIA = [
+  { name: '대한민국 약전 (KP)', items: '상수, 정제수(in bulk), 정제수(in containers), 멸균정제수, 주사용수, 멸균주사용수',
+    note: '상수 항목이 있으나, 순도시험 일부항목 제외, 먹는물 관리법 따르도록 함.' },
+  { name: '일본 약전 (JP)', items: '상수, 정제수, 멸균정제수, 주사용수',
+    note: '상수 항목이 있으나, 환경보건 당국 음용수 기준 따르도록 함.' },
+  { name: '미국 약전 (USP)', items: 'Purified water, Water for Injection, Bacteriostatic water for Injection, Sterile Water for Injection, water for inhalation, Sterile water for Irrigation, Sterile Purified water',
+    note: '상수 항목 없음. 상수는 환경보건 당국 음용수 기준을 따름.' },
+  { name: '유럽 약전 (EP)', items: 'Purified Water, Highly purified water, Water for Injection',
+    note: 'Purified water와 Highly purified water를 구분함.' }
+];
+
+// 국가별 정제수(PW in Bulk) 관리 기준 - organic carbon / conductivity
+const WATER_STD_TABLE = {
+  headers: ['항목', 'KP11', 'JP16', 'USP38', 'EP8.5'],
+  rows: [
+    ['유기탄소 (organic carbon)', '< 0.50 mg/L', '< 0.50 mg/L', '< 0.50 mg/L', '< 0.5 mg/L'],
+    ['전도율 (conductivity)', '< 2.1 µS/cm, 25℃', '< 2.1 µS/cm, 25℃', '< 1.3 µS/cm (Stage1, 25℃) / < 2.1 µS/cm (Stage2) / 2.1~4.7 µS/cm (Stage3, pH5~7)', '< 1.3 µS/cm (Stage1, 25℃) / < 2.1 µS/cm (Stage2) / 2.1~4.7 µS/cm (Stage3, pH5~7)']
+  ]
+};
+
+// 자사 관리 기준
+const WATER_COMPANY_STD = [
+  { label: '온도', value: '25℃ 이하', icon: 'fa-temperature-low' },
+  { label: 'TOC', value: '300ppb 미만', icon: 'fa-flask' },
+  { label: '유속', value: '1.0 m/s 이상', icon: 'fa-gauge-high' },
+  { label: '전도도', value: '1.3 µS/cm 미만', icon: 'fa-bolt' }
+];
+
+// 공정 흐름 (정제수 → 주사용수 생산까지)
+const WATER_PROCESS_STEPS = [
+  { title: '원수 저장', eng: 'Raw Water Tank', desc: '정제수를 생산하기 위해 원수(상수)를 저장하는 용기' },
+  { title: '연수 처리', eng: 'Softener Tank', desc: '양이온 교환수지로 물을 통과시켜 Mg, Ca를 제거 (경도 5ppm 이하로 관리)' },
+  { title: '여과 (10μm)', eng: '10μm Micro Filter', desc: '10μm보다 큰 부유물을 여과' },
+  { title: '활성탄 처리', eng: 'Active Carbon Tank', desc: '활성탄 흡착으로 염소 및 유기물 제거 (잔류염소 0.2ppm 이하로 관리, 역세로 재생 가능)' },
+  { title: '여과 (5μm)', eng: '5μm Micro Filter', desc: '5μm보다 큰 부유물을 여과' },
+  { title: 'UV 살균', eng: 'UV Lamp (254nm)', desc: '254nm 자외선으로 세균 DNA 손상을 유도해 증식 억제 및 사멸' },
+  { title: '전처리수 저장', eng: 'Softened Water Tank', desc: '연수·활성탄 처리를 마친 1차 처리수를 저장' },
+  { title: '여과 (1μm)', eng: '1μm Micro Filter', desc: '1μm보다 큰 부유물을 여과' },
+  { title: '이온·불순물 제거', eng: 'R/O Filter', desc: '반투막에 삼투압 이상의 압력을 가해 이온 및 불순물을 제거 (역삼투)' },
+  { title: '이온 제거', eng: 'EDI', desc: '전극을 이용해 잔류 이온 제거 (약품 불필요, 연속생산 가능 / 공급수 수질에 수명이 좌우됨)' },
+  { title: 'UV 살균', eng: 'UV Lamp', desc: '2차 살균' },
+  { title: '여과 (0.2μm)', eng: '0.2μm Micro Filter', desc: '정제수 생산을 위한 최종 여과' },
+  { title: '정제수 저장', eng: 'PW Storage Tank', desc: '생산된 정제수(PW)를 저장' },
+  { title: '주사용수 생산', eng: 'WFI Production', desc: '정제수를 증류하여 주사용수 생산, 노보시스 구역 유틸리티실로 분배' }
+];
+
+function isWaterEquipment(eq) {
+  if (!eq) return false;
+  const s = `${eq.name || ''} ${eq.eqCategory || ''}`;
+  return /정제수|주사용수|청정증기|RO|EDI/i.test(s);
+}
+
+function renderWaterStandards() {
+  const container = document.getElementById('waterstd-container');
+  if (!container) return;
+
+  // 자사 기준 카드
+  const companyCards = WATER_COMPANY_STD.map(s => `
+    <div class="bg-slate-950 border border-slate-800 rounded-xl p-4 text-center">
+      <i class="fa-solid ${s.icon} text-cyan-400 text-lg mb-2"></i>
+      <p class="text-[11px] text-slate-500">${esc(s.label)}</p>
+      <p class="text-sm font-bold text-slate-100 mt-0.5">${esc(s.value)}</p>
+    </div>`).join('');
+
+  // 약전 비교 표
+  const stdTable = `
+    <div class="overflow-x-auto">
+      <table class="w-full text-left text-xs text-slate-300">
+        <thead class="bg-slate-950 text-slate-400 border-b border-slate-800">
+          <tr>${WATER_STD_TABLE.headers.map(h => `<th class="px-3 py-2.5 font-bold">${esc(h)}</th>`).join('')}</tr>
+        </thead>
+        <tbody class="divide-y divide-slate-800/60">
+          ${WATER_STD_TABLE.rows.map(row => `<tr>${row.map((c, i) => `<td class="px-3 py-2.5 ${i===0?'font-bold text-slate-200':''}">${esc(c)}</td>`).join('')}</tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
+
+  // 약전별 품목/비고
+  const pharmaAccordion = WATER_PHARMACOPOEIA.map(p => `
+    <div class="bg-slate-950 border border-slate-800 rounded-xl p-3">
+      <p class="text-xs font-bold text-brand-300 mb-1.5">${esc(p.name)}</p>
+      <p class="text-xs text-slate-300 mb-1.5">${esc(p.items)}</p>
+      <p class="text-[11px] text-slate-500">${esc(p.note)}</p>
+    </div>`).join('');
+
+  // 공정 흐름도
+  const flow = WATER_PROCESS_STEPS.map((s, i) => `
+    <div class="flex gap-3">
+      <div class="flex flex-col items-center shrink-0">
+        <div class="w-8 h-8 rounded-full bg-brand-600 text-white text-xs font-bold flex items-center justify-center">${i+1}</div>
+        ${i < WATER_PROCESS_STEPS.length - 1 ? '<div class="w-px flex-1 bg-slate-700 my-1"></div>' : ''}
+      </div>
+      <div class="pb-4 flex-1">
+        <p class="text-sm font-bold text-slate-100">${esc(s.title)} <span class="text-slate-500 font-normal text-xs">${esc(s.eng)}</span></p>
+        <p class="text-xs text-slate-400 mt-1 leading-relaxed">${esc(s.desc)}</p>
+      </div>
+    </div>`).join('');
+
+  // 정제수 관련 설비 필터/교체 현황 (정기교체관리 데이터 재사용)
+  const waterEqIds = equipments.filter(isWaterEquipment).map(e => e.id);
+  const waterSchedules = schedules.filter(s => waterEqIds.includes(s.eqId))
+    .sort((a, b) => (daysUntil(addDays(a.lastDate, a.cycleDays)) ?? 9999) - (daysUntil(addDays(b.lastDate, b.cycleDays)) ?? 9999));
+
+  const filterRows = waterSchedules.length ? waterSchedules.map(s => {
+    const next = addDays(s.lastDate, s.cycleDays);
+    const d = daysUntil(next);
+    const tone = d === null ? 'text-slate-400' : d < 0 ? 'text-rose-400 font-bold' : d <= 14 ? 'text-amber-400' : 'text-emerald-400';
+    const badge = d === null ? '-' : d < 0 ? `만료 ${Math.abs(d)}일 경과` : `D-${d}`;
+    return `
+      <tr class="hover:bg-slate-900/50 transition-colors">
+        <td class="px-4 py-3"><div class="font-bold text-slate-100">${esc(s.name)}</div>${s.note ? `<div class="text-[11px] text-slate-500 mt-0.5">${esc(s.note)}</div>` : ''}</td>
+        <td class="px-4 py-3 text-slate-300">${esc(s.eqName || '-')}</td>
+        <td class="px-4 py-3 text-slate-400">${num(s.cycleDays)}일</td>
+        <td class="px-4 py-3 font-mono text-slate-300">${esc(next || '-')}</td>
+        <td class="px-4 py-3"><span class="${tone} font-bold">${badge}</span></td>
+      </tr>`;
+  }).join('') : `<tr><td colspan="5">${emptyState('fa-filter', '정제수 관련 설비에 등록된 교체 일정이 없습니다.')}</td></tr>`;
+
+  container.innerHTML = `
+    <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
+      <h2 class="text-lg font-bold text-white flex items-center gap-2 mb-4"><i class="fa-solid fa-droplet text-cyan-400"></i> 자사 관리 기준</h2>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">${companyCards}</div>
+    </div>
+
+    <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
+      <h3 class="font-bold text-slate-100 flex items-center gap-2 mb-3"><i class="fa-solid fa-scale-balanced text-brand-400"></i> 각국 약전 기준 비교 (정제수, PW in Bulk)</h3>
+      ${stdTable}
+      <details class="mt-4">
+        <summary class="text-xs font-bold text-slate-400 cursor-pointer select-none hover:text-slate-200">약전별 대상 품목 · 비고 보기</summary>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">${pharmaAccordion}</div>
+      </details>
+    </div>
+
+    <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
+      <h3 class="font-bold text-slate-100 flex items-center gap-2 mb-4"><i class="fa-solid fa-diagram-project text-emerald-400"></i> 공정 흐름 (원수 → 정제수 → 주사용수)</h3>
+      <div>${flow}</div>
+    </div>
+
+    <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="font-bold text-slate-100 flex items-center gap-2"><i class="fa-solid fa-filter text-amber-400"></i> 필터 · 설비 교체 현황</h3>
+        <button type="button" onclick="switchTab('schedules')" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg transition-colors">정기 교체 관리로 이동</button>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs text-slate-300">
+          <thead class="bg-slate-950 text-slate-400 border-b border-slate-800">
+            <tr>
+              <th class="px-4 py-2.5">교체 항목</th>
+              <th class="px-4 py-2.5">대상 설비</th>
+              <th class="px-4 py-2.5">주기</th>
+              <th class="px-4 py-2.5">차기 예정일</th>
+              <th class="px-4 py-2.5">상태</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-800/60">${filterRows}</tbody>
+        </table>
+      </div>
+    </div>`;
+}
+
 function renderSparePartsTable() {
   const q = (document.getElementById('sp-search')?.value || '').trim().toLowerCase();
   const rows = spareParts.filter(sp => !q || `${sp.name} ${sp.code} ${sp.category || ''}`.toLowerCase().includes(q));
@@ -3377,15 +3549,16 @@ async function handleCalDayDrop(e, dateStr) {
 }
 
 const CAL_COLORS = {
-  slate:  { hex: '#64748b', label: '기본' },
-  red:    { hex: '#dc2626', label: '빨강' },
-  orange: { hex: '#ea580c', label: '주황' },
-  yellow: { hex: '#ca8a04', label: '노랑' },
-  green:  { hex: '#16a34a', label: '초록' },
-  blue:   { hex: '#2563eb', label: '파랑' },
-  navy:   { hex: '#1e3a8a', label: '남색' },
-  purple: { hex: '#7c3aed', label: '보라' }
+  slate:  { hex: '#eab308', label: '기본', text: '#1c1917' },
+  red:    { hex: '#dc2626', label: '빨강', text: '#ffffff' },
+  orange: { hex: '#ea580c', label: '주황', text: '#ffffff' },
+  yellow: { hex: '#ca8a04', label: '노랑', text: '#1c1917' },
+  green:  { hex: '#16a34a', label: '초록', text: '#ffffff' },
+  blue:   { hex: '#2563eb', label: '파랑', text: '#ffffff' },
+  navy:   { hex: '#1e3a8a', label: '남색', text: '#ffffff' },
+  purple: { hex: '#7c3aed', label: '보라', text: '#ffffff' }
 };
+const calColorText = key => (CAL_COLORS[key] || CAL_COLORS.slate).text;
 const calColorHex = key => (CAL_COLORS[key] || CAL_COLORS.slate).hex;
 
 function renderCalColorSwatches(selected) {
@@ -3538,8 +3711,8 @@ function renderCalendar() {
       html += `<div draggable="true" ondragstart="handleCalEventDragStart(event, '${esc(b.ev.id)}'); event.stopPropagation();"
         onclick="event.stopPropagation(); openCalEventForm('${esc(b.ev.id)}', '${esc(s)}')"
         title="${esc(b.ev.title || '')} · 드래그해서 날짜 이동"
-        style="grid-column: ${b.colStart+1} / span ${b.span}; grid-row: ${b.track + 2}; background-color:${calColorHex(b.ev.color)};"
-        class="${roundL} ${roundR} text-white text-[11px] px-1.5 flex items-center truncate cursor-grab active:cursor-grabbing mx-px hover:brightness-110 transition-[filter]">${arrowL}${esc(b.ev.title || '')}${arrowR}</div>`;
+        style="grid-column: ${b.colStart+1} / span ${b.span}; grid-row: ${b.track + 2}; background-color:${calColorHex(b.ev.color)}; color:${calColorText(b.ev.color)};"
+        class="${roundL} ${roundR} text-[11px] px-1.5 flex items-center truncate cursor-grab active:cursor-grabbing mx-px hover:brightness-110 transition-[filter]">${arrowL}${esc(b.ev.title || '')}${arrowR}</div>`;
     });
 
 
@@ -4134,7 +4307,11 @@ function bootApp() {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
-  checkLoginGate();
+  // [임시] 로그인 게이트 비활성화 — 다시 켜려면 아래 줄을 checkLoginGate()로 되돌리면 됩니다.
+  // checkLoginGate();
+  document.getElementById('login-screen')?.classList.add('hidden');
+  document.getElementById('app-root')?.classList.remove('hidden');
+  bootApp();
 });
 
 </script>
